@@ -8,16 +8,16 @@
                 </div>
                 <ul class="navbar-menu">
                     <li class="navbar-item">
-                        <a href="/" class="navbar-link active">Home</a>
+                        <a href="{{ url_for('home') }}" class="navbar-link {% if request.path == '/' %}active{% endif %}">Home</a>
                     </li>
                     <li class="navbar-item">
-                        <a href="/about" class="navbar-link">About</a>
+                        <a href="{{ url_for('about') }}" class="navbar-link {% if request.path == '/about' %}active{% endif %}">About</a>
                     </li>
                     <li class="navbar-item">
-                        <a href="/services" class="navbar-link">Services</a>
+                        <a href="{{ url_for('services') }}" class="navbar-link {% if request.path == '/services' %}active{% endif %}">Services</a>
                     </li>
                     <li class="navbar-item">
-                        <a href="/contact" class="navbar-link">Contact</a>
+                        <a href="{{ url_for('contact') }}" class="navbar-link {% if request.path == '/contact' %}active{% endif %}">Contact</a>
                     </li>
                 </ul>
             </div>

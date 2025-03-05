@@ -6,6 +6,11 @@
     font-family: 'Arial', sans-serif;
 }
 
+main {
+    margin-top: 100px;
+}
+
+
 html {
     scroll-behavior: smooth;
 }
@@ -20,6 +25,13 @@ body {
 a {
     text-decoration: none;
     color: inherit;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2%;
 }
 
 /* Navigation Bar Styles */
@@ -68,13 +80,15 @@ a {
     font-weight: 500;
     transition: color 0.3s ease;
     padding: 8px 0;
+    border-bottom: 2px solid transparent;
 }
 
-.navbar-link:hover, .navbar-link.active {
+.navbar-link:hover {
     color: #3498db;
 }
 
 .navbar-link.active {
+    color: #3498db;
     border-bottom: 2px solid #3498db;
 }
 

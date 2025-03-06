@@ -4,13 +4,27 @@ from server.utils.toast_helper import redirect_with_toast, set_toast
 
 auth_bp = Blueprint('auth', __name__)
 
+
 @auth_bp.route('/auth', methods=['GET'])
 def auth_page():
     """Render the authentication widget page"""
+    # If already logged in, redirect to workspace
+    if AuthService.is_authenticated():
+        return redirect(url_for('workspace.dashboard'))
     return render_template('auth/auth_widget.html')
 
-@auth_bp.route('/signup', methods=['POST'])
+
+@auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
+    """Handle user signup"""
+    # GET request: show signup page
+    if request.method == 'GET':
+        # If already logged in, redirect to workspace
+        if AuthService.is_authenticated():
+            return redirect(url_for('workspace.dashboard'))
+        return render_template('auth/signup.html')
+
+    # POST request: process signup form
     # Get form data
     nom = request.form.get('nom')
     prenom = request.form.get('prenom')
@@ -20,76 +34,71 @@ def signup():
 
     # Basic validation
     if not all([nom, prenom, email, password, confirm_password]):
-        return redirect(redirect_with_toast(
-            url_for('auth.auth_page', tab='signup'),
-            'Tous les champs sont obligatoires.',
-            'error'
-        ))
+        flash('Tous les champs sont obligatoires.', 'error')
+        return redirect(url_for('auth.signup'))
 
     if password != confirm_password:
-        return redirect(redirect_with_toast(
-            url_for('auth.auth_page', tab='signup'),
-            'Les mots de passe ne correspondent pas.',
-            'error'
-        ))
+        flash('Les mots de passe ne correspondent pas.', 'error')
+        return redirect(url_for('auth.signup'))
 
     # Register user
     success, message = AuthService.register_user(nom, prenom, email, password)
 
     if success:
-        return redirect(redirect_with_toast(
-            url_for('auth.auth_page'),
-            message,
-            'success'
-        ))
+        flash(message, 'success')
+        return redirect(url_for('auth.login'))
     else:
-        return redirect(redirect_with_toast(
-            url_for('auth.auth_page', tab='signup'),
-            message,
-            'error'
-        ))
+        flash(message, 'error')
+        return redirect(url_for('auth.signup'))
 
-@auth_bp.route('/login', methods=['POST'])
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    """Handle user login"""
+    # GET request: show login page
+    if request.method == 'GET':
+        # If already logged in, redirect to workspace
+        if AuthService.is_authenticated():
+            return redirect(url_for('workspace.projects'))
+        return render_template('auth/login.html')
+
+    # POST request: process login form
     email = request.form.get('email')
     password = request.form.get('password')
 
     if not all([email, password]):
-        return redirect(redirect_with_toast(
-            url_for('auth.auth_page'),
-            'Veuillez entrer votre email et mot de passe.',
-            'error'
-        ))
+        flash('Veuillez entrer votre email et mot de passe.', 'error')
+        return redirect(url_for('auth.login'))
 
     success, message, user = AuthService.login_user(email, password)
 
     if success:
-        # Set toast in session for the home page
+        # Set success toast message
         set_toast(message, 'success')
-        return redirect(url_for('home'))
+        # Redirect to workspace dashboard
+        return redirect(url_for('workspace.dashboard'))
     else:
-        return redirect(redirect_with_toast(
-            url_for('auth.auth_page'),
-            message,
-            'error'
-        ))
+        flash(message, 'error')
+        return redirect(url_for('auth.login'))
+
 
 @auth_bp.route('/logout')
 def logout():
+    """Log out user"""
     success, message = AuthService.logout_user()
+    # Redirect to home page with toast message
     return redirect(redirect_with_toast(
         url_for('home'),
         message,
         'success'
     ))
 
+
 @auth_bp.route('/profile')
 def profile():
+    """User profile page"""
     if not AuthService.is_authenticated():
-        return redirect(redirect_with_toast(
-            url_for('auth.auth_page'),
-            'Veuillez vous connecter pour accéder à votre profil.',
-            'error'
-        ))
+        flash('Veuillez vous connecter pour accéder à votre profil.', 'error')
+        return redirect(url_for('auth.login'))
 
     return render_template('auth/profile.html')

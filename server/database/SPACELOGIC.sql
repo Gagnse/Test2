@@ -163,3 +163,6 @@ INSERT INTO users (id, nom, prenom, email, password) VALUES
 INSERT INTO organisations (id, nom) VALUES
                           (1,"GLO-2005")
                           ;
+INSERT INTO projects (id, numero, nom, description) VALUES
+                     (1,"GLO-2005","DÉMO","Ceci est un projet test")
+                    ;

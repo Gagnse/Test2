@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, redirect, url_for
 import os
 from datetime import timedelta
 
@@ -12,12 +12,17 @@ app.permanent_session_lifetime = timedelta(days=1)
 
 # Import blueprints
 from server.routes.auth import auth_bp
+from server.routes.workspace import workspace_bp
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='')
+app.register_blueprint(workspace_bp, url_prefix='/workspace')
 
 @app.route('/')
 def home():
+    # If user is authenticated, redirect to workspace projects
+    if 'user_id' in session:
+        return redirect(url_for('workspace.projects'))
     return render_template('index.html')
 
 @app.route('/about')

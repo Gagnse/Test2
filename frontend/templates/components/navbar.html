@@ -53,8 +53,8 @@
                             <a href="{{ url_for('auth.logout') }}" class="logout-button">Déconnexion</a>
                         </div>
                     {% else %}
-                        <a href="{{ url_for('auth.login') }}" class="login-button">Log In</a>
-                        <a href="{{ url_for('auth.signup') }}" class="signup-button">Sign Up</a>
+                        <a href="{{ url_for('auth.auth_page') }}" class="login-button">Log In</a>
+                        <a href="{{ url_for('auth.auth_page', tab='signup') }}" class="signup-button">Sign Up</a>
                     {% endif %}
                 </div>
             </div>

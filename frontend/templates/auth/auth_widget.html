@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Authentication - Spacelogic{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-widget">
+        <div class="auth-tabs">
+            <button class="auth-tab-btn active" data-tab="login">Connexion</button>
+            <button class="auth-tab-btn" data-tab="signup">Inscription</button>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Login Form -->
+        <div class="auth-tab-content active" id="login-tab">
+            <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" name="email" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-password">Mot de passe</label>
+                    <input type="password" id="login-password" name="password" required class="form-control">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Se connecter</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Signup Form -->
+        <div class="auth-tab-content" id="signup-tab">
+            <form method="POST" action="{{ url_for('auth.signup') }}" class="auth-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prenom">Prénom</label>
+                        <input type="text" id="prenom" name="prenom" required class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nom">Nom</label>
+                        <input type="text" id="nom" name="nom" required class="form-control">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" name="email" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-password">Mot de passe</label>
+                    <input type="password" id="signup-password" name="password" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_password">Confirmer le mot de passe</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required class="form-control">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">S'inscrire</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+        min-height: calc(100vh - 200px);
+    }
+    
+    .auth-widget {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        padding: 30px;
+        width: 100%;
+        max-width: 500px;
+        position: relative;
+    }
+    
+    .auth-tabs {
+        display: flex;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 25px;
+    }
+    
+    .auth-tab-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 15px 0;
+        font-size: 16px;
+        font-weight: 500;
+        color: #777;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .auth-tab-btn.active {
+        color: #3498db;
+    }
+    
+    .auth-tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: #3498db;
+    }
+    
+    .auth-tab-content {
+        display: none;
+    }
+    
+    .auth-tab-content.active {
+        display: block;
+        animation: fadeIn 0.5s;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-row {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .form-row .form-group {
+        flex: 1;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #555;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .form-control:focus {
+        border-color: #3498db;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+    
+    .form-actions {
+        margin-top: 25px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background-color: #3498db;
+        color: white;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+    
+    .alert {
+        padding: 12px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab switching functionality
+        const tabButtons = document.querySelectorAll('.auth-tab-btn');
+        const tabContents = document.querySelectorAll('.auth-tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all tabs
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                button.classList.add('active');
+                document.getElementById(`${button.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+        
+        // Handle URL parameters to switch tabs if needed
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        
+        if (tabParam === 'signup') {
+            document.querySelector('[data-tab="signup"]').click();
+        }
+    });
+</script>
+{% endblock %}

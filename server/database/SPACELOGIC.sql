@@ -155,3 +155,11 @@ REFERENCES rooms (no_programme)
 ON DELETE CASCADE
 ON UPDATE CASCADE);
 
+#-----------------------------Données par défauts-----------------------------
+
+INSERT INTO users (id, nom, prenom, email, password) VALUES
+                  (1,"Sébastien","Gagnon","sgagnon@stgm.net","$2b$12$E/yJZ6vH2A6Msr/lHkvkJ.yJsMVyvc6H2c7pi7kGzq8jsCz0Ni.O.")
+                  ;
+INSERT INTO organisations (id, nom) VALUES
+                          (1,"GLO-2005")
+                          ;

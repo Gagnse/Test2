@@ -4,7 +4,7 @@
             <!-- Left side: Logo and menu items -->
             <div class="navbar-left">
                 <div class="navbar-logo">
-                    <a href="/">STGM</a>
+                    <a href="/">SpaceLogic</a>
                 </div>
                 <ul class="navbar-menu">
                     <li class="navbar-item">
@@ -44,8 +44,18 @@
                     </a>
                 </div>
                 <div class="login-section">
-                    <a href="/login" class="login-button">Log In</a>
-                    <a href="/signup" class="signup-button">Sign Up</a>
+                    {% if is_authenticated %}
+                        <div class="user-menu">
+                            <a href="{{ url_for('auth.profile') }}" class="user-profile">
+                                <div class="user-avatar">{{ current_user_name[0] | upper }}</div>
+                                <span class="user-name">{{ current_user_name }}</span>
+                            </a>
+                            <a href="{{ url_for('auth.logout') }}" class="logout-button">Déconnexion</a>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="login-button">Log In</a>
+                        <a href="{{ url_for('auth.signup') }}" class="signup-button">Sign Up</a>
+                    {% endif %}
                 </div>
             </div>
 
@@ -58,3 +68,69 @@
         </div>
     </nav>
 </header>
+
+<style>
+    /* Additional styles for user menu */
+    .user-menu {
+        display: flex;
+        align-items: center;
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+        margin-right: 15px;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #3498db;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+
+    .user-name {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 150px;
+    }
+
+    .logout-button {
+        padding: 8px 15px;
+        border: 1px solid #e74c3c;
+        border-radius: 5px;
+        color: #e74c3c;
+        transition: all 0.3s ease;
+    }
+
+    .logout-button:hover {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    @media screen and (max-width: 768px) {
+        .user-menu {
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .user-profile {
+            margin-right: 0;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+
+        .logout-button {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>

@@ -4,13 +4,7 @@
 
 {% block workspace_context %}
 <div class="workspace-actions">
-    <button class="btn btn-primary create-org-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Nouvelle organisation
-    </button>
+
 </div>
 {% endblock %}
 
@@ -19,13 +13,6 @@
     <div class="organisations-header">
         <h1>Mes organisations</h1>
         <div class="organisations-filters">
-            <div class="search-container">
-                <input type="text" placeholder="Rechercher une organisation..." class="search-input">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-            </div>
             <div class="sort-dropdown">
                 <button class="sort-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -41,20 +28,9 @@
     {% if organisations %}
     <div class="organisations-grid">
         {% for org in organisations %}
-        <div class="org-card">
-            <div class="org-card-header">
-                <div class="org-avatar">
-                    {{ org.nom[0] | upper }}
-                </div>
-                <div class="org-actions">
-                    <button class="org-action-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="1"></circle>
-                            <circle cx="19" cy="12" r="1"></circle>
-                            <circle cx="5" cy="12" r="1"></circle>
-                        </svg>
-                    </button>
-                </div>
+        <a href="{{ url_for('workspace.organisation_detail', org_id=org.id) }}" class="org-card">
+            <div class="org-avatar">
+                {{ org.nom[0] | upper }}
             </div>
             <div class="org-card-content">
                 <h3 class="org-title">{{ org.nom }}</h3>
@@ -74,16 +50,7 @@
                     <span>{{ org.projects|length }} projet{% if org.projects|length > 1 %}s{% endif %}</span>
                 </div>
             </div>
-            <div class="org-card-footer">
-                <a href="{{ url_for('workspace.organisation_detail', org_id=org.id) }}" class="org-details-link">
-                    Voir les détails
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </a>
-            </div>
-        </div>
+        </a>
         {% endfor %}
     </div>
     {% else %}
@@ -98,263 +65,109 @@
         </div>
         <h2>Aucune organisation</h2>
         <p>Vous n'avez pas encore créé ou rejoint d'organisation.</p>
-        <button class="btn btn-primary create-org-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Créer une nouvelle organisation
-        </button>
     </div>
     {% endif %}
 </div>
-{% endblock %}
 
-{% block extra_css %}
-{{ super() }}
 <style>
-    /* Organizations Styles */
-    .organisations-container {
-        width: 100%;
-    }
+.organisations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
 
-    .organisations-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 25px;
-    }
+.org-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    aspect-ratio: 1 / 1;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
 
-    .organisations-header h1 {
-        font-size: 1.8rem;
-        color: #2d3748;
-        margin: 0;
-    }
+.org-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
 
-    .organisations-filters {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
+.org-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: #6366F1;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 16px;
+}
 
-    .workspace-actions {
-        display: flex;
-        gap: 10px;
-    }
+.org-card-content {
+    text-align: center;
+    width: 100%;
+}
 
-    .create-org-btn {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 15px;
-        background-color: #3498db;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
+.org-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #333;
+}
 
-    .create-org-btn:hover {
-        background-color: #2980b9;
-    }
+.org-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6B7280;
+    margin-bottom: 8px;
+}
 
-    .search-container {
-        position: relative;
-    }
+.org-meta svg {
+    margin-right: 6px;
+}
 
-    .search-input {
-        padding: 8px 15px 8px 35px;
-        border: 1px solid #e2e8f0;
-        border-radius: 5px;
-        width: 250px;
-        font-size: 0.9rem;
-    }
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 0;
+    text-align: center;
+    color: #6B7280;
+}
 
-    .search-icon {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #a0aec0;
-    }
+.empty-icon {
+    margin-bottom: 16px;
+    color: #D1D5DB;
+}
 
-    .sort-btn {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        padding: 8px 15px;
-        border: 1px solid #e2e8f0;
-        border-radius: 5px;
-        background-color: white;
-        cursor: pointer;
-        font-size: 0.9rem;
-        color: #4a5568;
-        transition: all 0.2s ease;
-    }
+.organisations-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
 
-    .sort-btn:hover {
-        background-color: #f7fafc;
-    }
+.sort-btn {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
 
-    .organisations-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
-    }
-
-    .org-card {
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        border: 1px solid #e2e8f0;
-        overflow: hidden;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .org-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
-    }
-
-    .org-card-header {
-        padding: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .org-avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 8px;
-        background-color: #3498db;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
-
-    .org-action-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: #a0aec0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 5px;
-        border-radius: 50%;
-        transition: background-color 0.2s ease;
-    }
-
-    .org-action-btn:hover {
-        background-color: #f7fafc;
-        color: #4a5568;
-    }
-
-    .org-card-content {
-        padding: 0 20px 20px;
-        flex: 1;
-    }
-
-    .org-title {
-        margin: 0 0 15px 0;
-        font-size: 1.2rem;
-        color: #2d3748;
-    }
-
-    .org-meta {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #718096;
-        font-size: 0.9rem;
-        margin-bottom: 8px;
-    }
-
-    .org-card-footer {
-        padding: 15px 20px;
-        border-top: 1px solid #e2e8f0;
-        background-color: #f8fafc;
-    }
-
-    .org-details-link {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        color: #3498db;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    .org-details-link svg {
-        transition: transform 0.2s ease;
-    }
-
-    .org-details-link:hover svg {
-        transform: translateX(5px);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        background-color: #f8fafc;
-        border-radius: 8px;
-        border: 1px dashed #e2e8f0;
-    }
-
-    .empty-icon {
-        margin-bottom: 20px;
-        color: #a0aec0;
-    }
-
-    .empty-state h2 {
-        margin: 0 0 10px 0;
-        color: #2d3748;
-        font-size: 1.5rem;
-    }
-
-    .empty-state p {
-        margin: 0 0 25px 0;
-        color: #718096;
-    }
-
-    @media (max-width: 768px) {
-        .organisations-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-
-        .organisations-filters {
-            width: 100%;
-            justify-content: space-between;
-        }
-
-        .search-input {
-            width: 100%;
-        }
-    }
+.sort-btn svg {
+    margin-right: 4px;
+}
 </style>
-{% endblock %}
-
-{% block extra_js %}
-{{ super() }}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add event listeners for organization actions here if needed
-        const createButtons = document.querySelectorAll('.create-org-btn');
-        createButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                window.location.href = "{{ url_for('workspace.new_organisation') }}";
-            });
-        });
-    });
-</script>
 {% endblock %}

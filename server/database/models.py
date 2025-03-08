@@ -86,10 +86,31 @@ class User:
         finally:
             close_connection(connection, cursor)
 
+    @staticmethod
+    def get_user_org_id(user_id):
+        """Get a user's organization ID"""
+        connection = get_db_connection()
+        cursor = None
+        org_id = None
+
+        try:
+            cursor = connection.cursor(dictionary=True)
+            query = "SELECT BIN_TO_UUID(org_id) as org_id FROM users WHERE id = UUID_TO_BIN(%s)"
+            cursor.execute(query, (user_id,))
+            result = cursor.fetchone()
+            if result:
+                org_id = result['org_id']
+        except Exception as e:
+            print(f"Error getting user's organization: {e}")
+        finally:
+            close_connection(connection, cursor)
+
+        return org_id
+
 
 class Project:
     def __init__(self, id=None, numero=None, nom=None, description=None,
-                 started_at=None, ended_at=None, status=None, type=None):
+                 started_at=None, ended_at=None, status=None, type=None, org_id=None):
         self.id = id
         self.numero = numero
         self.nom = nom
@@ -98,6 +119,7 @@ class Project:
         self.ended_at = ended_at
         self.status = status
         self.type = type
+        self.org_id = org_id
 
     @staticmethod
     def find_by_id(project_id):
@@ -212,21 +234,21 @@ class Project:
                 query = """
                     UPDATE projects
                     SET numero = %s, nom = %s, description = %s, started_at = %s, 
-                    ended_at = %s, status = %s, type = %s
+                    ended_at = %s, status = %s, type = %s, org_id = NULLIF(UUID_TO_BIN(%s), UUID_TO_BIN(NULL))
                     WHERE id = UUID_TO_BIN(%s)
                 """
                 values = (
                     self.numero, self.nom, self.description,
-                    self.started_at, self.ended_at, self.status, self.type, self.id
+                    self.started_at, self.ended_at, self.status, self.type, self.org_id, self.id
                 )
             else:  # Create new project
                 query = """
-                    INSERT INTO projects (numero, nom, description, started_at, ended_at, status, type)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO projects (numero, nom, description, status, type, org_id)
+                    VALUES (%s, %s, %s, %s, %s, NULLIF(UUID_TO_BIN(%s), UUID_TO_BIN(NULL)))
                 """
                 values = (
                     self.numero, self.nom, self.description,
-                    self.started_at, self.ended_at, self.status, self.type
+                    self.status, self.type, self.org_id
                 )
 
             cursor.execute(query, values)
@@ -234,12 +256,23 @@ class Project:
 
             # Get the auto-generated ID for a new project
             if not self.id:
-                self.id = cursor.lastrowid
+                # For UUIDs, we need to query the UUID that was just created
+                cursor.execute("""
+                    SELECT BIN_TO_UUID(id) 
+                    FROM projects 
+                    WHERE numero = %s
+                """, (self.numero,))
+
+                result = cursor.fetchone()
+                if result:
+                    self.id = result[0]
 
             return True
         except Exception as e:
             connection.rollback()
             print(f"Error saving project: {e}")
+            import traceback
+            traceback.print_exc()  # Print the full error traceback for debugging
             return False
         finally:
             close_connection(connection, cursor)

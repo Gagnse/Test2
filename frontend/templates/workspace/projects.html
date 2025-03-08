@@ -66,18 +66,16 @@
                 <div class="project-image-container">
                     <img src="/static/images/project-placeholder.png" alt="Project Image" class="project-image">
                 </div>
-                <h3 class="project-title">{{ project.nom }}</h3>
+                <h3 class="project-title">Projet {{ project.numero }}</h3>
                 <p class="project-description">{{ project.description }}</p>
             </div>
             <div class="project-card-footer">
-                <div class="project-date">
+                <div class="project-name">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                     </svg>
-                    <span>{{ project.started_at }}</span>
+                    <span>{{ project.nom }}</span>
                 </div>
                 <span class="project-status {{ project.status|lower }}">{{ project.status }}</span>
             </div>
@@ -197,7 +195,7 @@
 
     .projects-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 20px;
     }
 
@@ -210,6 +208,8 @@
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         display: flex;
         flex-direction: column;
+        max-width: 200px;
+        max-height: 200px;
     }
 
     .project-card:hover {
@@ -218,7 +218,7 @@
     }
 
     .project-card-header {
-        padding: 15px;
+        padding: 10px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -226,9 +226,9 @@
     }
 
     .project-status {
-        padding: 3px 8px;
+        padding: 2px 6px;
         border-radius: 12px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 500;
     }
 
@@ -248,7 +248,7 @@
     }
 
     .project-number {
-        font-size: 0.85rem;
+        font-size: 0.7rem;
         color: #718096;
         margin: 0;
     }
@@ -261,7 +261,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 5px;
+        padding: 3px;
         border-radius: 50%;
         transition: background-color 0.2s ease;
     }
@@ -272,50 +272,54 @@
     }
 
     .project-card-content {
-        padding: 15px;
+        padding: 10px;
         flex: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
+        overflow: hidden;
     }
 
     .project-image-container {
-        margin-bottom: 15px;
+        margin-bottom: 10px;
         width: 100%;
         display: flex;
         justify-content: center;
     }
 
     .project-image {
-        width: 120px;
-        height: 120px;
+        width: 80px;
+        height: 80px;
         object-fit: cover;
-        border-radius: 8px;
+        border-radius: 6px;
     }
 
     .project-title {
-        margin: 0 0 10px 0;
-        font-size: 1.1rem;
+        margin: 0 0 5px 0;
+        font-size: 0.9rem;
         color: #2d3748;
         width: 100%;
         text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .project-description {
         color: #4a5568;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         margin: 0;
-        line-height: 1.5;
+        line-height: 1.3;
         display: -webkit-box;
         -webkit-box-orient: vertical;
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 2;
         overflow: hidden;
         width: 100%;
         text-align: left;
     }
 
     .project-card-footer {
-        padding: 15px;
+        padding: 10px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -323,19 +327,24 @@
         background-color: #f8fafc;
     }
 
-    .project-date {
+    .project-name {
         display: flex;
         align-items: center;
-        gap: 5px;
-        color: #718096;
-        font-size: 0.85rem;
+        gap: 3px;
+        color: #2d3748;
+        font-size: 0.7rem;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 70%;
     }
 
     .project-type {
-        padding: 3px 8px;
+        padding: 2px 6px;
         background-color: #edf2f7;
         border-radius: 12px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: #4a5568;
     }
 

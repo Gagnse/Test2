@@ -1,6 +1,8 @@
+# app.py
 from flask import Flask, render_template, request, session, redirect, url_for
 import os
 from datetime import timedelta
+from server.utils.cors import setup_cors
 
 app = Flask(__name__,
             static_folder='frontend/static',
@@ -10,13 +12,18 @@ app = Flask(__name__,
 app.secret_key = os.environ.get('SECRET_KEY', 'spacelogic-dev-key')  # Change this in production!
 app.permanent_session_lifetime = timedelta(days=1)
 
+# Setup CORS
+setup_cors(app)
+
 # Import blueprints
 from server.routes.auth import auth_bp
 from server.routes.workspace import workspace_bp
+from server.routes.api import api_bp
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='')
 app.register_blueprint(workspace_bp, url_prefix='/workspace')
+app.register_blueprint(api_bp, url_prefix='/api')  # Register API blueprint with /api prefix
 
 @app.route('/')
 def home():

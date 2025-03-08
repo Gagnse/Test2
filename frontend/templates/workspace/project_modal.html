@@ -1,0 +1,149 @@
+<!-- Project Creation Modal -->
+<div id="create-project-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Créer un nouveau projet</h2>
+            <button class="close-modal-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="create-project-form">
+                <div class="form-group">
+                    <label for="project-number">Numéro du projet</label>
+                    <input type="text" id="project-number" name="numero" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-name">Nom du projet</label>
+                    <input type="text" id="project-name" name="nom" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-description">Description</label>
+                    <textarea id="project-description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="project-type">Type de projet</label>
+                    <select id="project-type" name="type">
+                        <option value="Résidentiel">Résidentiel</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Institutionnel">Institutionnel</option>
+                        <option value="Industriel">Industriel</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="project-status">Statut</label>
+                    <select id="project-status" name="status">
+                        <option value="Actif">Actif</option>
+                        <option value="En attente">En attente</option>
+                        <option value="Terminé">Terminé</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary cancel-btn">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer le projet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get modal elements
+        const modal = document.getElementById('create-project-modal');
+        const createButtons = document.querySelectorAll('.create-project-btn');
+        const closeButton = document.querySelector('.close-modal-btn');
+        const cancelButton = document.querySelector('.cancel-btn');
+        const form = document.getElementById('create-project-form');
+
+        // Open modal when create buttons are clicked
+        createButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                modal.classList.add('active');
+            });
+        });
+
+        // Close modal when close button is clicked
+        closeButton.addEventListener('click', function() {
+            modal.classList.remove('active');
+        });
+
+        // Close modal when cancel button is clicked
+        cancelButton.addEventListener('click', function() {
+            modal.classList.remove('active');
+        });
+
+        // Close modal when clicking outside the modal content
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+
+        // Handle form submission
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Remove any existing error messages
+            const existingError = form.querySelector('.form-error');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            // Get form data
+            const formData = new FormData(form);
+
+            // Create form data to submit - we will directly use the formData object
+            // since it already contains all the form fields
+
+            // Send request to create project using standard form submission
+            fetch('{{ url_for("workspace.new_project") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Try to parse JSON, but also handle the case where we get redirected
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return null;
+                }
+                return response.json().catch(() => null);
+            })
+            .then(data => {
+                if (data !== null) {
+                    // If we got a valid response, close modal and redirect with success toast
+                    modal.classList.remove('active');
+                    // Redirect with toast parameter in the query string
+                    window.location.href = '{{ url_for("workspace.projects") }}' +
+                        '?_toast_message=' + encodeURIComponent('Projet créé avec succès!') +
+                        '&_toast_type=success';
+                }
+            })
+            .catch(error => {
+                console.error('Error creating project:', error);
+                // Don't close the modal or redirect on error
+                // Display a message in the form instead
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'form-error';
+                errorDiv.textContent = 'Une erreur est survenue lors de la création du projet. Veuillez réessayer.';
+                errorDiv.style.color = '#e53e3e';
+                errorDiv.style.marginBottom = '15px';
+
+                // Remove any existing error messages
+                const existingError = form.querySelector('.form-error');
+                if (existingError) {
+                    existingError.remove();
+                }
+
+                // Add the error at the top of the form
+                form.prepend(errorDiv);
+            });
+        });
+    });
+</script>

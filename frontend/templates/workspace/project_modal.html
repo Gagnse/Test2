@@ -1,6 +1,43 @@
 <!-- Project Creation Modal -->
 <div id="create-project-modal" class="modal">
     <div class="modal-content">
+        <style>
+            /* Spinner animation */
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .spin {
+                animation: spin 1.5s linear infinite;
+            }
+
+            /* Form help text */
+            .form-help {
+                color: #718096;
+                font-size: 0.8rem;
+                margin-top: 3px;
+            }
+
+            /* Form error styling */
+            .form-error {
+                background-color: #FEF2F2;
+                border: 1px solid #F87171;
+                color: #B91C1C;
+                padding: 10px 15px;
+                border-radius: 5px;
+                margin-bottom: 15px;
+                font-size: 0.9rem;
+            }
+
+            /* Input focus state */
+            .form-group input:focus,
+            .form-group textarea:focus,
+            .form-group select:focus {
+                border-color: #3498db;
+                box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+                outline: none;
+            }
+        </style>
         <div class="modal-header">
             <h2>Créer un nouveau projet</h2>
             <button class="close-modal-btn">
@@ -12,17 +49,19 @@
         </div>
         <div class="modal-body">
             <form id="create-project-form">
+                <!-- Error container will appear here when needed -->
                 <div class="form-group">
                     <label for="project-number">Numéro du projet</label>
-                    <input type="text" id="project-number" name="numero" required>
+                    <input type="text" id="project-number" name="numero" required placeholder="ex: GLO-2005">
+                    <div class="form-help">Un identifiant unique pour ce projet</div>
                 </div>
                 <div class="form-group">
                     <label for="project-name">Nom du projet</label>
-                    <input type="text" id="project-name" name="nom" required>
+                    <input type="text" id="project-name" name="nom" required placeholder="ex: Projet SpaceLogic">
                 </div>
                 <div class="form-group">
                     <label for="project-description">Description</label>
-                    <textarea id="project-description" name="description" rows="3"></textarea>
+                    <textarea id="project-description" name="description" rows="3" placeholder="Décrivez votre projet..."></textarea>
                 </div>
                 <div class="form-group">
                     <label for="project-type">Type de projet</label>
@@ -31,6 +70,7 @@
                         <option value="Commercial">Commercial</option>
                         <option value="Institutionnel">Institutionnel</option>
                         <option value="Industriel">Industriel</option>
+                        <option value="Divers">Divers</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -43,7 +83,15 @@
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary cancel-btn">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Créer le projet</button>
+                    <button type="submit" class="btn btn-primary create-btn">
+                        <span class="btn-text">Créer le projet</span>
+                        <span class="btn-spinner" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -87,62 +135,88 @@
         form.addEventListener('submit', function(event) {
             event.preventDefault();
 
+            // Get submit button elements
+            const submitButton = form.querySelector('.create-btn');
+            const buttonText = submitButton.querySelector('.btn-text');
+            const buttonSpinner = submitButton.querySelector('.btn-spinner');
+
+            // Show loading state
+            submitButton.disabled = true;
+            buttonText.style.display = 'none';
+            buttonSpinner.style.display = 'inline-block';
+
             // Remove any existing error messages
             const existingError = form.querySelector('.form-error');
             if (existingError) {
                 existingError.remove();
             }
 
-            // Get form data
+            // Get form data and convert to JSON
             const formData = new FormData(form);
+            const projectData = {
+                numero: formData.get('numero'),
+                nom: formData.get('nom'),
+                description: formData.get('description'),
+                status: formData.get('status'),
+                type: formData.get('type')
+            };
 
-            // Create form data to submit - we will directly use the formData object
-            // since it already contains all the form fields
-
-            // Send request to create project using standard form submission
-            fetch('{{ url_for("workspace.new_project") }}', {
+            // Send request to create project using the API
+            fetch('/api/projects', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(projectData),
+                credentials: 'same-origin' // Include cookies
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                // Try to parse JSON, but also handle the case where we get redirected
-                if (response.redirected) {
-                    window.location.href = response.url;
-                    return null;
-                }
-                return response.json().catch(() => null);
+                // Always parse JSON first to get any error message
+                return response.json().then(data => {
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Une erreur est survenue');
+                    }
+                    return data;
+                });
             })
             .then(data => {
-                if (data !== null) {
-                    // If we got a valid response, close modal and redirect with success toast
+                if (data.success) {
+                    // Close modal and show success toast
                     modal.classList.remove('active');
-                    // Redirect with toast parameter in the query string
-                    window.location.href = '{{ url_for("workspace.projects") }}' +
-                        '?_toast_message=' + encodeURIComponent('Projet créé avec succès!') +
-                        '&_toast_type=success';
+
+                    // Show success toast
+                    if (window.toast) {
+                        window.toast.success('Projet créé avec succès!');
+                    }
+
+                    // Reload the page to show new project
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    throw new Error(data.message || 'Une erreur est survenue');
                 }
             })
             .catch(error => {
                 console.error('Error creating project:', error);
-                // Don't close the modal or redirect on error
-                // Display a message in the form instead
+
+                // Reset button state
+                submitButton.disabled = false;
+                buttonText.style.display = 'inline';
+                buttonSpinner.style.display = 'none';
+
+                // Create error message
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'form-error';
-                errorDiv.textContent = 'Une erreur est survenue lors de la création du projet. Veuillez réessayer.';
-                errorDiv.style.color = '#e53e3e';
-                errorDiv.style.marginBottom = '15px';
-
-                // Remove any existing error messages
-                const existingError = form.querySelector('.form-error');
-                if (existingError) {
-                    existingError.remove();
-                }
+                errorDiv.textContent = error.message || 'Une erreur est survenue lors de la création du projet. Veuillez réessayer.';
 
                 // Add the error at the top of the form
                 form.prepend(errorDiv);
+
+                // Show error toast
+                if (window.toast) {
+                    window.toast.error(error.message || 'Une erreur est survenue lors de la création du projet');
+                }
             });
         });
     });

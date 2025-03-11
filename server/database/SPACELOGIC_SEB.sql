@@ -31,7 +31,7 @@ CREATE TABLE users (
     UNIQUE(email)
 );
 
--- foreign key constraint super_admin
+-- Add foreign key constraint for super_admin
 ALTER TABLE organizations
     ADD CONSTRAINT fk_super_admin
     FOREIGN KEY (super_admin_id) REFERENCES users(id)
@@ -59,27 +59,41 @@ CREATE TABLE projects (
     end_date DATETIME,
     status VARCHAR(50) DEFAULT 'active',
     type VARCHAR(50),
-    db_name VARCHAR(100) NOT NULL,
     FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    UNIQUE(project_number),
-    UNIQUE(db_name)
+    UNIQUE(project_number)
 );
 
 #-----------------------------RELATIONS-----------------------------
 
+-- User-organization relationship (similar to organisation_user in old schema)
+CREATE TABLE organization_user (
+    organizations_id BINARY(16) NOT NULL,
+    users_id BINARY(16) NOT NULL,
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    PRIMARY KEY (organizations_id, users_id),
+    FOREIGN KEY (organizations_id)
+    REFERENCES organizations(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+    FOREIGN KEY (users_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
 -- User-organization-role assignment
-CREATE TABLE user_organization_roles (
+CREATE TABLE user_organisation_role (
     user_id BINARY(16) NOT NULL,
-    organization_id BINARY(16) NOT NULL,
+    organisation_id BINARY(16) NOT NULL,
     role_id BINARY(16) NOT NULL,
     assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, organization_id, role_id),
+    PRIMARY KEY (user_id, organisation_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+    FOREIGN KEY (organisation_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES organization_roles(id) ON DELETE CASCADE
 );
 
--- Project user assignment
+-- Project user assignment (similar to project_user in old schema)
 CREATE TABLE project_users (
     project_id BINARY(16) NOT NULL,
     user_id BINARY(16) NOT NULL,
@@ -89,8 +103,7 @@ CREATE TABLE project_users (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-
-# ----------------------------PROCEDURE---------------------------
+# ----------------------------PROCEDURES---------------------------
 
 DELIMITER //
 CREATE PROCEDURE create_project_database(
@@ -169,46 +182,40 @@ BEGIN
 END //
 DELIMITER ;
 
+# ----------------------------SAMPLE DATA---------------------------
 
 -- Create organisation first without super_admin_id
-INSERT INTO SPACELOGIC_ADMIN_DB.organizations (name, super_admin_id)
+INSERT INTO organizations (name, super_admin_id)
 VALUES ('Gucci Gang', NULL);
 
 -- Get the organisation ID
-SET @org_id = (SELECT id FROM SPACELOGIC_ADMIN_DB.organizations WHERE name = 'Gucci Gang');
+SET @org_id = (SELECT id FROM organizations WHERE name = 'Gucci Gang');
 
 -- Insert user with organisation ID
-INSERT INTO SPACELOGIC_ADMIN_DB.users (first_name, last_name, email, password, organization_id)
+INSERT INTO users (first_name, last_name, email, password, organization_id)
 VALUES ('Sébastien', 'Gagnon', 'sgagnon@stgm.net', '$2b$12$ZXYdUk9rLwY731UuTtpw0.kF7DXpGj8X/soFJ5yAmO1zHqbyqQiEa', @org_id),
        ('Presley', 'Elvis', 'mort@dead.com', '$2b$12$ZXYdUk9rLwY731UuTtpw0.kF7DXpGj8X/soFJ5yAmO1zHqbyqQiEa', @org_id),
        ('Shady', 'Slim', 'Mynameis@eminem.com', '$2b$12$ZXYdUk9rLwY731UuTtpw0.kF7DXpGj8X/soFJ5yAmO1zHqbyqQiEa', @org_id);
 
 -- Get the user ID
-SET @user_id_Seb = (SELECT id FROM SPACELOGIC_ADMIN_DB.users WHERE email = 'sgagnon@stgm.net');
-SET @user_id_1 = (SELECT id FROM SPACELOGIC_ADMIN_DB.users WHERE email = 'mort@dead.com');
-SET @user_id_2 = (SELECT id FROM SPACELOGIC_ADMIN_DB.users WHERE email = 'Mynameis@eminem.com');
+SET @user_id_Seb = (SELECT id FROM users WHERE email = 'sgagnon@stgm.net');
+SET @user_id_1 = (SELECT id FROM users WHERE email = 'mort@dead.com');
+SET @user_id_2 = (SELECT id FROM users WHERE email = 'Mynameis@eminem.com');
 
 -- Update organisation with super_admin_id
-UPDATE SPACELOGIC_ADMIN_DB.organizations
+UPDATE organizations
 SET super_admin_id = @user_id_Seb
 WHERE name = 'Gucci Gang';
 
 -- Insert organisation roles
-#INSERT INTO SPACELOGIC_projet1.organisationRoles (organisation_id, nom, description)
-#VALUES (@org_id, 'Administrateur', 'un king pin'),
-#       (@org_id, 'Collaborateur', 'un doer'),
-#       (@org_id, 'Client', 'un exigeant');
+INSERT INTO organization_roles (organization_id, name, description)
+VALUES (@org_id, 'Administrateur', 'un king pin'),
+       (@org_id, 'Collaborateur', 'un doer'),
+       (@org_id, 'Client', 'un exigeant');
 
 -- Insert user-organisation relationship
-#INSERT INTO SPACELOGIC_projet1.organisation_user (organisations_id, users_id)
-#VALUES (@org_id, @user_id_Seb),
-#       (@org_id, @user_id_1),
-#       (@org_id, @user_id_2);
+INSERT INTO organization_user (organizations_id, users_id)
+VALUES (@org_id, @user_id_Seb),
+       (@org_id, @user_id_1),
+       (@org_id, @user_id_2);
 
--- Insert project
-#INSERT INTO SPACELOGIC_users.projects (org_id, project_number, nom, description)
-#VALUES (@org_id, 'GLO-2005', 'DÉMO', 'Ceci est un projet test'),
-#       (@org_id, 'S-24130','Hôpital de Baie-Saint-Paul','Très bel hôpital');
-
-#INSERT INTO SPACELOGIC_projet1.project_user (project_id, user_id)
-#VALUES ((SELECT id FROM SPACELOGIC_users.projects WHERE project_number ='GLO-2005'),@user_id_Seb);

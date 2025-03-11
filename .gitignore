@@ -1,0 +1,6 @@
+/server/utils/__pycache__
+*.pyc
+*.pyc
+/server/database/__pycache__
+/venv
+/venv

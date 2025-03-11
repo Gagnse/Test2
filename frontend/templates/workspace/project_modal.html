@@ -1,0 +1,223 @@
+<!-- Project Creation Modal -->
+<div id="create-project-modal" class="modal">
+    <div class="modal-content">
+        <style>
+            /* Spinner animation */
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .spin {
+                animation: spin 1.5s linear infinite;
+            }
+
+            /* Form help text */
+            .form-help {
+                color: #718096;
+                font-size: 0.8rem;
+                margin-top: 3px;
+            }
+
+            /* Form error styling */
+            .form-error {
+                background-color: #FEF2F2;
+                border: 1px solid #F87171;
+                color: #B91C1C;
+                padding: 10px 15px;
+                border-radius: 5px;
+                margin-bottom: 15px;
+                font-size: 0.9rem;
+            }
+
+            /* Input focus state */
+            .form-group input:focus,
+            .form-group textarea:focus,
+            .form-group select:focus {
+                border-color: #3498db;
+                box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+                outline: none;
+            }
+        </style>
+        <div class="modal-header">
+            <h2>Créer un nouveau projet</h2>
+            <button class="close-modal-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="create-project-form">
+                <!-- Error container will appear here when needed -->
+                <div class="form-group">
+                    <label for="project-number">Numéro du projet</label>
+                    <input type="text" id="project-number" name="project_number" required placeholder="ex: GLO-2005">
+                    <div class="form-help">Un identifiant unique pour ce projet</div>
+                </div>
+                <div class="form-group">
+                    <label for="project-name">Nom du projet</label>
+                    <input type="text" id="project-name" name="nom" required placeholder="ex: Projet SpaceLogic">
+                </div>
+                <div class="form-group">
+                    <label for="project-description">Description</label>
+                    <textarea id="project-description" name="description" rows="3" placeholder="Décrivez votre projet..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="project-type">Type de projet</label>
+                    <select id="project-type" name="type">
+                        <option value="Résidentiel">Résidentiel</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Institutionnel">Institutionnel</option>
+                        <option value="Industriel">Industriel</option>
+                        <option value="Divers">Divers</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="project-status">Statut</label>
+                    <select id="project-status" name="status">
+                        <option value="Actif">Actif</option>
+                        <option value="En attente">En attente</option>
+                        <option value="Terminé">Terminé</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary cancel-btn">Annuler</button>
+                    <button type="submit" class="btn btn-primary create-btn">
+                        <span class="btn-text">Créer le projet</span>
+                        <span class="btn-spinner" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get modal elements
+        const modal = document.getElementById('create-project-modal');
+        const createButtons = document.querySelectorAll('.create-project-btn');
+        const closeButton = document.querySelector('.close-modal-btn');
+        const cancelButton = document.querySelector('.cancel-btn');
+        const form = document.getElementById('create-project-form');
+
+        // Open modal when create buttons are clicked
+        createButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                modal.classList.add('active');
+            });
+        });
+
+        // Close modal when close button is clicked
+        closeButton.addEventListener('click', function() {
+            modal.classList.remove('active');
+        });
+
+        // Close modal when cancel button is clicked
+        cancelButton.addEventListener('click', function() {
+            modal.classList.remove('active');
+        });
+
+        // Close modal when clicking outside the modal content
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+
+        // Handle form submission
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Get submit button elements
+            const submitButton = form.querySelector('.create-btn');
+            const buttonText = submitButton.querySelector('.btn-text');
+            const buttonSpinner = submitButton.querySelector('.btn-spinner');
+
+            // Show loading state
+            submitButton.disabled = true;
+            buttonText.style.display = 'none';
+            buttonSpinner.style.display = 'inline-block';
+
+            // Remove any existing error messages
+            const existingError = form.querySelector('.form-error');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            // Get form data and convert to JSON
+            const formData = new FormData(form);
+            const projectData = {
+                project_number: formData.get('project_number'),
+                name: formData.get('name'),
+                description: formData.get('description'),
+                status: formData.get('status'),
+                type: formData.get('type')
+            };
+
+            // Send request to create project using the API
+            fetch('/api/projects', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(projectData),
+                credentials: 'same-origin' // Include cookies
+            })
+            .then(response => {
+                // Always parse JSON first to get any error message
+                return response.json().then(data => {
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Une erreur est survenue');
+                    }
+                    return data;
+                });
+            })
+            .then(data => {
+                if (data.success) {
+                    // Close modal and show success toast
+                    modal.classList.remove('active');
+
+                    // Show success toast
+                    if (window.toast) {
+                        window.toast.success('Projet créé avec succès!');
+                    }
+
+                    // Reload the page to show new project
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    throw new Error(data.message || 'Une erreur est survenue');
+                }
+            })
+            .catch(error => {
+                console.error('Error creating project:', error);
+
+                // Reset button state
+                submitButton.disabled = false;
+                buttonText.style.display = 'inline';
+                buttonSpinner.style.display = 'none';
+
+                // Create error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'form-error';
+                errorDiv.textContent = error.message || 'Une erreur est survenue lors de la création du projet. Veuillez réessayer.';
+
+                // Add the error at the top of the form
+                form.prepend(errorDiv);
+
+                // Show error toast
+                if (window.toast) {
+                    window.toast.error(error.message || 'Une erreur est survenue lors de la création du projet');
+                }
+            });
+        });
+    });
+</script>

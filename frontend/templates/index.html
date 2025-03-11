@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Spacelogic{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Parallax -->
+<section class="parallax-hero">
+    <div class="hero-content">
+        <h1>Bienvenue sur mon super design</h1>
+        <p> Chez SpaceLogic, nous vous aiderons à simplifier
+            vos projets d'architecture. Cette plateforme en
+            ligne est conçue pour accompagner les architectes
+            ainsi que leurs clients afin de faciliter la
+            communication sur les différents aspects du projet.
+            En se basant sur des services existants, nous avons
+            rassemblé les points forts de ces logiciels et
+            corrigé les points à améliorer.</p>
+        <p>Rejoignez notre communauté dès maintenant pour tirer profit de la
+            plateforme qui transformera votre façon de gérer les projets!</p>
+        <button class="cta-button">Get Started</button>
+    </div>
+    <div class="scroll-down">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+        </svg>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+    <div class="features-container">
+        <h2>Ce que nous offrons</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Sécurité</h3>
+                <p>Une plateforme sécurisée pour vos
+                    projets architecturaux</p>
+            </div>
+            <div class="feature-card">
+                <h3>Simplicité</h3>
+                <p>Un environnement simple pour retrouver
+                    facilement les projets par organisation</p>
+            </div>
+            <div class="feature-card">
+                <h3>Historique</h3>
+                <p>Accès à l'historique des changements</p>
+            </div>
+            <div class="feature-card">
+                <h3>Abonnements</h3>
+                <p>Des plans d'abonnement disponibles selon vos besoins</p>
+            </div>
+            <div class="feature-card">
+                <h3>Commentaires</h3>
+                <p>Des espaces pour les commentaires des clients sur
+                    chaque aspect du projet</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Second Parallax Section -->
+<section class="parallax-section">
+    <div class="parallax-bg"></div>
+    <div class="parallax-content">
+        <h2>Pourquoi choisir SpaceLogic?</h2>
+        <p>-Outils pratiques pour optimiser votre travail</p>
+        <p>-Facilitation de la communication avec les clients</p>
+        <button class="cta-button">Learn More</button>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about">
+    <div class="about-container">
+        <h2>About Us</h2>
+        <p> Nous sommes une équipe composée de quatre étudiants au
+            baccalauréat en informatique à l'Université Laval. </p>
+        <p>Nora Belattar <br>
+        Sébastien Gagnon <br>
+        Jessica Leroux <br>
+        Rosalie Tremblay</p>
+        <button class="cta-button">En savoir plus</button>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Additional JavaScript for parallax effects
+    document.addEventListener('DOMContentLoaded', function() {
+        // Smooth scroll for the scroll-down button
+        const scrollDown = document.querySelector('.scroll-down');
+        if (scrollDown) {
+            scrollDown.addEventListener('click', function() {
+                window.scrollTo({
+                    top: window.innerHeight,
+                    behavior: 'smooth'
+                });
+            });
+        }
+
+        // Optional: Add a parallax scroll effect
+        window.addEventListener('scroll', function() {
+            const scrollPosition = window.pageYOffset;
+
+            // Adjust the background position for a subtle parallax effect
+            document.querySelector('.parallax-hero::before').style.backgroundPositionY = scrollPosition * 0.5 + 'px';
+            document.querySelector('.parallax-bg').style.backgroundPositionY = scrollPosition * 0.5 + 'px';
+        });
+    });
+</script>
+{% endblock %}

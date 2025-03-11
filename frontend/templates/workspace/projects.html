@@ -1,0 +1,497 @@
+{% extends "workspace/base.html" %}
+
+{% block title %}Mes projets - Spacelogic{% endblock %}
+
+{% block workspace_context %}
+<div class="workspace-actions">
+    <button class="btn btn-primary create-project-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nouveau projet
+    </button>
+</div>
+{% endblock %}
+
+{% block workspace_content %}
+<div class="projects-container">
+    <div class="projects-header">
+        <h1>Mes projets</h1>
+        <div class="projects-filters">
+            <div class="search-container">
+                <input type="text" placeholder="Rechercher un projet..." class="search-input">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </div>
+            <div class="filter-dropdown">
+                <button class="filter-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    Filtrer
+                </button>
+            </div>
+            <div class="sort-dropdown">
+                <button class="sort-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <polyline points="19 12 12 19 5 12"></polyline>
+                    </svg>
+                    Trier
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% if projects %}
+    <div class="projects-grid">
+        {% for project in projects %}
+        <div class="project-card">
+            <div class="project-card-header">
+                <p class="project-number">No. {{ project.project_number }}</p>
+                <div class="project-actions">
+                    <button class="project-action-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="19" cy="12" r="1"></circle>
+                            <circle cx="5" cy="12" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="project-card-content">
+                <div class="project-image-container">
+                    <img src="/static/images/project-placeholder.png" alt="Project Image" class="project-image">
+                </div>
+                <h3 class="project-title">Projet {{ project.project_number }}</h3>
+                <p class="project-description">{{ project.description }}</p>
+            </div>
+            <div class="project-card-footer">
+                <div class="project-name">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <span>{{ project.nom }}</span>
+                </div>
+                <span class="project-status {{ project.status|lower }}">{{ project.status }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </div>
+        <h2>Aucun projet</h2>
+        <p>Vous n'avez pas encore créé ou rejoint de projet.</p>
+        <button class="btn btn-primary create-project-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Créer un nouveau projet
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+{% include "workspace/project_modal.html" %}
+{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    /* Projects Styles */
+    .projects-container {
+        width: 100%;
+    }
+
+    .projects-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .projects-header h1 {
+        font-size: 1.8rem;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .projects-filters {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .workspace-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .create-project-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 15px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .create-project-btn:hover {
+        background-color: #2980b9;
+    }
+
+    .search-container {
+        position: relative;
+    }
+
+    .search-input {
+        padding: 8px 15px 8px 35px;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        width: 250px;
+        font-size: 0.9rem;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a0aec0;
+    }
+
+    .filter-btn, .sort-btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        background-color: white;
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: #4a5568;
+        transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover, .sort-btn:hover {
+        background-color: #f7fafc;
+    }
+
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .project-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        max-width: 200px;
+        max-height: 200px;
+    }
+
+    .project-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .project-card-header {
+        padding: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .project-status {
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .project-status.active {
+        background-color: #d1f9d1;
+        color: #237923;
+    }
+
+    .project-status.pending {
+        background-color: #fff2cc;
+        color: #856404;
+    }
+
+    .project-status.completed {
+        background-color: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .project-number {
+        font-size: 0.7rem;
+        color: #718096;
+        margin: 0;
+    }
+
+    .project-action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #a0aec0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3px;
+        border-radius: 50%;
+        transition: background-color 0.2s ease;
+    }
+
+    .project-action-btn:hover {
+        background-color: #f7fafc;
+        color: #4a5568;
+    }
+
+    .project-card-content {
+        padding: 10px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .project-image-container {
+        margin-bottom: 10px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .project-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+
+    .project-title {
+        margin: 0 0 5px 0;
+        font-size: 0.9rem;
+        color: #2d3748;
+        width: 100%;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .project-description {
+        color: #4a5568;
+        font-size: 0.8rem;
+        margin: 0;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        width: 100%;
+        text-align: left;
+    }
+
+    .project-card-footer {
+        padding: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+    }
+
+    .project-name {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        color: #2d3748;
+        font-size: 0.7rem;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 70%;
+    }
+
+    .project-type {
+        padding: 2px 6px;
+        background-color: #edf2f7;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        color: #4a5568;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background-color: #f8fafc;
+        border-radius: 8px;
+        border: 1px dashed #e2e8f0;
+    }
+
+    .empty-icon {
+        margin-bottom: 20px;
+        color: #a0aec0;
+    }
+
+    .empty-state h2 {
+        margin: 0 0 10px 0;
+        color: #2d3748;
+        font-size: 1.5rem;
+    }
+
+    .empty-state p {
+        margin: 0 0 25px 0;
+        color: #718096;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        overflow: auto;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 600px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        margin: 30px;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #2d3748;
+    }
+
+    .close-modal-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #a0aec0;
+        padding: 5px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .close-modal-btn:hover {
+        background-color: #f7fafc;
+        color: #4a5568;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #4a5568;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        font-size: 0.95rem;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 25px;
+    }
+
+    .btn-secondary {
+        background-color: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+        background-color: #cbd5e0;
+    }
+
+    @media (max-width: 768px) {
+        .projects-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .projects-filters {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .search-input {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}

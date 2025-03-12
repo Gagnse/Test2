@@ -199,7 +199,6 @@ class User:
 
         return organization_id
 
-
 class Project:
     def __init__(self, id=None, project_number=None, name=None, description=None,
                  start_date=None, end_date=None, status=None, type=None, organization_id=None):

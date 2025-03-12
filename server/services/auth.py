@@ -9,11 +9,20 @@ from server.database.models import User
 
 class AuthService:
     @staticmethod
-    def register_user(last_name, first_name, email, password):
+    def register_user(nom=None, prenom=None, last_name=None, first_name=None, email=None, password=None):
         """
         Register a new user
         Returns (success, message)
+
+
         """
+        # Use either the English or French parameter names
+        last_name = last_name or nom
+        first_name = first_name or prenom
+
+        if not all([last_name, first_name, email, password]):
+            return False, "Tous les champs sont obligatoires."
+
         # Check if user already exists
         existing_user = User.find_by_email(email)
         if existing_user:
@@ -43,7 +52,7 @@ class AuthService:
         if not user:
             return False, "Email ou mot de passe incorrect.", None
 
-        if not user.is_active:
+        if hasattr(user, 'is_active') and not user.is_active:
             return False, "Ce compte a été désactivé.", None
 
         if User.check_password(user.password, password):

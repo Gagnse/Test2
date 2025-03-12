@@ -4,7 +4,8 @@ from server.database.db_config import get_db_connection, close_connection
 
 
 class User:
-    def __init__(self, id=None, first_name=None, last_name=None, email=None, password=None, created_at=None, is_active=True):
+    def __init__(self, id=None, first_name=None, last_name=None, email=None, password=None, created_at=None,
+                 is_active=True, organization_id=None):
         self.id = id
         self.first_name = first_name
         self.last_name = last_name
@@ -12,6 +13,7 @@ class User:
         self.password = password
         self.created_at = created_at
         self.is_active = is_active
+        self.organization_id = organization_id
 
     @staticmethod
     def hash_password(password):
@@ -33,7 +35,12 @@ class User:
 
         try:
             cursor = connection.cursor(dictionary=True)
-            query = "SELECT BIN_TO_UUID(id) as id, first_name, last_name, email, password, created_at, is_active FROM users WHERE email = %s"
+            query = """
+                SELECT BIN_TO_UUID(id) as id, first_name, last_name, 
+                email, password, created_at, is_active, 
+                BIN_TO_UUID(organization_id) as organization_id 
+                FROM users WHERE email = %s
+            """
             cursor.execute(query, (email,))
             result = cursor.fetchone()
 
@@ -45,7 +52,8 @@ class User:
                     email=result['email'],
                     password=result['password'],
                     created_at=result['created_at'],
-                    is_active=result['is_active']
+                    is_active=result['is_active'],
+                    organization_id=result['organization_id']
                 )
         except Exception as e:
             print(f"Error finding user by email: {e}")
@@ -63,7 +71,12 @@ class User:
 
         try:
             cursor = connection.cursor(dictionary=True)
-            query = "SELECT BIN_TO_UUID(id) as id, first_name, last_name, email, password, created_at, is_active FROM users WHERE id = UUID_TO_BIN(%s)"
+            query = """
+                SELECT BIN_TO_UUID(id) as id, first_name, last_name, 
+                email, password, created_at, is_active, 
+                BIN_TO_UUID(organization_id) as organization_id 
+                FROM users WHERE id = UUID_TO_BIN(%s)
+            """
             cursor.execute(query, (user_id,))
             result = cursor.fetchone()
 
@@ -75,7 +88,8 @@ class User:
                     email=result['email'],
                     password=result['password'],
                     created_at=result['created_at'],
-                    is_active=result['is_active']
+                    is_active=result['is_active'],
+                    organization_id=result['organization_id']
                 )
         except Exception as e:
             print(f"Error finding user by ID: {e}")
@@ -92,26 +106,74 @@ class User:
         try:
             cursor = connection.cursor()
 
+            # Get an organization to associate with the user
+            # For simplicity, we'll use the first organization in the database
+            org_id = None
+            try:
+                cursor.execute("SELECT BIN_TO_UUID(id) FROM organizations LIMIT 1")
+                org_result = cursor.fetchone()
+                if org_result:
+                    org_id = org_result[0]
+            except Exception as e:
+                print(f"Error getting default organization: {e}")
+
+            if not org_id:
+                print("No organization found for user. Creating a default one.")
+                # Create a default organization if none exists
+                cursor.execute("INSERT INTO organizations (name) VALUES ('Default Organization')")
+                connection.commit()
+                cursor.execute("SELECT BIN_TO_UUID(id) FROM organizations WHERE name = 'Default Organization'")
+                org_result = cursor.fetchone()
+                if org_result:
+                    org_id = org_result[0]
+
             # Hash the password if it's not already hashed
             if not self.password.startswith('$2b$'):
                 self.password = self.hash_password(self.password)
 
             # Use MySQL's UUID_TO_BIN function to convert UUID to binary
-            query = """
-                INSERT INTO users (first_name, last_name, email, password)
-                VALUES (%s, %s, %s, %s)
-            """
-            values = (self.first_name, self.last_name, self.email, self.password)
+            if self.id:  # Update existing user
+                query = """
+                    UPDATE users 
+                    SET first_name = %s, last_name = %s, email = %s, password = %s
+                    WHERE id = UUID_TO_BIN(%s)
+                """
+                values = (self.first_name, self.last_name, self.email, self.password, self.id)
+            else:  # Create new user
+                query = """
+                    INSERT INTO users (first_name, last_name, email, password, organization_id)
+                    VALUES (%s, %s, %s, %s, UUID_TO_BIN(%s))
+                """
+                values = (self.first_name, self.last_name, self.email, self.password, org_id)
 
             cursor.execute(query, values)
             connection.commit()
 
-            # Get the auto-generated ID
-            self.id = cursor.lastrowid
+            # Get the auto-generated ID for new user
+            if not self.id:
+                cursor.execute("SELECT BIN_TO_UUID(id) FROM users WHERE email = %s", (self.email,))
+                result = cursor.fetchone()
+                if result:
+                    self.id = result[0]
+
+                    # Add user to the organization
+                    if org_id:
+                        try:
+                            cursor.execute(
+                                "INSERT INTO organization_user (organizations_id, users_id) VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s))",
+                                (org_id, self.id)
+                            )
+                            connection.commit()
+                        except Exception as e:
+                            print(f"Error adding user to organization: {e}")
+
             return True
         except Exception as e:
-            connection.rollback()
+            if connection:
+                connection.rollback()
             print(f"Error saving user: {e}")
+            import traceback
+            traceback.print_exc()
             return False
         finally:
             close_connection(connection, cursor)
@@ -160,8 +222,11 @@ class Project:
 
         try:
             cursor = connection.cursor(dictionary=True)
-            query = "SELECT BIN_TO_UUID(id) as id, project_number, name, description, " \
-                    "start_date, end_date, status, type FROM projects WHERE id = UUID_TO_BIN(%s)"
+            query = """
+                SELECT BIN_TO_UUID(id) as id, project_number, name, description, 
+                start_date, end_date, status, type, BIN_TO_UUID(organization_id) as organization_id 
+                FROM projects WHERE id = UUID_TO_BIN(%s)
+            """
             cursor.execute(query, (project_id,))
             result = cursor.fetchone()
 
@@ -174,7 +239,8 @@ class Project:
                     start_date=result['start_date'],
                     end_date=result['end_date'],
                     status=result['status'],
-                    type=result['type']
+                    type=result['type'],
+                    organization_id=result['organization_id']
                 )
         except Exception as e:
             print(f"Error finding project by ID: {e}")
@@ -196,7 +262,7 @@ class Project:
 
             query = """
                 SELECT BIN_TO_UUID(p.id) as id, p.project_number, p.name, p.description, 
-                p.start_date, p.end_date, p.status, p.type
+                p.start_date, p.end_date, p.status, p.type, BIN_TO_UUID(p.organization_id) as organization_id
                 FROM projects p
                 JOIN project_users pu ON p.id = pu.project_id
                 WHERE pu.user_id = UUID_TO_BIN(%s)
@@ -214,7 +280,8 @@ class Project:
                     start_date=result['start_date'],
                     end_date=result['end_date'],
                     status=result['status'],
-                    type=result['type']
+                    type=result['type'],
+                    organization_id=result['organization_id']
                 )
                 projects.append(project)
         except Exception as e:
@@ -263,13 +330,14 @@ class Project:
             if self.id:  # Update existing project
                 query = """
                     UPDATE projects
-                    SET project_number = %s, name = %s, description = %s, start_date = %s, 
-                    end_date = %s, status = %s, type = %s, organization_id = NULLIF(UUID_TO_BIN(%s), UUID_TO_BIN(NULL))
+                    SET project_number = %s, name = %s, description = %s,
+                    status = %s, type = %s,
+                    organization_id = NULLIF(UUID_TO_BIN(%s), UUID_TO_BIN(NULL))
                     WHERE id = UUID_TO_BIN(%s)
                 """
                 values = (
                     self.project_number, self.name, self.description,
-                    self.start_date, self.end_date, self.status, self.type, self.organization_id, self.id
+                    self.status, self.type, self.organization_id, self.id
                 )
             else:  # Create new project
                 query = """

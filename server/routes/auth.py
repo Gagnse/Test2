@@ -10,7 +10,7 @@ def auth_page():
     """Render the authentication widget page"""
     # If already logged in, redirect to workspace
     if AuthService.is_authenticated():
-        return redirect(url_for('workspace.dashboard'))
+        return redirect(url_for('workspace.projects'))
     return render_template('auth/auth_widget.html')
 
 
@@ -21,7 +21,7 @@ def signup():
     if request.method == 'GET':
         # If already logged in, redirect to workspace
         if AuthService.is_authenticated():
-            return redirect(url_for('workspace.dashboard'))
+            return redirect(url_for('workspace.projects'))
         return render_template('auth/signup.html')
 
     # POST request: process signup form
@@ -41,8 +41,13 @@ def signup():
         flash('Les mots de passe ne correspondent pas.', 'error')
         return redirect(url_for('auth.signup'))
 
-    # Register user
-    success, message = AuthService.register_user(last_name, first_name, email, password)
+    # Register user - now using last_name/first_name parameters to match AuthService
+    success, message = AuthService.register_user(
+        last_name=last_name,
+        first_name=first_name,
+        email=email,
+        password=password
+    )
 
     if success:
         flash(message, 'success')

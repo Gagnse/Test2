@@ -40,10 +40,10 @@ def api_signup():
         return jsonify({'success': False, 'message': 'Missing required fields'}), 400
 
     success, message = AuthService.register_user(
-        data['last_name'],
-        data['first_name'],
-        data['email'],
-        data['password']
+        last_name=data['last_name'],
+        first_name=data['first_name'],
+        email=data['email'],
+        password=data['password']
     )
 
     if success:
@@ -89,16 +89,24 @@ def api_get_projects():
 
     projects = []
     for project in user_projects:
-        projects.append({
+        project_data = {
             'id': project.id,
             'name': project.name,
             'project_number': project.project_number,
             'description': project.description,
-            'started_at': project.started_at.isoformat() if project.started_at else None,
-            'ended_at': project.ended_at.isoformat() if project.ended_at else None,
-            'status': project.status,
-            'type': project.type
-        })
+        }
+
+        # Add optional fields if they exist
+        if hasattr(project, 'start_date') and project.start_date:
+            project_data['start_date'] = project.start_date.isoformat()
+        if hasattr(project, 'end_date') and project.end_date:
+            project_data['end_date'] = project.end_date.isoformat()
+        if hasattr(project, 'status'):
+            project_data['status'] = project.status
+        if hasattr(project, 'type'):
+            project_data['type'] = project.type
+
+        projects.append(project_data)
 
     return jsonify({'success': True, 'projects': projects})
 
@@ -116,10 +124,7 @@ def api_create_project():
 
     user_id = AuthService.get_current_user_id()
 
-    # Get the user's organization ID using a method from the User class
-    from server.database.models import User
-
-    # This would be a new method you'd add to the User class
+    # Get the user's organization ID
     organization_id = User.get_user_org_id(user_id)
 
     try:
@@ -129,11 +134,13 @@ def api_create_project():
             description=data.get('description', ''),
             status=data.get('status', 'Actif'),
             type=data.get('type', 'Divers'),
-            organization_id=organization_id  # Set the organization ID here
+            organization_id=organization_id
         )
 
         if project.save():
+            # Add the user to the project
             project.add_user(user_id)
+
             return jsonify({
                 'success': True,
                 'message': 'Projet créé avec succès',
@@ -175,11 +182,17 @@ def api_get_project(project_id):
         'name': project.name,
         'project_number': project.project_number,
         'description': project.description,
-        'started_at': project.started_at.isoformat() if project.started_at else None,
-        'ended_at': project.ended_at.isoformat() if project.ended_at else None,
-        'status': project.status,
-        'type': project.type
     }
+
+    # Add optional fields if they exist
+    if hasattr(project, 'start_date') and project.start_date:
+        project_data['start_date'] = project.start_date.isoformat()
+    if hasattr(project, 'end_date') and project.end_date:
+        project_data['end_date'] = project.end_date.isoformat()
+    if hasattr(project, 'status'):
+        project_data['status'] = project.status
+    if hasattr(project, 'type'):
+        project_data['type'] = project.type
 
     return jsonify({'success': True, 'project': project_data})
 
@@ -233,7 +246,7 @@ def api_get_organisations():
         return jsonify({'success': False, 'message': 'Authentication required'}), 401
 
     user_id = AuthService.get_current_user_id()
-    user_organisations = Organisation.find_by_user(user_id)
+    user_organisations = Organizations.find_by_user(user_id)
 
     organisations = []
     for org in user_organisations:
@@ -251,3 +264,89 @@ def api_get_organisations():
         })
 
     return jsonify({'success': True, 'organisations': organisations})
+
+
+@api_bp.route('/organisations/<org_id>', methods=['GET'])
+def api_get_organisation(org_id):
+    """Get a specific organisation by ID"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    org = Organizations.find_by_id(org_id)
+
+    if not org:
+        return jsonify({'success': False, 'message': 'Organisation non trouvée'}), 404
+
+    # Get members and projects if these methods exist
+    members = []
+    if hasattr(org, 'get_users'):
+        user_list = org.get_users()
+        for user in user_list:
+            members.append({
+                'id': user.id,
+                'name': f"{user.first_name} {user.last_name}",
+                'email': user.email,
+                'is_admin': user.id == org.super_admin_id
+            })
+
+    projects = []
+    if hasattr(org, 'get_projects'):
+        project_list = org.get_projects()
+        for project in project_list:
+            projects.append({
+                'id': project.id,
+                'name': project.name,
+                'project_number': project.project_number,
+                'status': project.status if hasattr(project, 'status') else 'Unknown'
+            })
+
+    roles = []
+    if hasattr(org, 'get_roles'):
+        roles = org.get_roles()
+
+    organisation_data = {
+        'id': org.id,
+        'name': org.name,
+        'created_at': org.created_at.isoformat() if org.created_at else None,
+        'super_admin_id': org.super_admin_id,
+        'members': members,
+        'projects': projects,
+        'roles': roles
+    }
+
+    return jsonify({'success': True, 'organisation': organisation_data})
+
+
+@api_bp.route('/organisations', methods=['POST'])
+def api_create_organisation():
+    """Create a new organisation"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    data = request.get_json()
+
+    if not data or 'name' not in data:
+        return jsonify({'success': False, 'message': 'Le nom de l\'organisation est requis'}), 400
+
+    user_id = AuthService.get_current_user_id()
+
+    org = Organizations(
+        name=data['name'],
+        super_admin_id=user_id
+    )
+
+    if org.save():
+        # Add the user to the organization
+        if hasattr(org, 'add_user'):
+            org.add_user(user_id)
+
+        return jsonify({
+            'success': True,
+            'message': 'Organisation créée avec succès',
+            'organisation': {
+                'id': org.id,
+                'name': org.name
+            }
+        }), 201
+    else:
+        return jsonify({'success': False, 'message': 'Erreur lors de la création de l\'organisation'}), 500

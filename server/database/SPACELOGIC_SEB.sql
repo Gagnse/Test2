@@ -219,3 +219,6 @@ VALUES (@org_id, @user_id_Seb),
        (@org_id, @user_id_1),
        (@org_id, @user_id_2);
 
+-- Insert projects and create their databases
+INSERT INTO projects (organization_id, project_number, name, description)
+VALUES (@org_id, 'GLO-2005', 'DÉMO', 'Ceci est un projet test');

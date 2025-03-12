@@ -56,44 +56,38 @@ def new_project():
         project_number = request.form.get('project_number')
         name = request.form.get('name')
         description = request.form.get('description')
-        organization_id = request.form.get('organization_id')
+        project_type = request.form.get('type', 'Divers')
+        status = request.form.get('status', 'Actif')
+
+        # Get the user's organization ID
+        organization_id = User.get_user_org_id(user_id)
 
         print(f"Debug: Data received for project creation: {request.form}")
 
-        # Create new project
+        # Sanitize project number for database name
+        sanitized_number = ''.join(c for c in project_number if c.isalnum() or c in '-_')
+
+        # Create new project with organization
         project = Project(
-            project_number=project_number,
+            project_number=sanitized_number,
             name=name,
-            description=description
+            description=description,
+            status=status,
+            type=project_type,
+            organization_id=organization_id
         )
 
         # Save the project and add the current user to it
         if project.save():
             project.add_user(user_id)
 
-            # If an organization was selected, associate the project with it
-            if organization_id:
-                # You would need to add a method to associate a project with an org
-                # This is just a placeholder for the logic
-                # e.g., project.set_organisation(organisation_id)
-                pass
+            # Get the database name for the toast message
+            db_name = f"SPACELOGIC_{sanitized_number.replace('-', '_')}"
 
-            set_toast('Projet créé avec succès!', 'success')
+            set_toast(f'Projet créé avec succès! Base de données: {db_name}', 'success')
             return redirect(url_for('workspace.projects'))
         else:
             set_toast('Erreur lors de la création du projet.', 'error')
-
-    # Get organizations for this user
-    user_organizations = Organizations.find_by_user(user_id)
-    organizations = []
-    for org in user_organizations:
-        organizations.append({
-            'id': org.id,
-            'name': org.name
-        })
-
-    return render_template('workspace/new_project.html', organizations=organizations)
-
 
 @workspace_bp.route('/projects/<project_id>')
 def project_detail(project_id):

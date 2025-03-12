@@ -222,6 +222,17 @@
                     if (window.toast) {
                         window.toast.error(error.message || 'Une erreur est survenue lors de la création du projet');
                     }
+
+                    // Show success toast with database info
+                    if (window.toast) {
+                        const dbName = data.project.database_name || `SPACELOGIC_${projectData.project_number.replace('-', '_')}`;
+                        window.toast.success(`Projet créé avec succès! Base de données: ${dbName}`);
+                    }
+
+                    // Reload the page to show new project
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
                 });
             });
         }

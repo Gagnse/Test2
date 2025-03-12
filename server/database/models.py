@@ -364,6 +364,17 @@ class Project:
                 if result:
                     self.id = result[0]
 
+                    # Create project database by calling stored procedure
+                    try:
+                        # Create database name based on project number
+                        db_name = f"SPACELOGIC_{self.project_number.replace('-', '_')}"
+                        cursor.execute("CALL create_project_database(UUID_TO_BIN(%s), %s)", (self.id, db_name))
+                        connection.commit()
+                        print(f"Project database '{db_name}' created successfully")
+                    except Exception as e:
+                        print(f"Error creating project database: {e}")
+
+
             return True
         except Exception as e:
             connection.rollback()

@@ -127,9 +127,15 @@ def api_create_project():
     # Get the user's organization ID
     organization_id = User.get_user_org_id(user_id)
 
+    if not organization_id:
+        return jsonify({'success': False, 'message': 'User is not associated with any organization'}), 400
+
     try:
+        # Sanitize project number (remove spaces, special characters) for database name
+        sanitized_number = ''.join(c for c in data['project_number'] if c.isalnum() or c in '-_')
+
         project = Project(
-            project_number=data['project_number'],
+            project_number=sanitized_number,
             name=data['name'],
             description=data.get('description', ''),
             status=data.get('status', 'Actif'),
@@ -148,7 +154,8 @@ def api_create_project():
                     'id': project.id,
                     'name': project.name,
                     'project_number': project.project_number,
-                    'organization_id': organization_id
+                    'organization_id': organization_id,
+                    'database_name': f"SPACELOGIC_{sanitized_number.replace('-', '_')}"
                 }
             }), 201
         else:

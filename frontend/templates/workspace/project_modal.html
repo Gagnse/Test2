@@ -57,7 +57,7 @@
                 </div>
                 <div class="form-group">
                     <label for="project-name">Nom du projet</label>
-                    <input type="text" id="project-name" name="nom" required placeholder="ex: Projet SpaceLogic">
+                    <input type="text" id="project-name" name="name" required placeholder="ex: Projet SpaceLogic">
                 </div>
                 <div class="form-group">
                     <label for="project-description">Description</label>
@@ -76,9 +76,9 @@
                 <div class="form-group">
                     <label for="project-status">Statut</label>
                     <select id="project-status" name="status">
-                        <option value="Actif">Actif</option>
-                        <option value="En attente">En attente</option>
-                        <option value="Terminé">Terminé</option>
+                        <option value="active">Actif</option>
+                        <option value="pending">En attente</option>
+                        <option value="completed">Terminé</option>
                     </select>
                 </div>
                 <div class="form-actions">
@@ -115,14 +115,18 @@
         });
 
         // Close modal when close button is clicked
-        closeButton.addEventListener('click', function() {
-            modal.classList.remove('active');
-        });
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                modal.classList.remove('active');
+            });
+        }
 
         // Close modal when cancel button is clicked
-        cancelButton.addEventListener('click', function() {
-            modal.classList.remove('active');
-        });
+        if (cancelButton) {
+            cancelButton.addEventListener('click', function() {
+                modal.classList.remove('active');
+            });
+        }
 
         // Close modal when clicking outside the modal content
         window.addEventListener('click', function(event) {
@@ -132,92 +136,93 @@
         });
 
         // Handle form submission
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
 
-            // Get submit button elements
-            const submitButton = form.querySelector('.create-btn');
-            const buttonText = submitButton.querySelector('.btn-text');
-            const buttonSpinner = submitButton.querySelector('.btn-spinner');
+                // Get submit button elements
+                const submitButton = form.querySelector('.create-btn');
+                const buttonText = submitButton.querySelector('.btn-text');
+                const buttonSpinner = submitButton.querySelector('.btn-spinner');
 
-            // Show loading state
-            submitButton.disabled = true;
-            buttonText.style.display = 'none';
-            buttonSpinner.style.display = 'inline-block';
+                // Show loading state
+                submitButton.disabled = true;
+                buttonText.style.display = 'none';
+                buttonSpinner.style.display = 'inline-block';
 
-            // Remove any existing error messages
-            const existingError = form.querySelector('.form-error');
-            if (existingError) {
-                existingError.remove();
-            }
+                // Remove any existing error messages
+                const existingError = form.querySelector('.form-error');
+                if (existingError) {
+                    existingError.remove();
+                }
 
-            // Get form data and convert to JSON
-            const formData = new FormData(form);
-            const projectData = {
-                project_number: formData.get('project_number'),
-                name: formData.get('name'),
-                description: formData.get('description'),
-                status: formData.get('status'),
-                type: formData.get('type')
-            };
+                // Get form data and convert to JSON
+                const formData = new FormData(form);
+                const projectData = {
+                    project_number: formData.get('project_number'),
+                    name: formData.get('name'),
+                    description: formData.get('description'),
+                    status: formData.get('status'),
+                    type: formData.get('type')
+                };
 
-            // Send request to create project using the API
-            fetch('/api/projects', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(projectData),
-                credentials: 'same-origin' // Include cookies
-            })
-            .then(response => {
-                // Always parse JSON first to get any error message
-                return response.json().then(data => {
-                    if (!response.ok) {
+                // Send request to create project using the API
+                fetch('/api/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(projectData),
+                    credentials: 'same-origin' // Include cookies
+                })
+                .then(response => {
+                    // Always parse JSON first to get any error message
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            throw new Error(data.message || 'Une erreur est survenue');
+                        }
+                        return data;
+                    });
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Close modal and show success toast
+                        modal.classList.remove('active');
+
+                        // Show success toast
+                        if (window.toast) {
+                            window.toast.success('Projet créé avec succès!');
+                        }
+
+                        // Reload the page to show new project
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    } else {
                         throw new Error(data.message || 'Une erreur est survenue');
                     }
-                    return data;
-                });
-            })
-            .then(data => {
-                if (data.success) {
-                    // Close modal and show success toast
-                    modal.classList.remove('active');
+                })
+                .catch(error => {
+                    console.error('Error creating project:', error);
 
-                    // Show success toast
+                    // Reset button state
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'inline';
+                    buttonSpinner.style.display = 'none';
+
+                    // Create error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error';
+                    errorDiv.textContent = error.message || 'Une erreur est survenue lors de la création du projet. Veuillez réessayer.';
+
+                    // Add the error at the top of the form
+                    form.prepend(errorDiv);
+
+                    // Show error toast
                     if (window.toast) {
-                        window.toast.success('Projet créé avec succès!');
+                        window.toast.error(error.message || 'Une erreur est survenue lors de la création du projet');
                     }
-
-                    // Reload the page to show new project
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
-                } else {
-                    throw new Error(data.message || 'Une erreur est survenue');
-                }
-            })
-            .catch(error => {
-                console.error('Error creating project:', error);
-
-                // Reset button state
-                submitButton.disabled = false;
-                buttonText.style.display = 'inline';
-                buttonSpinner.style.display = 'none';
-
-                // Create error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'form-error';
-                errorDiv.textContent = error.message || 'Une erreur est survenue lors de la création du projet. Veuillez réessayer.';
-
-                // Add the error at the top of the form
-                form.prepend(errorDiv);
-
-                // Show error toast
-                if (window.toast) {
-                    window.toast.error(error.message || 'Une erreur est survenue lors de la création du projet');
-                }
+                });
             });
-        });
+        }
     });
-</script>

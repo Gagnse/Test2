@@ -1,15 +1,15 @@
 {% extends "workspace/base.html" %}
 
-{% block title %}{{ organisation.nom }} - Spacelogic{% endblock %}
+{% block title %}{{ organisation.name }} - Spacelogic{% endblock %}
 
 {% block workspace_content %}
 <div class="organisation-container">
     <div class="organisation-header">
         <div class="organisation-title">
             <div class="org-avatar">
-                {{ organisation.nom[0] | upper }}
+                {{ organisation.name[0] | upper }}
             </div>
-            <h1>{{ organisation.nom }}</h1>
+            <h1>{{ organisation.name }}</h1>
         </div>
     </div>
 
@@ -50,8 +50,8 @@
                     <tbody>
                         {% for member in organisation.members %}
                         <tr>
-                            <td>{{ member.nom }}</td>
-                            <td>{{ member.prenom }}</td>
+                            <td>{{ member.last_name }}</td>
+                            <td>{{ member.first_name }}</td>
                             <td>{{ member.email }}</td>
                             <td>
                                 <span class="role-badge">{{ member.role|default('Membre') }}</span>
@@ -139,7 +139,7 @@
                         <div class="project-image-container">
                             <img src="/static/images/project-placeholder.png" alt="Project Image" class="project-image">
                         </div>
-                        <h3 class="project-title">{{ project.nom }}</h3>
+                        <h3 class="project-title">{{ project.name }}</h3>
                         <p class="project-description">{{ project.description }}</p>
                     </div>
                     <div class="project-card-footer">
@@ -193,7 +193,7 @@
                 {% for role in organisation.roles %}
                 <div class="role-card">
                     <div class="role-header">
-                        <h3>{{ role.nom }}</h3>
+                        <h3>{{ role.name }}</h3>
                         <div class="role-actions">
                             <button class="role-action-btn edit-role" data-id="{{ role.id }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -782,6 +782,7 @@
         const editRoleBtns = document.querySelectorAll('.edit-role');
         const deleteRoleBtns = document.querySelectorAll('.delete-role');
         const assignRoleBtns = document.querySelectorAll('.assign-role-btn');
+        const createProjectBtn = document.querySelectorAll('.create-project-btn');
 
         // Add event listeners for member functions
         addMemberBtn.forEach(btn => {
@@ -833,6 +834,18 @@
             btn.addEventListener('click', function() {
                 const roleId = this.getAttribute('data-id');
                 alert(`Fonctionnalité en développement: Assigner le rôle ${roleId}`);
+            });
+        });
+
+        // Add event listener for create project button
+        createProjectBtn.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Redirect to project creation page or trigger a modal
+                if (document.getElementById('create-project-modal')) {
+                    document.getElementById('create-project-modal').classList.add('active');
+                } else {
+                    window.location.href = "/workspace/projects/new";
+                }
             });
         });
     });

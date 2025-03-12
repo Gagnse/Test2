@@ -1,8 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from server.services.auth import AuthService
 from server.utils.toast_helper import redirect_with_toast, set_toast
-from server.database.models import Project
-from server.database.models import Organizations
+from server.database.models import Project, Organizations
 
 workspace_bp = Blueprint('workspace', __name__)
 
@@ -39,7 +38,7 @@ def projects():
             'project_number': project.project_number,
             'description': project.description,
             'start_date': project.start_date,
-            'status': project.status or 'Unknown',
+            'status': project.status or 'active',
             'type': project.type or 'N/A'
         })
 
@@ -57,9 +56,9 @@ def new_project():
         project_number = request.form.get('project_number')
         name = request.form.get('name')
         description = request.form.get('description')
-        organisation_id = request.form.get('organisation_id')
+        organization_id = request.form.get('organization_id')
 
-        print(f"Debug: Données reçues pour la création du projet: {data}")
+        print(f"Debug: Data received for project creation: {request.form}")
 
         # Create new project
         project = Project(
@@ -73,7 +72,7 @@ def new_project():
             project.add_user(user_id)
 
             # If an organization was selected, associate the project with it
-            if organisation_id:
+            if organization_id:
                 # You would need to add a method to associate a project with an org
                 # This is just a placeholder for the logic
                 # e.g., project.set_organisation(organisation_id)
@@ -112,7 +111,7 @@ def project_detail(project_id):
         'project_number': project_obj.project_number,
         'description': project_obj.description,
         'start_date': project_obj.start_date,
-        'status': project_obj.status or 'Unknown',
+        'status': project_obj.status or 'active',
         'type': project_obj.type or 'N/A'
     }
 
@@ -126,7 +125,7 @@ def organisations():
     print(f"Current user ID: {user_id}")
 
     # Get the first organization for this user
-    # Since a user belongs to only one organization
+    # Since a user belongs to only one organization according to schema
     user_organizations = Organizations.find_by_user(user_id)
 
     if not user_organizations:
@@ -147,7 +146,7 @@ def organisations():
     if not users:
         # If no users were returned, there may be an issue with the relationship
         # At the very least, add the current user
-        current_user = Users.find_by_id(user_id)
+        current_user = User.find_by_id(user_id)
         if current_user:
             print(f"Adding current user {current_user.first_name} {current_user.last_name} to members list")
             members_list.append({
@@ -164,7 +163,7 @@ def organisations():
         for member in users:
             # Get the roles for this member in this organization
             roles = org.get_user_roles(member.id) if hasattr(org, 'get_user_roles') else []
-            role_name = roles[0]['nom'] if roles else 'Membre'
+            role_name = roles[0]['name'] if roles else 'Membre'
 
             members_list.append({
                 'id': member.id,
@@ -189,7 +188,7 @@ def organisations():
             'description': proj.description,
             'start_date': proj.start_date,
             'end_date': proj.end_date,
-            'status': proj.status or 'Actif',
+            'status': proj.status or 'active',
             'type': proj.type or 'Divers'
         })
 
@@ -198,7 +197,7 @@ def organisations():
     print(f"Retrieved {len(roles_list)} roles")
 
     # Create the organization data structure
-    organization = {
+    organisation = {
         'id': org.id,
         'name': org.name,
         'created_at': org.created_at,
@@ -214,7 +213,7 @@ def organisations():
 @workspace_bp.route('/organisations/<org_id>')
 def organisation_detail(org_id):
     """Organization detail page"""
-    # Get the organization details using the Organisation model
+    # Get the organization details using the Organization model
     org = Organizations.find_by_id(org_id)
 
     if not org:

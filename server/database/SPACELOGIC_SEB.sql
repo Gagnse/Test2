@@ -65,7 +65,7 @@ CREATE TABLE projects (
 
 #-----------------------------RELATIONS-----------------------------
 
--- User-organization relationship (similar to organisation_user in old schema)
+-- User-organization relationship
 CREATE TABLE organization_user (
     organizations_id BINARY(16) NOT NULL,
     users_id BINARY(16) NOT NULL,
@@ -93,7 +93,7 @@ CREATE TABLE user_organisation_role (
     FOREIGN KEY (role_id) REFERENCES organization_roles(id) ON DELETE CASCADE
 );
 
--- Project user assignment (similar to project_user in old schema)
+-- Project user assignment
 CREATE TABLE project_users (
     project_id BINARY(16) NOT NULL,
     user_id BINARY(16) NOT NULL,

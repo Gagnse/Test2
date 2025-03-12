@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Test script for the Organisation class.
-This script tests various operations of the Organisation class using a single test user.
+Test script for the Organization class.
+This script tests various operations of the Organization class using a single test user.
 """
 
 import sys
 import uuid
 import datetime
 import pytest
-from server.database.models import *
+from server.database.models import User, Organizations
 from server.database.db_config import get_db_connection, close_connection
 
 
@@ -38,16 +38,16 @@ def test_user(request):
         cursor = connection.cursor()
 
         # Create a temporary organization with NULL super_admin_id
-        temp_org_name = f"Temp Organisation {datetime.datetime.now().strftime('%Y%m%d%H%M%S')}-{unique_id}"
-        cursor.execute("INSERT INTO organisations (nom, super_admin_id) VALUES (%s, NULL)", (temp_org_name,))
+        temp_org_name = f"Temp Organization {datetime.datetime.now().strftime('%Y%m%d%H%M%S')}-{unique_id}"
+        cursor.execute("INSERT INTO organizations (name, super_admin_id) VALUES (%s, NULL)", (temp_org_name,))
         connection.commit()
 
         # Get the ID of the temporary organization
-        cursor.execute("SELECT BIN_TO_UUID(id) FROM organisations WHERE nom = %s", (temp_org_name,))
+        cursor.execute("SELECT BIN_TO_UUID(id) FROM organizations WHERE name = %s", (temp_org_name,))
         result = cursor.fetchone()
         if result:
             org_id = result[0]
-            print(f"Created temporary organisation with ID: {org_id}")
+            print(f"Created temporary organization with ID: {org_id}")
 
         # Now create the user with the organization ID
         email = f"test.user.{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}@example.com"
@@ -57,7 +57,7 @@ def test_user(request):
 
         # Insert the user with org_id
         cursor.execute(
-            "INSERT INTO users (nom, prenom, email, password, org_id) VALUES (%s, %s, %s, %s, UUID_TO_BIN(%s))",
+            "INSERT INTO users (first_name, last_name, email, password, organization_id) VALUES (%s, %s, %s, %s, UUID_TO_BIN(%s))",
             ("Test", "User", email, password_hash, org_id)
         )
         connection.commit()
@@ -71,11 +71,11 @@ def test_user(request):
 
         # Update the organization with the user as super_admin
         cursor.execute(
-            "UPDATE organisations SET super_admin_id = UUID_TO_BIN(%s) WHERE id = UUID_TO_BIN(%s)",
+            "UPDATE organizations SET super_admin_id = UUID_TO_BIN(%s) WHERE id = UUID_TO_BIN(%s)",
             (user_id, org_id)
         )
         connection.commit()
-        print(f"Updated organisation with super_admin_id: {user_id}")
+        print(f"Updated organization with super_admin_id: {user_id}")
 
     except Exception as e:
         if connection:
@@ -98,16 +98,16 @@ def test_user(request):
 
             # First, we need to remove the super_admin_id constraint
             cursor.execute(
-                "UPDATE organisations SET super_admin_id = NULL WHERE id = UUID_TO_BIN(%s)",
+                "UPDATE organizations SET super_admin_id = NULL WHERE id = UUID_TO_BIN(%s)",
                 (org_id,)
             )
             connection.commit()
 
             # Now we can delete the user
             if user_id:
-                # First remove from organisation_user table
+                # First remove from organization_user table
                 cursor.execute(
-                    "DELETE FROM organisation_user WHERE users_id = UUID_TO_BIN(%s)",
+                    "DELETE FROM organization_user WHERE users_id = UUID_TO_BIN(%s)",
                     (user_id,)
                 )
                 connection.commit()
@@ -119,9 +119,9 @@ def test_user(request):
 
             # Then delete the organization
             if org_id:
-                cursor.execute("DELETE FROM organisations WHERE id = UUID_TO_BIN(%s)", (org_id,))
+                cursor.execute("DELETE FROM organizations WHERE id = UUID_TO_BIN(%s)", (org_id,))
                 connection.commit()
-                print(f"Deleted temporary organisation with ID: {org_id}")
+                print(f"Deleted temporary organization with ID: {org_id}")
         except Exception as e:
             if connection:
                 connection.rollback()
@@ -138,15 +138,15 @@ def test_user(request):
 # Create a test organization fixture that will be reused
 @pytest.fixture(scope="module")
 def test_org(test_user, request):
-    """Create a test organisation."""
-    print_separator("Creating test organisation")
+    """Create a test organization."""
+    print_separator("Creating test organization")
 
     if not test_user:
-        pytest.skip("No test user available for creating organisation")
+        pytest.skip("No test user available for creating organization")
         return None
 
-    # Instead of using the Organisation object which has issues,
-    # create a new test organisation directly with SQL
+    # Instead of using the Organization object which has issues,
+    # create a new test organization directly with SQL
     connection = get_db_connection()
     cursor = None
     org_id = None
@@ -154,40 +154,40 @@ def test_org(test_user, request):
     try:
         cursor = connection.cursor()
 
-        # Create a new test organisation with the super_admin_id
-        org_name = f"Test Organisation {datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+        # Create a new test organization with the super_admin_id
+        org_name = f"Test Organization {datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
 
         cursor.execute(
-            "INSERT INTO organisations (nom, super_admin_id) VALUES (%s, UUID_TO_BIN(%s))",
+            "INSERT INTO organizations (name, super_admin_id) VALUES (%s, UUID_TO_BIN(%s))",
             (org_name, test_user.id)
         )
         connection.commit()
 
-        # Get the organisation ID
-        cursor.execute("SELECT BIN_TO_UUID(id) FROM organisations WHERE nom = %s", (org_name,))
+        # Get the organization ID
+        cursor.execute("SELECT BIN_TO_UUID(id) FROM organizations WHERE name = %s", (org_name,))
         result = cursor.fetchone()
         if result:
             org_id = result[0]
-            print(f"Created organisation with ID: {org_id}")
+            print(f"Created organization with ID: {org_id}")
 
-            # Create a proper Organisation object
-            org = Organisation(id=org_id, nom=org_name, super_admin_id=test_user.id)
-            print(f"Organisation object created: {org.nom} (ID: {org.id})")
+            # Create a proper Organization object
+            org = Organizations(id=org_id, name=org_name, super_admin_id=test_user.id)
+            print(f"Organization object created: {org.name} (ID: {org.id})")
 
-            # Add test user to the organisation
+            # Add test user to the organization
             cursor.execute(
-                "INSERT INTO organisation_user (organisations_id, users_id) VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s))",
+                "INSERT INTO organization_user (organizations_id, users_id) VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s))",
                 (org_id, test_user.id)
             )
             connection.commit()
-            print(f"Added user {test_user.id} to organisation {org_id}")
+            print(f"Added user {test_user.id} to organization {org_id}")
 
             return org
 
     except Exception as e:
         if connection:
             connection.rollback()
-        print(f"Error creating test organisation: {e}")
+        print(f"Error creating test organization: {e}")
     finally:
         close_connection(connection, cursor)
 
@@ -198,64 +198,64 @@ def test_create_user(test_user):
     """Test if our test user was created successfully."""
     assert test_user is not None
     assert test_user.email is not None
-    print(f"Test user verified: {test_user.prenom} {test_user.nom} ({test_user.email})")
+    print(f"Test user verified: {test_user.first_name} {test_user.last_name} ({test_user.email})")
 
 
-def test_create_organisation(test_org):
-    """Test if our test organisation was created successfully."""
+def test_create_organization(test_org):
+    """Test if our test organization was created successfully."""
     assert test_org is not None
     assert test_org.id is not None
-    print(f"Test organisation verified: {test_org.nom} (ID: {test_org.id})")
+    print(f"Test organization verified: {test_org.name} (ID: {test_org.id})")
 
 
 def test_find_by_id(test_org):
-    """Test finding an organisation by ID."""
+    """Test finding an organization by ID."""
     print_separator("Testing find_by_id")
 
-    org = Organisation.find_by_id(test_org.id)
+    org = Organizations.find_by_id(test_org.id)
 
     assert org is not None
     assert org.id == test_org.id
-    assert org.nom == test_org.nom
+    assert org.name == test_org.name
 
-    print(f"Found organisation: {org.nom} (ID: {org.id})")
+    print(f"Found organization: {org.name} (ID: {org.id})")
     return org
 
 
 def test_find_by_name(test_org):
-    """Test finding an organisation by name."""
+    """Test finding an organization by name."""
     print_separator("Testing find_by_name")
 
     if not test_org:
-        pytest.skip("No test organisation available")
+        pytest.skip("No test organization available")
 
-    org = Organisation.find_by_name(test_org.nom)
+    org = Organizations.find_by_name(test_org.name)
 
     assert org is not None
     assert org.id == test_org.id
-    assert org.nom == test_org.nom
+    assert org.name == test_org.name
 
-    print(f"Found organisation: {org.nom} (ID: {org.id})")
+    print(f"Found organization: {org.name} (ID: {org.id})")
     return org
 
 
 def test_find_all():
-    """Test finding all organisations."""
+    """Test finding all organizations."""
     print_separator("Testing find_all")
 
-    orgs = Organisation.find_all()
+    orgs = Organizations.find_all()
     assert orgs is not None
     assert len(orgs) > 0
 
-    print(f"Found {len(orgs)} organisations:")
+    print(f"Found {len(orgs)} organizations:")
     for i, org in enumerate(orgs, 1):
-        print(f"{i}. {org.nom} (ID: {org.id})")
+        print(f"{i}. {org.name} (ID: {org.id})")
 
     return orgs
 
 
 def test_get_users(test_org, test_user):
-    """Test getting all users in an organisation."""
+    """Test getting all users in an organization."""
     print_separator("Testing get_users")
 
     # Since there's an import error in the get_users method, we'll check directly with SQL
@@ -268,8 +268,8 @@ def test_get_users(test_org, test_user):
         query = """
             SELECT BIN_TO_UUID(u.id) as id 
             FROM users u
-            JOIN organisation_user ou ON u.id = ou.users_id
-            WHERE ou.organisations_id = UUID_TO_BIN(%s)
+            JOIN organization_user ou ON u.id = ou.users_id
+            WHERE ou.organizations_id = UUID_TO_BIN(%s)
         """
         cursor.execute(query, (test_org.id,))
         results = cursor.fetchall()
@@ -286,13 +286,13 @@ def test_get_users(test_org, test_user):
         close_connection(connection, cursor)
 
     assert users_found is True
-    print(f"Verified user {test_user.id} exists in organisation {test_org.id}")
+    print(f"Verified user {test_user.id} exists in organization {test_org.id}")
 
 
 # Test role as a function with explicit cleanup
 @pytest.fixture(scope="module")
 def test_role(test_org, request):
-    """Add a test role to the organisation."""
+    """Add a test role to the organization."""
     print_separator("Creating test role")
 
     connection = get_db_connection()
@@ -307,14 +307,14 @@ def test_role(test_org, request):
         role_description = "A test role for testing purposes"
 
         cursor.execute(
-            "INSERT INTO organisationRoles (organisation_id, nom, description) VALUES (UUID_TO_BIN(%s), %s, %s)",
+            "INSERT INTO organization_roles (organization_id, name, description) VALUES (UUID_TO_BIN(%s), %s, %s)",
             (test_org.id, role_name, role_description)
         )
         connection.commit()
 
         # Get the role ID
         cursor.execute(
-            "SELECT BIN_TO_UUID(id) FROM organisationRoles WHERE nom = %s AND organisation_id = UUID_TO_BIN(%s)",
+            "SELECT BIN_TO_UUID(id) FROM organization_roles WHERE name = %s AND organization_id = UUID_TO_BIN(%s)",
             (role_name, test_org.id)
         )
         result = cursor.fetchone()
@@ -345,7 +345,7 @@ def test_role(test_org, request):
 
                 # Then delete the role
                 cursor.execute(
-                    "DELETE FROM organisationRoles WHERE id = UUID_TO_BIN(%s)",
+                    "DELETE FROM organization_roles WHERE id = UUID_TO_BIN(%s)",
                     (role_id,)
                 )
                 connection.commit()
@@ -382,7 +382,7 @@ def test_add_role(test_org, test_role):
 
 
 def test_get_roles(test_org, test_role):
-    """Test getting all roles in an organisation."""
+    """Test getting all roles in an organization."""
     print_separator("Testing get_roles")
 
     roles = test_org.get_roles()
@@ -390,9 +390,9 @@ def test_get_roles(test_org, test_role):
     assert roles is not None
     assert len(roles) > 0
 
-    print(f"Found {len(roles)} roles in organisation '{test_org.nom}':")
+    print(f"Found {len(roles)} roles in organization '{test_org.name}':")
     for i, role in enumerate(roles, 1):
-        print(f"{i}. {role['nom']} (ID: {role['id']})")
+        print(f"{i}. {role['name']} (ID: {role['id']})")
 
     return roles
 
@@ -458,19 +458,19 @@ def test_get_user_roles(test_org, test_user):
     assert roles is not None
     assert len(roles) > 0  # We should have at least one role assigned in the previous test
 
-    print(f"Found {len(roles)} roles for user in organisation '{test_org.nom}':")
+    print(f"Found {len(roles)} roles for user in organization '{test_org.name}':")
     for i, role in enumerate(roles, 1):
-        print(f"{i}. {role['nom']} (ID: {role['id']})")
+        print(f"{i}. {role['name']} (ID: {role['id']})")
 
     return roles
 
 
 def test_create_project(test_org):
-    """Test creating a project for an organisation."""
+    """Test creating a project for an organization."""
     print_separator("Testing create project")
 
     if not test_org:
-        pytest.skip("No test organisation available")
+        pytest.skip("No test organization available")
 
     # Create a test project with a unique number
     current_time = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')[:20]
@@ -485,14 +485,14 @@ def test_create_project(test_org):
     try:
         cursor = connection.cursor()
         query = """
-            INSERT INTO projects (org_id, numero, nom, description)
+            INSERT INTO projects (organization_id, project_number, name, description)
             VALUES (UUID_TO_BIN(%s), %s, %s, %s)
         """
         cursor.execute(query, (test_org.id, project_number, project_name, "Test project description"))
         connection.commit()
 
         # Get the project ID
-        cursor.execute("SELECT BIN_TO_UUID(id) FROM projects WHERE numero = %s", (project_number,))
+        cursor.execute("SELECT BIN_TO_UUID(id) FROM projects WHERE project_number = %s", (project_number,))
         result = cursor.fetchone()
         if result:
             project_id = result[0]
@@ -511,7 +511,7 @@ def test_create_project(test_org):
 
 
 def test_get_projects(test_org):
-    """Test getting all projects for an organisation."""
+    """Test getting all projects for an organization."""
     print_separator("Testing get_projects")
 
     # First create a project to ensure we have at least one
@@ -525,14 +525,14 @@ def test_get_projects(test_org):
         cursor = connection.cursor()
         query = """
             SELECT COUNT(*) FROM projects 
-            WHERE org_id = UUID_TO_BIN(%s)
+            WHERE organization_id = UUID_TO_BIN(%s)
         """
         cursor.execute(query, (test_org.id,))
         result = cursor.fetchone()
 
         if result and result[0] > 0:
             has_projects = True
-            print(f"Found {result[0]} projects for organisation {test_org.id}")
+            print(f"Found {result[0]} projects for organization {test_org.id}")
 
     except Exception as e:
         print(f"Error checking projects: {e}")
@@ -561,7 +561,7 @@ def test_remove_user_operation(test_org, test_user):
 
         # Insert with the correct org_id
         cursor.execute(
-            "INSERT INTO users (nom, prenom, email, password, org_id) VALUES (%s, %s, %s, %s, UUID_TO_BIN(%s))",
+            "INSERT INTO users (first_name, last_name, email, password, organization_id) VALUES (%s, %s, %s, %s, UUID_TO_BIN(%s))",
             ("Temp", "Removal", email, password_hash, test_org.id)
         )
         connection.commit()
@@ -573,19 +573,19 @@ def test_remove_user_operation(test_org, test_user):
             temp_user_id = result[0]
             print(f"Created temporary user for removal test: {temp_user_id}")
 
-        # Add user to organisation
+        # Add user to organization
         if temp_user_id:
             cursor.execute(
-                "INSERT INTO organisation_user (organisations_id, users_id) VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s))",
+                "INSERT INTO organization_user (organizations_id, users_id) VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s))",
                 (test_org.id, temp_user_id)
             )
             connection.commit()
-            print(f"Added temporary user to organisation")
+            print(f"Added temporary user to organization")
 
-            # Now test removal using the Organisation class
+            # Now test removal using the Organizations class
             success = test_org.remove_user(temp_user_id)
             assert success is True
-            print(f"Removed temporary user from organisation: {success}")
+            print(f"Removed temporary user from organization: {success}")
 
             # Clean up the temporary user
             cursor.execute("DELETE FROM users WHERE id = UUID_TO_BIN(%s)", (temp_user_id,))
@@ -600,7 +600,7 @@ def test_remove_user_operation(test_org, test_user):
     finally:
         close_connection(connection, cursor)
 
-    # Check if the main test user still exists in the organisation
+    # Check if the main test user still exists in the organization
     connection = get_db_connection()
     cursor = None
     user_exists = False
@@ -608,8 +608,8 @@ def test_remove_user_operation(test_org, test_user):
     try:
         cursor = connection.cursor()
         query = """
-            SELECT COUNT(*) FROM organisation_user
-            WHERE organisations_id = UUID_TO_BIN(%s) AND users_id = UUID_TO_BIN(%s)
+            SELECT COUNT(*) FROM organization_user
+            WHERE organizations_id = UUID_TO_BIN(%s) AND users_id = UUID_TO_BIN(%s)
         """
         cursor.execute(query, (test_org.id, test_user.id))
         result = cursor.fetchone()
@@ -623,12 +623,12 @@ def test_remove_user_operation(test_org, test_user):
         close_connection(connection, cursor)
 
     assert user_exists is True
-    print(f"Verified main test user still exists in organisation: {user_exists}")
+    print(f"Verified main test user still exists in organization: {user_exists}")
 
 
-def test_delete_organisation_operation():
-    """Test the delete_organisation operation on a temporary organization."""
-    print_separator("Testing delete_organisation operation")
+def test_delete_organization_operation():
+    """Test the delete_organization operation on a temporary organization."""
+    print_separator("Testing delete_organization operation")
 
     # Create a temporary organization just for testing deletion
     connection = get_db_connection()
@@ -640,32 +640,32 @@ def test_delete_organisation_operation():
 
         # Create a temporary organization
         temp_org_name = f"Temp Delete Org {datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-        cursor.execute("INSERT INTO organisations (nom, super_admin_id) VALUES (%s, NULL)", (temp_org_name,))
+        cursor.execute("INSERT INTO organizations (name, super_admin_id) VALUES (%s, NULL)", (temp_org_name,))
         connection.commit()
 
         # Get the organization ID
-        cursor.execute("SELECT BIN_TO_UUID(id) FROM organisations WHERE nom = %s", (temp_org_name,))
+        cursor.execute("SELECT BIN_TO_UUID(id) FROM organizations WHERE name = %s", (temp_org_name,))
         result = cursor.fetchone()
         if result:
             temp_org_id = result[0]
-            print(f"Created temporary organisation for deletion test: {temp_org_id}")
+            print(f"Created temporary organization for deletion test: {temp_org_id}")
 
         # Now test deletion
         if temp_org_id:
-            temp_org = Organisation.find_by_id(temp_org_id)
+            temp_org = Organizations.find_by_id(temp_org_id)
             success = temp_org.delete()
             assert success is True
-            print(f"Deleted temporary organisation: {success}")
+            print(f"Deleted temporary organization: {success}")
 
             # Verify it's gone
-            org = Organisation.find_by_id(temp_org_id)
+            org = Organizations.find_by_id(temp_org_id)
             assert org is None
-            print("Verified organisation was deleted successfully")
+            print("Verified organization was deleted successfully")
 
     except Exception as e:
         if connection:
             connection.rollback()
-        print(f"Error in delete_organisation test: {e}")
-        assert False, f"Error in delete_organisation test: {e}"
+        print(f"Error in delete_organization test: {e}")
+        assert False, f"Error in delete_organization test: {e}"
     finally:
         close_connection(connection, cursor)

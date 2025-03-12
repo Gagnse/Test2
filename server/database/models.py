@@ -509,7 +509,7 @@ class Organizations:
                 SELECT BIN_TO_UUID(o.id) as id, o.name, o.created_at, 
                 BIN_TO_UUID(o.super_admin_id) as super_admin_id
                 FROM organizations o
-                JOIN organisation_user ou ON o.id = ou.organisations_id
+                JOIN organization_user ou ON o.id = ou.organizations_id
                 WHERE ou.users_id = UUID_TO_BIN(%s)
             """
             cursor.execute(query, (user_id,))
@@ -677,7 +677,7 @@ class Organizations:
 
     def get_user_roles(self, user_id):
         """Get all roles for a specific user in the organization"""
-        connection = get_db_connection('users_db')
+        connection = get_db_connection('project_db')
         cursor = None
         roles = []
 
@@ -688,7 +688,7 @@ class Organizations:
                 FROM organization_roles r
                 JOIN user_organisation_role uor ON r.id = uor.role_id
                 WHERE uor.user_id = UUID_TO_BIN(%s) 
-                AND uor.organization_id = UUID_TO_BIN(%s)
+                AND uor.organisation_id = UUID_TO_BIN(%s)
             """
             cursor.execute(query, (user_id, self.id))
             results = cursor.fetchall()
@@ -726,7 +726,8 @@ class Organizations:
             results = cursor.fetchall()
 
             for result in results:
-                from server.models.project import Project  # Import here to avoid circular imports
+                # Import Project class locally to avoid circular imports
+                from server.database.models import Project
                 project = Project(
                     id=result['id'],
                     project_number=result['project_number'],
@@ -739,36 +740,15 @@ class Organizations:
                 )
                 projects.append(project)
         except Exception as e:
-            print(f"Error getting projects for organisation: {e}")
+            print(f"Error getting projects for organization: {e}")
         finally:
             close_connection(connection, cursor)
 
         return projects
 
-    def add_role(self, role_name, role_description=None):
-        """Add a role to the organisation"""
-        connection = get_db_connection('projects_db')
-        cursor = None
-
-        try:
-            cursor = connection.cursor()
-            query = """
-                INSERT INTO organization_roles (organization_id, name, description)
-                VALUES (UUID_TO_BIN(%s), %s, %s)
-            """
-            cursor.execute(query, (self.id, role_name, role_description))
-            connection.commit()
-            return True
-        except Exception as e:
-            connection.rollback()
-            print(f"Error adding role to organisation: {e}")
-            return False
-        finally:
-            close_connection(connection, cursor)
-
     def get_roles(self):
-        """Get all roles in the organisation"""
-        connection = get_db_connection('projects_db')
+        """Get all roles in the organization"""
+        connection = get_db_connection('project_db')
         cursor = None
         roles = []
 
@@ -791,21 +771,21 @@ class Organizations:
                 }
                 roles.append(role)
         except Exception as e:
-            print(f"Error getting roles for organisation: {e}")
+            print(f"Error getting roles for organization: {e}")
         finally:
             close_connection(connection, cursor)
 
         return roles
 
     def assign_role_to_user(self, user_id, role_id):
-        """Assign a role to a user in the organisation"""
-        connection = get_db_connection('projects_db')
+        """Assign a role to a user in the organization"""
+        connection = get_db_connection('project_db')
         cursor = None
 
         try:
             cursor = connection.cursor()
             query = """
-                INSERT INTO user_organization_roles (user_id, organization_id, role_id)
+                INSERT INTO user_organisation_role (user_id, organisation_id, role_id)
                 VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s), UUID_TO_BIN(%s))
             """
             cursor.execute(query, (user_id, self.id, role_id))
@@ -818,40 +798,8 @@ class Organizations:
         finally:
             close_connection(connection, cursor)
 
-    def get_user_roles(self, user_id):
-        """Get all roles for a user in the organisation"""
-        connection = get_db_connection('projects_db')
-        cursor = None
-        roles = []
-
-        try:
-            cursor = connection.cursor(dictionary=True)
-            query = """
-                SELECT BIN_TO_UUID(r.id) as id, r.name, r.description, r.created_at
-                FROM organization_roles r
-                JOIN user_organisation_role uor ON r.id = uor.role_id
-                WHERE uor.user_id = UUID_TO_BIN(%s) AND uor.organisation_id = UUID_TO_BIN(%s)
-            """
-            cursor.execute(query, (user_id, self.id))
-            results = cursor.fetchall()
-
-            for result in results:
-                role = {
-                    'id': result['id'],
-                    'name': result['name'],
-                    'description': result['description'],
-                    'created_at': result['created_at']
-                }
-                roles.append(role)
-        except Exception as e:
-            print(f"Error getting roles for user in organisation: {e}")
-        finally:
-            close_connection(connection, cursor)
-
-        return roles
-
     def delete(self):
-        """Delete the organisation"""
+        """Delete the organization"""
         connection = get_db_connection('users_db')
         cursor = None
 
@@ -866,7 +814,7 @@ class Organizations:
             return True
         except Exception as e:
             connection.rollback()
-            print(f"Error deleting organisation: {e}")
+            print(f"Error deleting organization: {e}")
             return False
         finally:
             close_connection(connection, cursor)

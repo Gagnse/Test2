@@ -42,7 +42,10 @@
                             <th>Prénom</th>
                             <th>Email</th>
                             <th>Rôle</th>
+                            <th>Département</th>
+                            <th>Emplacement</th>
                             <th>Inscrit le</th>
+                            <th>Dernière activité</th>
                             <th>Statut</th>
                             <th>Actions</th>
                         </tr>
@@ -56,7 +59,10 @@
                             <td>
                                 <span class="role-badge">{{ member.role|default('Membre') }}</span>
                             </td>
+                            <td>{{ member.department|default('N/A') }}</td>
+                            <td>{{ member.location|default('N/A') }}</td>
                             <td>{{ member.created_at.strftime('%d/%m/%Y') if member.created_at else 'N/A' }}</td>
+                            <td>{{ member.last_active.strftime('%d/%m/%Y %H:%M') if member.last_active else 'N/A' }}</td>
                             <td>
                                 <span class="status-badge {% if member.is_active %}active{% else %}inactive{% endif %}">
                                     {% if member.is_active %}Actif{% else %}Inactif{% endif %}

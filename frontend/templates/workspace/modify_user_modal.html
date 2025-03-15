@@ -1,0 +1,411 @@
+<!-- User Edit Modal -->
+<div id="edit-user-modal" class="modal">
+    <div class="modal-content">
+        <style>
+            /* Spinner animation */
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .spin {
+                animation: spin 1.5s linear infinite;
+            }
+
+            /* Form help text */
+            .form-help {
+                color: #718096;
+                font-size: 0.8rem;
+                margin-top: 3px;
+            }
+
+            /* Form error styling */
+            .form-error {
+                background-color: #FEF2F2;
+                border: 1px solid #F87171;
+                color: #B91C1C;
+                padding: 10px 15px;
+                border-radius: 5px;
+                margin-bottom: 15px;
+                font-size: 0.9rem;
+            }
+
+            /* Input focus state */
+            .form-group input:focus,
+            .form-group textarea:focus,
+            .form-group select:focus {
+                border-color: #3498db;
+                box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+                outline: none;
+            }
+
+            /* Read-only fields */
+            .form-control[readonly] {
+                background-color: #f8f9fa;
+                cursor: not-allowed;
+            }
+
+            /* User info display section */
+            .user-info-section {
+                background-color: #f8fafc;
+                border-radius: 5px;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .user-info-row {
+                display: flex;
+                flex-wrap: wrap;
+                margin-bottom: 10px;
+            }
+
+            .user-info-field {
+                flex: 1;
+                min-width: 200px;
+                margin-bottom: 5px;
+            }
+
+            .user-info-label {
+                font-weight: 500;
+                color: #4a5568;
+                font-size: 0.9rem;
+            }
+
+            .user-info-value {
+                color: #2d3748;
+            }
+        </style>
+        <div class="modal-header">
+            <h2>Modifier les informations de l'utilisateur</h2>
+            <button class="close-modal-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- User Information Display Section -->
+            <div class="user-info-section">
+                <h3>Informations utilisateur</h3>
+                <div class="user-info-row">
+                    <div class="user-info-field">
+                        <div class="user-info-label">ID:</div>
+                        <div class="user-info-value" id="display-user-id"></div>
+                    </div>
+                    <div class="user-info-field">
+                        <div class="user-info-label">Email:</div>
+                        <div class="user-info-value" id="display-user-email"></div>
+                    </div>
+                </div>
+                <div class="user-info-row">
+                    <div class="user-info-field">
+                        <div class="user-info-label">Nom:</div>
+                        <div class="user-info-value" id="display-user-lastname"></div>
+                    </div>
+                    <div class="user-info-field">
+                        <div class="user-info-label">Prénom:</div>
+                        <div class="user-info-value" id="display-user-firstname"></div>
+                    </div>
+                </div>
+                <div class="user-info-row">
+                    <div class="user-info-field">
+                        <div class="user-info-label">Inscrit le:</div>
+                        <div class="user-info-value" id="display-user-created-at"></div>
+                    </div>
+                    <div class="user-info-field">
+                        <div class="user-info-label">Dernière activité:</div>
+                        <div class="user-info-value" id="display-user-last-active"></div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="edit-user-form">
+                <!-- Error container will appear here when needed -->
+                <input type="hidden" id="user-id" name="user_id">
+
+                <div class="form-group">
+                    <label for="user-department">Département</label>
+                    <input type="text" id="user-department" name="department" placeholder="ex: Architecture">
+                    <div class="form-help">Département ou service de l'utilisateur</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="user-location">Emplacement</label>
+                    <input type="text" id="user-location" name="location" placeholder="ex: Montréal">
+                    <div class="form-help">Bureau ou emplacement physique</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="user-role">Rôle</label>
+                    <select id="user-role" name="role">
+                        <!-- Roles will be dynamically populated from the organization's available roles -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="user-status">Statut</label>
+                    <select id="user-status" name="is_active">
+                        <option value="1">Actif</option>
+                        <option value="0">Inactif</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary cancel-btn">Annuler</button>
+                    <button type="submit" class="btn btn-primary save-btn">
+                        <span class="btn-text">Enregistrer</span>
+                        <span class="btn-spinner" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get modal elements
+        const modal = document.getElementById('edit-user-modal');
+        const closeButton = modal.querySelector('.close-modal-btn');
+        const cancelButton = modal.querySelector('.cancel-btn');
+        const form = document.getElementById('edit-user-form');
+
+        // Get all edit buttons in the members table
+        const editButtons = document.querySelectorAll('.edit-btn');
+
+        // Function to open the modal with user data
+        function openUserModal(userId) {
+            // Show loading state in the modal
+
+            // Reset form and error messages
+            form.reset();
+            const existingError = form.querySelector('.form-error');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            // Set the user ID in the hidden field
+            document.getElementById('user-id').value = userId;
+
+            // Show the modal
+            modal.classList.add('active');
+
+            // Fetch user data from API
+            fetch(`/api/users/${userId}`, {
+                method: 'GET',
+                credentials: 'same-origin' // Include cookies
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+
+                    // Populate display fields
+                    document.getElementById('display-user-id').textContent = user.id;
+                    document.getElementById('display-user-email').textContent = user.email;
+                    document.getElementById('display-user-firstname').textContent = user.first_name;
+                    document.getElementById('display-user-lastname').textContent = user.last_name;
+                    document.getElementById('display-user-created-at').textContent =
+                        user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A';
+                    document.getElementById('display-user-last-active').textContent =
+                        user.last_active ? new Date(user.last_active).toLocaleString() : 'N/A';
+
+                    // Populate form fields
+                    document.getElementById('user-department').value = user.department || '';
+                    document.getElementById('user-location').value = user.location || '';
+
+                    // Populate role dropdown
+                    const roleSelect = document.getElementById('user-role');
+                    roleSelect.innerHTML = ''; // Clear existing options
+
+                    // Add organization roles from data.roles (would come from the API)
+                    if (data.roles && data.roles.length > 0) {
+                        data.roles.forEach(role => {
+                            const option = document.createElement('option');
+                            option.value = role.id;
+                            option.textContent = role.name;
+
+                            // Set selected if this is the user's current role
+                            if (user.role_id === role.id) {
+                                option.selected = true;
+                            }
+
+                            roleSelect.appendChild(option);
+                        });
+                    } else {
+                        // If no roles are available, add some default options
+                        const defaultRoles = [
+                            { id: 'admin', name: 'Administrateur' },
+                            { id: 'collaborator', name: 'Collaborateur' },
+                            { id: 'client', name: 'Client' },
+                            { id: 'member', name: 'Membre' }
+                        ];
+
+                        defaultRoles.forEach(role => {
+                            const option = document.createElement('option');
+                            option.value = role.id;
+                            option.textContent = role.name;
+
+                            // Set selected if this matches the user's current role name
+                            if (user.role === role.name) {
+                                option.selected = true;
+                            }
+
+                            roleSelect.appendChild(option);
+                        });
+                    }
+
+                    // Set user status
+                    document.getElementById('user-status').value = user.is_active ? '1' : '0';
+                } else {
+                    throw new Error(data.message || 'Failed to load user data');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching user data:', error);
+
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'form-error';
+                errorDiv.textContent = error.message || 'Une erreur est survenue lors du chargement des données utilisateur.';
+                form.prepend(errorDiv);
+
+                // Show error toast
+                if (window.toast) {
+                    window.toast.error(error.message || 'Erreur lors du chargement des données utilisateur');
+                }
+            });
+        }
+
+        // Add event listeners to all edit buttons
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                openUserModal(userId);
+            });
+        });
+
+        // Close modal when close button is clicked
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                modal.classList.remove('active');
+            });
+        }
+
+        // Close modal when cancel button is clicked
+        if (cancelButton) {
+            cancelButton.addEventListener('click', function() {
+                modal.classList.remove('active');
+            });
+        }
+
+        // Close modal when clicking outside the modal content
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+
+        // Handle form submission
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                // Get submit button elements
+                const submitButton = form.querySelector('.save-btn');
+                const buttonText = submitButton.querySelector('.btn-text');
+                const buttonSpinner = submitButton.querySelector('.btn-spinner');
+
+                // Show loading state
+                submitButton.disabled = true;
+                buttonText.style.display = 'none';
+                buttonSpinner.style.display = 'inline-block';
+
+                // Remove any existing error messages
+                const existingError = form.querySelector('.form-error');
+                if (existingError) {
+                    existingError.remove();
+                }
+
+                // Get form data and convert to JSON
+                const formData = new FormData(form);
+                const userId = formData.get('user_id');
+
+                const userData = {
+                    department: formData.get('department'),
+                    location: formData.get('location'),
+                    role: formData.get('role'),
+                    is_active: formData.get('is_active') === '1'
+                };
+
+                // Send request to update user using the API
+                fetch(`/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData),
+                    credentials: 'same-origin' // Include cookies
+                })
+                .then(response => {
+                    // Always parse JSON first to get any error message
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            throw new Error(data.message || 'Une erreur est survenue');
+                        }
+                        return data;
+                    });
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Close modal and show success toast
+                        modal.classList.remove('active');
+
+                        // Show success toast
+                        if (window.toast) {
+                            window.toast.success('Utilisateur modifié avec succès!');
+                        }
+
+                        // Reload the page to show updated user data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    } else {
+                        throw new Error(data.message || 'Une erreur est survenue');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating user:', error);
+
+                    // Reset button state
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'inline';
+                    buttonSpinner.style.display = 'none';
+
+                    // Create error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error';
+                    errorDiv.textContent = error.message || 'Une erreur est survenue lors de la modification de l\'utilisateur. Veuillez réessayer.';
+
+                    // Add the error at the top of the form
+                    form.prepend(errorDiv);
+
+                    // Show error toast
+                    if (window.toast) {
+                        window.toast.error(error.message || 'Une erreur est survenue lors de la modification de l\'utilisateur');
+                    }
+                });
+            });
+        }
+    });
+</script>

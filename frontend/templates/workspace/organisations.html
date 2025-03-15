@@ -800,7 +800,15 @@
         editBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 const memberId = this.getAttribute('data-id');
-                alert(`Fonctionnalité en développement: Modifier le membre ${memberId}`);
+                const modal = document.getElementById('edit-user-modal');
+                if (modal) {
+                    // Call the openUserModal function passing the user ID
+                    openUserModal(memberId);
+                    modal.classList.add('active');
+                } else {
+                    console.error('Edit user modal not found in the DOM');
+                    alert('Modal not available. Unable to edit user.');
+                }
             });
         });
 
@@ -855,5 +863,23 @@
             });
         });
     });
+
+    editBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+        const memberId = this.getAttribute('data-id');
+        // Check if the modal exists and is included
+        const modal = document.getElementById('edit-user-modal');
+        if (modal) {
+            // Call the openUserModal function passing the user ID
+            openUserModal(memberId);
+            modal.classList.add('active');
+        } else {
+            console.error('Edit user modal not found in the DOM');
+            alert('Modal not available. Unable to edit user.');
+        }
+    });
+});
+
 </script>
 {% endblock %}
+{% include "workspace/modify_user_modal.html" %}

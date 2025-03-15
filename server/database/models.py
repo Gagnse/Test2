@@ -100,83 +100,66 @@ class User:
         return user
 
     def save(self):
-        """Save project to database"""
+        """Save user to database"""
         connection = get_db_connection('users_db')
         cursor = None
 
         try:
             cursor = connection.cursor()
 
-            if self.id:  # Update existing project
+            if self.id:  # Update existing user
                 query = """
-                    UPDATE projects
-                    SET project_number = %s, name = %s, description = %s,
-                    status = %s, type = %s,
-                    organization_id = NULLIF(UUID_TO_BIN(%s), UUID_TO_BIN(NULL))
+                    UPDATE users
+                    SET first_name = %s, last_name = %s, email = %s,
+                    is_active = %s, department = %s, location = %s, role = %s
                     WHERE id = UUID_TO_BIN(%s)
                 """
                 values = (
-                    self.project_number, self.name, self.description,
-                    self.status, self.type, self.organization_id, self.id
+                    self.first_name, self.last_name, self.email,
+                    self.is_active,
+                    getattr(self, 'department', None),
+                    getattr(self, 'location', None),
+                    getattr(self, 'role', None),
+                    self.id
                 )
-            else:  # Create new project
+            else:  # Create new user
+                # Hash the password for new users
+                hashed_password = self.hash_password(self.password)
+
                 query = """
-                    INSERT INTO projects (project_number, name, description, status, type, organization_id)
-                    VALUES (%s, %s, %s, %s, %s, NULLIF(UUID_TO_BIN(%s), UUID_TO_BIN(NULL)))
+                    INSERT INTO users (first_name, last_name, email, password, organization_id, is_active)
+                    VALUES (%s, %s, %s, %s, UUID_TO_BIN(%s), %s)
                 """
                 values = (
-                    self.project_number, self.name, self.description,
-                    self.status, self.type, self.organization_id
+                    self.first_name, self.last_name, self.email,
+                    hashed_password, self.organization_id, self.is_active
                 )
 
             cursor.execute(query, values)
             connection.commit()
 
-            # Get the auto-generated ID for a new project
+            # Get the auto-generated ID for a new user
             if not self.id:
-                # For UUIDs, we need to query the UUID that was just created
                 cursor.execute("""
                     SELECT BIN_TO_UUID(id) 
-                    FROM projects 
-                    WHERE project_number = %s
-                """, (self.project_number,))
+                    FROM users 
+                    WHERE email = %s
+                """, (self.email,))
 
                 result = cursor.fetchone()
                 if result:
                     self.id = result[0]
 
-                    # Create project database directly with Python function
-                    try:
-                        # Close existing connection before creating new DB
-                        close_connection(connection, cursor)
-                        connection = None
-                        cursor = None
-
-                        # Call the function to create the database
-                        success, db_name = create_project_database(self.id, self.project_number)
-                        if success:
-                            print(f"Project database '{db_name}' created successfully")
-                            # Store database name for later reference
-                            self.database_name = db_name
-                        else:
-                            print(f"Failed to create project database")
-                            # Don't return False here - we still want the project to be created
-                    except Exception as e:
-                        print(f"Error creating project database: {e}")
-                        import traceback
-                        traceback.print_exc()
-
             return True
         except Exception as e:
             if connection:
                 connection.rollback()
-            print(f"Error saving project: {e}")
+            print(f"Error saving user: {e}")
             import traceback
             traceback.print_exc()  # Print the full error traceback for debugging
             return False
         finally:
-            if connection and cursor:
-                close_connection(connection, cursor)
+            close_connection(connection, cursor)
 
     @staticmethod
     def get_user_org_id(user_id):

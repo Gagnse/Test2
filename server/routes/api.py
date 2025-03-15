@@ -384,80 +384,80 @@ def api_create_organisation():
     else:
         return jsonify({'success': False, 'message': 'Erreur lors de la création de l\'organisation'}), 500
 
-    @api_bp.route('/users/<user_id>', methods=['GET'])
-    def api_get_user(user_id):
-        """Get a specific user by ID"""
-        if not AuthService.is_authenticated():
-            return jsonify({'success': False, 'message': 'Authentication required'}), 401
+@api_bp.route('/users/<user_id>', methods=['GET'])
+def api_get_user(user_id):
+    """Get a specific user by ID"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
 
-        user = User.find_by_id(user_id)
+    user = User.find_by_id(user_id)
 
-        if not user:
-            return jsonify({'success': False, 'message': 'Utilisateur non trouvé'}), 404
+    if not user:
+        return jsonify({'success': False, 'message': 'Utilisateur non trouvé'}), 404
 
-        # Get the user's current organization
-        org_id = user.organization_id
-        organization = Organizations.find_by_id(org_id) if org_id else None
+    # Get the user's current organization
+    org_id = user.organization_id
+    organization = Organizations.find_by_id(org_id) if org_id else None
 
-        # Get organization roles if organization exists
-        roles = []
-        if organization:
-            roles = organization.get_roles()
+    # Get organization roles if organization exists
+    roles = []
+    if organization:
+        roles = organization.get_roles()
 
-        user_data = {
-            'id': user.id,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email': user.email,
-            'created_at': user.created_at.isoformat() if user.created_at else None,
-            'last_active': hasattr(user, 'last_active') and user.last_active.isoformat() if user.last_active else None,
-            'is_active': user.is_active,
-            'department': getattr(user, 'department', None),
-            'location': getattr(user, 'location', None),
-            'role': getattr(user, 'role', None)
-        }
+    user_data = {
+        'id': user.id,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'email': user.email,
+        'created_at': user.created_at.isoformat() if user.created_at else None,
+        'last_active': user.last_active.isoformat() if hasattr(user, 'last_active') and user.last_active else None,
+        'is_active': user.is_active,
+        'department': getattr(user, 'department', None),
+        'location': getattr(user, 'location', None),
+        'role': getattr(user, 'role', None)
+    }
 
-        return jsonify({
-            'success': True,
-            'user': user_data,
-            'roles': roles
-        })
+    return jsonify({
+        'success': True,
+        'user': user_data,
+        'roles': roles
+    })
 
-    @api_bp.route('/users/<user_id>', methods=['PUT'])
-    def api_update_user(user_id):
-        """Update a specific user"""
-        if not AuthService.is_authenticated():
-            return jsonify({'success': False, 'message': 'Authentication required'}), 401
+@api_bp.route('/users/<user_id>', methods=['PUT'])
+def api_update_user(user_id):
+    """Update a specific user"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
 
-        current_user_id = AuthService.get_current_user_id()
+    current_user_id = AuthService.get_current_user_id()
 
-        # Get the user to update
-        user = User.find_by_id(user_id)
+    # Get the user to update
+    user = User.find_by_id(user_id)
 
-        if not user:
-            return jsonify({'success': False, 'message': 'Utilisateur non trouvé'}), 404
+    if not user:
+        return jsonify({'success': False, 'message': 'Utilisateur non trouvé'}), 404
 
-        # Check if the current user has permission to update this user
-        # Only allow if it's the same user or the user is an admin of the organization
-        org = Organizations.find_by_id(user.organization_id)
-        if user_id != current_user_id and (not org or org.super_admin_id != current_user_id):
-            return jsonify(
-                {'success': False, 'message': 'Vous n\'avez pas la permission de modifier cet utilisateur'}), 403
+    # Check if the current user has permission to update this user
+    # Only allow if it's the same user or the user is an admin of the organization
+    org = Organizations.find_by_id(user.organization_id)
+    if user_id != current_user_id and (not org or org.super_admin_id != current_user_id):
+        return jsonify(
+            {'success': False, 'message': 'Vous n\'avez pas la permission de modifier cet utilisateur'}), 403
 
-        data = request.get_json()
+    data = request.get_json()
 
-        # Update fields that were provided
-        if 'department' in data:
-            user.department = data['department']
-        if 'location' in data:
-            user.location = data['location']
-        if 'role' in data:
-            user.role = data['role']
-        if 'is_active' in data:
-            user.is_active = data['is_active']
+    # Update fields that were provided
+    if 'department' in data:
+        user.department = data['department']
+    if 'location' in data:
+        user.location = data['location']
+    if 'role' in data:
+        user.role = data['role']
+    if 'is_active' in data:
+        user.is_active = data['is_active']
 
-        # Save the user
-        if user.save():
-            return jsonify({'success': True, 'message': 'Utilisateur mis à jour avec succès'})
-        else:
-            return jsonify({'success': False, 'message': 'Erreur lors de la mise à jour de l\'utilisateur'}), 500
+    # Save the user
+    if user.save():
+        return jsonify({'success': True, 'message': 'Utilisateur mis à jour avec succès'})
+    else:
+        return jsonify({'success': False, 'message': 'Erreur lors de la mise à jour de l\'utilisateur'}), 500

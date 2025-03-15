@@ -750,136 +750,383 @@
 
 {% block extra_js %}
 {{ super() }}
+{{ super() }}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Check if hash exists and activate the corresponding tab
-        if(window.location.hash) {
-            const hash = window.location.hash.substring(1);
-            const tabToActivate = document.querySelector(`.tab-btn[data-tab="${hash}"]`);
-            if(tabToActivate) {
-                tabToActivate.click();
+document.addEventListener('DOMContentLoaded', function() {
+    // Get modal elements
+    const modal = document.getElementById('edit-user-modal');
+
+    // Only initialize the modal functionality if it exists in the DOM
+    if (modal) {
+        const closeButton = modal.querySelector('.close-modal-btn');
+        const cancelButton = modal.querySelector('.cancel-btn');
+        const form = document.getElementById('edit-user-form');
+
+        // Define the openUserModal function in the global scope
+        window.openUserModal = function(userId) {
+            console.log('Opening modal for user ID:', userId);
+
+            // Reset form and error messages
+            if (form) {
+                form.reset();
+                const existingError = form.querySelector('.form-error');
+                if (existingError) {
+                    existingError.remove();
+                }
             }
-        }
 
-        // Tab switching functionality
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
+            // Set the user ID in the hidden field
+            const userIdField = document.getElementById('user-id');
+            if (userIdField) {
+                userIdField.value = userId;
+            }
 
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Remove active class from all tabs
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabContents.forEach(content => content.classList.remove('active'));
-
-                // Add active class to clicked tab
-                button.classList.add('active');
-                document.getElementById(`${button.dataset.tab}-tab`).classList.add('active');
-
-                // Store active tab in URL hash
-                window.location.hash = button.dataset.tab;
-            });
-        });
-
-        // Add event listeners for add/edit buttons
-        const addMemberBtn = document.querySelectorAll('.add-member-btn');
-        const addRoleBtn = document.querySelectorAll('.add-role-btn');
-        const editBtns = document.querySelectorAll('.edit-btn');
-        const deleteBtns = document.querySelectorAll('.delete-btn');
-        const editRoleBtns = document.querySelectorAll('.edit-role');
-        const deleteRoleBtns = document.querySelectorAll('.delete-role');
-        const assignRoleBtns = document.querySelectorAll('.assign-role-btn');
-        const createProjectBtn = document.querySelectorAll('.create-project-btn');
-
-        // Add event listeners for member functions
-        addMemberBtn.forEach(btn => {
-            btn.addEventListener('click', () => {
-                alert('Fonctionnalité en développement: Ajouter un membre');
-            });
-        });
-
-        editBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const memberId = this.getAttribute('data-id');
-                const modal = document.getElementById('edit-user-modal');
-                if (modal) {
-                    // Call the openUserModal function passing the user ID
-                    openUserModal(memberId);
-                    modal.classList.add('active');
-                } else {
-                    console.error('Edit user modal not found in the DOM');
-                    alert('Modal not available. Unable to edit user.');
-                }
-            });
-        });
-
-        deleteBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const memberId = this.getAttribute('data-id');
-                if (confirm('Êtes-vous sûr de vouloir supprimer ce membre?')) {
-                    alert(`Fonctionnalité en développement: Supprimer le membre ${memberId}`);
-                }
-            });
-        });
-
-        // Add event listeners for role functions
-        addRoleBtn.forEach(btn => {
-            btn.addEventListener('click', () => {
-                alert('Fonctionnalité en développement: Ajouter un rôle');
-            });
-        });
-
-        editRoleBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const roleId = this.getAttribute('data-id');
-                alert(`Fonctionnalité en développement: Modifier le rôle ${roleId}`);
-            });
-        });
-
-        deleteRoleBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const roleId = this.getAttribute('data-id');
-                if (confirm('Êtes-vous sûr de vouloir supprimer ce rôle?')) {
-                    alert(`Fonctionnalité en développement: Supprimer le rôle ${roleId}`);
-                }
-            });
-        });
-
-        assignRoleBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const roleId = this.getAttribute('data-id');
-                alert(`Fonctionnalité en développement: Assigner le rôle ${roleId}`);
-            });
-        });
-
-        // Add event listener for create project button
-        createProjectBtn.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Redirect to project creation page or trigger a modal
-                if (document.getElementById('create-project-modal')) {
-                    document.getElementById('create-project-modal').classList.add('active');
-                } else {
-                    window.location.href = "/workspace/projects/new";
-                }
-            });
-        });
-    });
-
-    editBtns.forEach(btn => {
-    btn.addEventListener('click', function() {
-        const memberId = this.getAttribute('data-id');
-        // Check if the modal exists and is included
-        const modal = document.getElementById('edit-user-modal');
-        if (modal) {
-            // Call the openUserModal function passing the user ID
-            openUserModal(memberId);
+            // Show the modal
             modal.classList.add('active');
-        } else {
-            console.error('Edit user modal not found in the DOM');
-            alert('Modal not available. Unable to edit user.');
+
+            // Make the modal visible with CSS if it's using display:none
+            modal.style.display = 'block';
+
+            // Fetch user data from API
+            fetch(`/api/users/${userId}`, {
+                method: 'GET',
+                credentials: 'same-origin' // Include cookies
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+
+                    // Populate display fields
+                    document.getElementById('display-user-id').textContent = user.id;
+                    document.getElementById('display-user-email').textContent = user.email;
+                    document.getElementById('display-user-firstname').textContent = user.first_name;
+                    document.getElementById('display-user-lastname').textContent = user.last_name;
+                    document.getElementById('display-user-created-at').textContent =
+                        user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A';
+                    document.getElementById('display-user-last-active').textContent =
+                        user.last_active ? new Date(user.last_active).toLocaleString() : 'N/A';
+
+                    // Populate form fields
+                    document.getElementById('user-department').value = user.department || '';
+                    document.getElementById('user-location').value = user.location || '';
+
+                    // Populate role dropdown
+                    const roleSelect = document.getElementById('user-role');
+                    roleSelect.innerHTML = ''; // Clear existing options
+
+                    // Add organization roles from data.roles
+                    if (data.roles && data.roles.length > 0) {
+                        data.roles.forEach(role => {
+                            const option = document.createElement('option');
+                            option.value = role.name;
+                            option.textContent = role.name;
+
+                            // Set selected if this is the user's current role
+                            if (user.role === role.name) {
+                                option.selected = true;
+                            }
+
+                            roleSelect.appendChild(option);
+                        });
+                    } else {
+                        // If no roles are available, add some default options
+                        const defaultRoles = [
+                            { id: 'admin', name: 'Administrateur' },
+                            { id: 'collaborator', name: 'Collaborateur' },
+                            { id: 'client', name: 'Client' },
+                            { id: 'member', name: 'Membre' }
+                        ];
+
+                        defaultRoles.forEach(role => {
+                            const option = document.createElement('option');
+                            option.value = role.name;
+                            option.textContent = role.name;
+
+                            // Set selected if this matches the user's current role name
+                            if (user.role === role.name) {
+                                option.selected = true;
+                            }
+
+                            roleSelect.appendChild(option);
+                        });
+                    }
+
+                    // Set user status
+                    document.getElementById('user-status').value = user.is_active ? '1' : '0';
+                } else {
+                    throw new Error(data.message || 'Failed to load user data');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching user data:', error);
+
+                // Show error message
+                if (form) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error';
+                    errorDiv.textContent = error.message || 'Une erreur est survenue lors du chargement des données utilisateur.';
+                    form.prepend(errorDiv);
+                }
+
+                // Show error toast
+                if (window.toast) {
+                    window.toast.error(error.message || 'Erreur lors du chargement des données utilisateur');
+                }
+            });
+        };
+
+        // Close modal when close button is clicked
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                modal.classList.remove('active');
+                modal.style.display = 'none';
+            });
         }
-    });
+
+        // Close modal when cancel button is clicked
+        if (cancelButton) {
+            cancelButton.addEventListener('click', function() {
+                modal.classList.remove('active');
+                modal.style.display = 'none';
+            });
+        }
+
+        // Close modal when clicking outside the modal content
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.classList.remove('active');
+                modal.style.display = 'none';
+            }
+        });
+
+        // Handle form submission
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                // Get submit button elements
+                const submitButton = form.querySelector('.save-btn');
+                const buttonText = submitButton.querySelector('.btn-text');
+                const buttonSpinner = submitButton.querySelector('.btn-spinner');
+
+                // Show loading state
+                submitButton.disabled = true;
+                buttonText.style.display = 'none';
+                buttonSpinner.style.display = 'inline-block';
+
+                // Remove any existing error messages
+                const existingError = form.querySelector('.form-error');
+                if (existingError) {
+                    existingError.remove();
+                }
+
+                // Get form data and convert to JSON
+                const formData = new FormData(form);
+                const userId = formData.get('user_id');
+
+                const userData = {
+                    department: formData.get('department'),
+                    location: formData.get('location'),
+                    role: formData.get('role'),
+                    is_active: formData.get('is_active') === '1'
+                };
+
+                // Send request to update user using the API
+                fetch(`/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData),
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    // Always parse JSON first to get any error message
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            throw new Error(data.message || `HTTP error ${response.status}`);
+                        }
+                        return data;
+                    });
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Close modal and show success toast
+                        modal.classList.remove('active');
+                        modal.style.display = 'none';
+
+                        // Show success toast
+                        if (window.toast) {
+                            window.toast.success('Utilisateur modifié avec succès!');
+                        }
+
+                        // Reload the page to show updated user data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    } else {
+                        throw new Error(data.message || 'Une erreur est survenue');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating user:', error);
+
+                    // Reset button state
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'inline';
+                    buttonSpinner.style.display = 'none';
+
+                    // Create error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error';
+                    errorDiv.textContent = error.message || 'Une erreur est survenue lors de la modification de l\'utilisateur. Veuillez réessayer.';
+
+                    // Add the error at the top of the form
+                    form.prepend(errorDiv);
+
+                    // Show error toast
+                    if (window.toast) {
+                        window.toast.error(error.message || 'Une erreur est survenue lors de la modification de l\'utilisateur');
+                    }
+                });
+            });
+        }
+    } else {
+        console.warn('Modal with ID "edit-user-modal" not found in the DOM');
+    }
 });
 
+// Main Page Script - This should come after the modal script
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if hash exists and activate the corresponding tab
+    if(window.location.hash) {
+        const hash = window.location.hash.substring(1);
+        const tabToActivate = document.querySelector(`.tab-btn[data-tab="${hash}"]`);
+        if(tabToActivate) {
+            tabToActivate.click();
+        }
+    }
+
+    // Tab switching functionality
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Remove active class from all tabs
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            // Add active class to clicked tab
+            button.classList.add('active');
+            document.getElementById(`${button.dataset.tab}-tab`).classList.add('active');
+
+            // Store active tab in URL hash
+            window.location.hash = button.dataset.tab;
+        });
+    });
+
+    // Add event listeners for add/edit buttons
+    const addMemberBtn = document.querySelectorAll('.add-member-btn');
+    const addRoleBtn = document.querySelectorAll('.add-role-btn');
+    const editBtns = document.querySelectorAll('.edit-btn');
+    const deleteBtns = document.querySelectorAll('.delete-btn');
+    const editRoleBtns = document.querySelectorAll('.edit-role');
+    const deleteRoleBtns = document.querySelectorAll('.delete-role');
+    const assignRoleBtns = document.querySelectorAll('.assign-role-btn');
+    const createProjectBtn = document.querySelectorAll('.create-project-btn');
+
+    // Add event listeners for member functions
+    addMemberBtn.forEach(btn => {
+        btn.addEventListener('click', () => {
+            alert('Fonctionnalité en développement: Ajouter un membre');
+        });
+    });
+
+    // Setup edit buttons with debug logging
+    console.log('Edit buttons found:', editBtns.length);
+    editBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const memberId = this.getAttribute('data-id');
+            console.log('Edit button clicked for member ID:', memberId);
+
+            // Check if the modal exists in the DOM
+            const modal = document.getElementById('edit-user-modal');
+            if (modal) {
+                console.log('Modal found in DOM');
+
+                // Check if openUserModal function exists
+                if (typeof window.openUserModal === 'function') {
+                    console.log('openUserModal function found, calling it');
+                    window.openUserModal(memberId);
+                } else {
+                    console.error('openUserModal function not found in global scope');
+                    alert('Error: Modal function not available. Please refresh the page and try again.');
+                }
+            } else {
+                console.error('Edit user modal not found in the DOM');
+                alert('Modal not available. Unable to edit user.');
+            }
+        });
+    });
+
+    deleteBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const memberId = this.getAttribute('data-id');
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce membre?')) {
+                alert(`Fonctionnalité en développement: Supprimer le membre ${memberId}`);
+            }
+        });
+    });
+
+    // Add event listeners for role functions
+    addRoleBtn.forEach(btn => {
+        btn.addEventListener('click', () => {
+            alert('Fonctionnalité en développement: Ajouter un rôle');
+        });
+    });
+
+    editRoleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const roleId = this.getAttribute('data-id');
+            alert(`Fonctionnalité en développement: Modifier le rôle ${roleId}`);
+        });
+    });
+
+    deleteRoleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const roleId = this.getAttribute('data-id');
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce rôle?')) {
+                alert(`Fonctionnalité en développement: Supprimer le rôle ${roleId}`);
+            }
+        });
+    });
+
+    assignRoleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const roleId = this.getAttribute('data-id');
+            alert(`Fonctionnalité en développement: Assigner le rôle ${roleId}`);
+        });
+    });
+
+    // Add event listener for create project button
+    createProjectBtn.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Redirect to project creation page or trigger a modal
+            if (document.getElementById('create-project-modal')) {
+                document.getElementById('create-project-modal').classList.add('active');
+            } else {
+                window.location.href = "/workspace/projects/new";
+            }
+        });
+    });
+});
 </script>
 {% endblock %}
 {% include "workspace/modify_user_modal.html" %}

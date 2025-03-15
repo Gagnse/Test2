@@ -53,7 +53,7 @@
                 <div class="form-group">
                     <label for="project-number">Numéro du projet</label>
                     <input type="text" id="project-number" name="project_number" required placeholder="ex: GLO-2005">
-                    <div class="form-help">Un identifiant unique pour ce projet</div>
+                    <div class="form-help">Un identifiant unique pour ce projet (ce numéro doit être unique dans le système)</div>
                 </div>
                 <div class="form-group">
                     <label for="project-name">Nom du projet</label>
@@ -71,14 +71,6 @@
                         <option value="Institutionnel">Institutionnel</option>
                         <option value="Industriel">Industriel</option>
                         <option value="Divers">Divers</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="project-status">Statut</label>
-                    <select id="project-status" name="status">
-                        <option value="active">Actif</option>
-                        <option value="pending">En attente</option>
-                        <option value="completed">Terminé</option>
                     </select>
                 </div>
                 <div class="form-actions">
@@ -166,6 +158,23 @@
                     type: formData.get('type')
                 };
 
+                // Validate project number format
+                const projectNumber = projectData.project_number.trim();
+                if (!projectNumber) {
+                    // Create error message for empty project number
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error';
+                    errorDiv.textContent = 'Le numéro de projet ne peut pas être vide.';
+                    form.prepend(errorDiv);
+
+                    // Reset button state
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'inline';
+                    buttonSpinner.style.display = 'none';
+
+                    return;
+                }
+
                 // Send request to create project using the API
                 fetch('/api/projects', {
                     method: 'POST',
@@ -178,10 +187,22 @@
                 .then(response => {
                     // Always parse JSON first to get any error message
                     return response.json().then(data => {
+                        // Store the parsed data for later use
+                        const responseData = data;
+
                         if (!response.ok) {
-                            throw new Error(data.message || 'Une erreur est survenue');
+                            // Check specifically for duplicate project number error
+                            if (response.status === 500 &&
+                                responseData.message &&
+                                responseData.message.includes('Duplicate entry') &&
+                                responseData.message.includes('project_number')) {
+                                throw new Error('Un projet avec ce numéro existe déjà. Veuillez utiliser un numéro unique.');
+                            } else {
+                                throw new Error(responseData.message || 'Une erreur est survenue');
+                            }
                         }
-                        return data;
+
+                        return responseData;
                     });
                 })
                 .then(data => {
@@ -189,15 +210,21 @@
                         // Close modal and show success toast
                         modal.classList.remove('active');
 
-                        // Show success toast
+                        // Show success toast with database info if available
                         if (window.toast) {
-                            window.toast.success('Projet créé avec succès!');
+                            const dbName = data.project && data.project.database_name
+                                ? data.project.database_name
+                                : `SPACELOGIC_${projectData.project_number.replace(/[-\s]/g, '_')}`;
+                            window.toast.success(`Projet créé avec succès! Base de données: ${dbName}`);
                         }
+
+                        // Reset form
+                        form.reset();
 
                         // Reload the page to show new project
                         setTimeout(() => {
                             window.location.reload();
-                        }, 500);
+                        }, 1000);
                     } else {
                         throw new Error(data.message || 'Une erreur est survenue');
                     }
@@ -222,18 +249,8 @@
                     if (window.toast) {
                         window.toast.error(error.message || 'Une erreur est survenue lors de la création du projet');
                     }
-
-                    // Show success toast with database info
-                    if (window.toast) {
-                        const dbName = data.project.database_name || `SPACELOGIC_${projectData.project_number.replace('-', '_')}`;
-                        window.toast.success(`Projet créé avec succès! Base de données: ${dbName}`);
-                    }
-
-                    // Reload the page to show new project
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
                 });
             });
         }
     });
+</script>

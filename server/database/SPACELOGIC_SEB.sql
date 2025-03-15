@@ -168,6 +168,232 @@ BEGIN
     -- Insert the project ID reference
     INSERT INTO project_reference (admin_project_id) VALUES (p_project_id);
 
+    CREATE TABLE interior_fenestration (
+        interior_fenestration_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        interior_fenestration_category VARCHAR(100),
+        interior_fenestration_number VARCHAR(100),
+        interior_fenestration_name VARCHAR(200),
+        interior_fenestration_commentary TEXT,
+        interior_fenestration_quantity INT,
+        interior_fenestration_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE exterior_fenestration (
+        exterior_fenestration_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        exterior_fenestration_category VARCHAR(100),
+        exterior_fenestration_number VARCHAR(100),
+        exterior_fenestration_name VARCHAR(200),
+        exterior_fenestration_commentary TEXT,
+        exterior_fenestration_quantity INT,
+        exterior_fenestration_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE finishes (
+        finishes_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        finishes_category VARCHAR(100),
+        finishes_number VARCHAR(100),
+        finishes_name VARCHAR(200),
+        finishes_commentary TEXT,
+        finishes_quantity INT,
+        finishes_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE doors (
+        doors_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        doors_category VARCHAR(100),
+        doors_number VARCHAR(100),
+        doors_name VARCHAR(200),
+        doors_commentary TEXT,
+        doors_quantity INT,
+        doors_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE built_in_fournitures (
+        built_in_fournitures_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        built_in_fournitures_category VARCHAR(100),
+        built_in_fournitures_number VARCHAR(100),
+        built_in_fournitures_name VARCHAR(200),
+        built_in_fournitures_commentary TEXT,
+        built_in_fournitures_quantity INT,
+        built_in_fournitures_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE accessories (
+        accessories_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        accessories_category VARCHAR(100),
+        accessories_number VARCHAR(100),
+        accessories_name VARCHAR(200),
+        accessories_commentary TEXT,
+        accessories_quantity INT,
+        accessories_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE plumbings (
+        plumbings_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        plumbings_category VARCHAR(100),
+        plumbings_number VARCHAR(100),
+        plumbings_name VARCHAR(200),
+        plumbings_commentary TEXT,
+        plumbings_quantity INT,
+        plumbings_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE fire_protection (
+        fire_protection_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        fire_protection_category VARCHAR(100),
+        fire_protection_number VARCHAR(100),
+        fire_protection_name VARCHAR(200),
+        fire_protection_commentary TEXT,
+        fire_protection_quantity INT,
+        fire_protection_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE lighting (
+        lighting_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        lighting_category VARCHAR(100),
+        lighting_number VARCHAR(100),
+        lighting_name VARCHAR(200),
+        lighting_commentary TEXT,
+        lighting_quantity INT,
+        lighting_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE electrical_outlets (
+        electrical_outlets_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        electrical_outlets_category VARCHAR(100),
+        electrical_outlets_number VARCHAR(100),
+        electrical_outlets_name VARCHAR(200),
+        electrical_outlets_commentary TEXT,
+        electrical_outlets_quantity INT,
+        electrical_outlets_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE communication_security (
+        communication_security_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        communication_security_category VARCHAR(100),
+        communication_security_number VARCHAR(100),
+        communication_security_name VARCHAR(200),
+        communication_security_commentary TEXT,
+        communication_security_quantity INT,
+        communication_security_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE medical_equipment (
+        medical_equipment_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        medical_equipment_category VARCHAR(100),
+        medical_equipment_number VARCHAR(100),
+        medical_equipment_name VARCHAR(200),
+        medical_equipment_commentary TEXT,
+        medical_equipment_quantity INT,
+        medical_equipment_creation_date DATE,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE functionality (
+		functionality_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+		room_id BINARY(16) NOT NULL,
+		functionality_occupants_number INT,
+		functionality_desk_number INT,
+		functionality_lab_number INT,
+		functionality_schedule VARCHAR(100),
+		functionality_access SET('client_access', 'stretcher_access',
+		    'bed_access', 'patients_access','exterior_access', 'hallway_access',
+		    'adj_room_access', 'other') ,
+		functionality_access_adj_room TEXT,
+		functionality_access_other TEXT,
+		functionality_consideration SET('NA', 'anti_suicide', 'waterproof', 'radiation',
+            'electromagnetic', 'sterile', 'vibrations_sensitivity', 'wet_lab', 'dry_lab',
+		    'biosecurity', 'pet_shop' ),
+		functionality_consideration_other TEXT DEFAULT NULL,
+		functionality_description TEXT,
+		functionality_proximity TEXT,
+		functionnality_commentary TEXT,
+		functionality_creation_date DATE,
+		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+		);
+
+	CREATE TABLE arch_requirements (
+		arch_requirements_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+		room_id BINARY(16) NOT NULL,
+		arch_requirements_critic_length INT,
+		arch_requirements_critic_width INT,
+		arch_requirements_critic_height INT,
+		arch_requirements_validation_req INT,
+		arch_requirements_acoustic INT,
+		arch_requirements_int_fenestration SET('not_required', 'with_hallway', 'clear_glass',
+            'frosted_glass', 'semi_frosted_glass', 'one_way_glass', 'integrated_blind'),
+		arch_requirements_int_fen_adj_room TEXT,
+		arch_requirements_int_fen_other TEXT,
+		arch_requirements_ext_fenestration SET('not_required', 'required', 'total_obscurity',
+            'frosted_glass', 'tinted_glass', 'integrated_blind'),
+		arch_requirements_ext_fen_solar_blind TEXT DEFAULT NULL,
+		arch_requirements_ext_fen_opaque_blind TEXT DEFAULT NULL,
+		arch_requirements_commentary TEXT,
+		arch_requirements_creation_date DATE,
+		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+		);
+
+	CREATE TABLE struct_requirements (
+		struct_requirements_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+		room_id BINARY(16) NOT NULL,
+		struct_requirements_floor_overload_required INT,
+		struct_requirements_overload INT DEFAULT NULL,
+		struct_requirements_equipment_weight INT DEFAULT NULL,
+		struct_requirements_floor_flatness INT,
+		struct_requirements_ditch_gutter INT,
+		struct_requirements_steel_sensitivity INT,
+		struct_requirements_equipment_other TEXT,
+		struct_requirements_vibrations_sensitivity INT,
+		struct_requirements_max_vibrations INT DEFAULT NULL,
+		struct_requirements_commentary TEXT,
+		struct_requirements_creation_date DATE,
+		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+		);
+
+	CREATE TABLE risk_elements (
+		risk_elements_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+		room_id BINARY(16) NOT NULL,
+		risk_elements_general SET('NA', 'concentrated_acids', 'concentrated_base',
+		    'water_air_reactive', 'radioactive'),
+		risk_elements_general_radioactive TEXT DEFAULT NULL,
+		risk_elements_biological SET('NA','biological_products', 'pathogens_humans',
+		    'pathogens_animals'),
+		risk_elements_gas SET('NA', 'gas_cylinders', 'important_qty', 'toxic_gas'),
+		risk_elements_gas_qty TEXT,
+		risk_elements_gas_toxic_gas TEXT,
+		risk_elements_liquids SET('NA', 'flammable', 'important_qty', 'cryogenic'),
+		risk_elements_liquids_qty TEXT,
+		risk_elements_liquids_cryogenic TEXT,
+		risk_elements_other SET('NA', 'lasers', 'animals'),
+		risk_elements_chemical_products TEXT,
+		risk_elements_commentary TEXT,
+		risk_elements_creation_date DATE,
+		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+	);
+
 END //
 DELIMITER ;
 

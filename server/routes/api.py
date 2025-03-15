@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, session
 from server.services.auth import AuthService
 from server.database.models import User, Project, Organizations
+from server.database.db_config import get_db_connection, close_connection
 import json
 
 api_bp = Blueprint('api', __name__)
@@ -134,6 +135,23 @@ def api_create_project():
         # Sanitize project number (remove spaces, special characters) for database name
         sanitized_number = ''.join(c for c in data['project_number'] if c.isalnum() or c in '-_')
 
+        # Check if project number already exists
+        connection = get_db_connection('users_db')
+        cursor = None
+
+        try:
+            cursor = connection.cursor()
+            cursor.execute("SELECT COUNT(*) FROM projects WHERE project_number = %s", (sanitized_number,))
+            result = cursor.fetchone()
+
+            if result and result[0] > 0:
+                return jsonify({
+                    'success': False,
+                    'message': 'Un projet avec ce numéro existe déjà. Veuillez utiliser un numéro unique.'
+                }), 400
+        finally:
+            close_connection(connection, cursor)
+
         project = Project(
             project_number=sanitized_number,
             name=data['name'],
@@ -166,6 +184,14 @@ def api_create_project():
         error_traceback = traceback.format_exc()
         print(f"Error creating project: {error_message}")
         print(f"Traceback: {error_traceback}")
+
+        # Check for duplicate key error
+        if "Duplicate entry" in error_message and "project_number" in error_message:
+            return jsonify({
+                'success': False,
+                'message': 'Un projet avec ce numéro existe déjà. Veuillez utiliser un numéro unique.'
+            }), 400
+
         return jsonify({
             'success': False,
             'message': f"Erreur lors de la création du projet: {error_message}",

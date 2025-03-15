@@ -1,6 +1,7 @@
 import uuid
 import bcrypt
 from server.database.db_config import get_db_connection, close_connection
+from server.utils.database_utils import *
 
 
 class User:
@@ -99,84 +100,83 @@ class User:
         return user
 
     def save(self):
-        """Save user to database"""
+        """Save project to database"""
         connection = get_db_connection('users_db')
         cursor = None
 
         try:
             cursor = connection.cursor()
 
-            # Get an organization to associate with the user
-            # For simplicity, we'll use the first organization in the database
-            org_id = None
-            try:
-                cursor.execute("SELECT BIN_TO_UUID(id) FROM organizations LIMIT 1")
-                org_result = cursor.fetchone()
-                if org_result:
-                    org_id = org_result[0]
-            except Exception as e:
-                print(f"Error getting default organization: {e}")
-
-            if not org_id:
-                print("No organization found for user. Creating a default one.")
-                # Create a default organization if none exists
-                cursor.execute("INSERT INTO organizations (name) VALUES ('Default Organization')")
-                connection.commit()
-                cursor.execute("SELECT BIN_TO_UUID(id) FROM organizations WHERE name = 'Default Organization'")
-                org_result = cursor.fetchone()
-                if org_result:
-                    org_id = org_result[0]
-
-            # Hash the password if it's not already hashed
-            if not self.password.startswith('$2b$'):
-                self.password = self.hash_password(self.password)
-
-            # Use MySQL's UUID_TO_BIN function to convert UUID to binary
-            if self.id:  # Update existing user
+            if self.id:  # Update existing project
                 query = """
-                    UPDATE users 
-                    SET first_name = %s, last_name = %s, email = %s, password = %s
+                    UPDATE projects
+                    SET project_number = %s, name = %s, description = %s,
+                    status = %s, type = %s,
+                    organization_id = NULLIF(UUID_TO_BIN(%s), UUID_TO_BIN(NULL))
                     WHERE id = UUID_TO_BIN(%s)
                 """
-                values = (self.first_name, self.last_name, self.email, self.password, self.id)
-            else:  # Create new user
+                values = (
+                    self.project_number, self.name, self.description,
+                    self.status, self.type, self.organization_id, self.id
+                )
+            else:  # Create new project
                 query = """
-                    INSERT INTO users (first_name, last_name, email, password, organization_id)
-                    VALUES (%s, %s, %s, %s, UUID_TO_BIN(%s))
+                    INSERT INTO projects (project_number, name, description, status, type, organization_id)
+                    VALUES (%s, %s, %s, %s, %s, NULLIF(UUID_TO_BIN(%s), UUID_TO_BIN(NULL)))
                 """
-                values = (self.first_name, self.last_name, self.email, self.password, org_id)
+                values = (
+                    self.project_number, self.name, self.description,
+                    self.status, self.type, self.organization_id
+                )
 
             cursor.execute(query, values)
             connection.commit()
 
-            # Get the auto-generated ID for new user
+            # Get the auto-generated ID for a new project
             if not self.id:
-                cursor.execute("SELECT BIN_TO_UUID(id) FROM users WHERE email = %s", (self.email,))
+                # For UUIDs, we need to query the UUID that was just created
+                cursor.execute("""
+                    SELECT BIN_TO_UUID(id) 
+                    FROM projects 
+                    WHERE project_number = %s
+                """, (self.project_number,))
+
                 result = cursor.fetchone()
                 if result:
                     self.id = result[0]
 
-                    # Add user to the organization
-                    if org_id:
-                        try:
-                            cursor.execute(
-                                "INSERT INTO organization_user (organizations_id, users_id) VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s))",
-                                (org_id, self.id)
-                            )
-                            connection.commit()
-                        except Exception as e:
-                            print(f"Error adding user to organization: {e}")
+                    # Create project database directly with Python function
+                    try:
+                        # Close existing connection before creating new DB
+                        close_connection(connection, cursor)
+                        connection = None
+                        cursor = None
+
+                        # Call the function to create the database
+                        success, db_name = create_project_database(self.id, self.project_number)
+                        if success:
+                            print(f"Project database '{db_name}' created successfully")
+                            # Store database name for later reference
+                            self.database_name = db_name
+                        else:
+                            print(f"Failed to create project database")
+                            # Don't return False here - we still want the project to be created
+                    except Exception as e:
+                        print(f"Error creating project database: {e}")
+                        import traceback
+                        traceback.print_exc()
 
             return True
         except Exception as e:
             if connection:
                 connection.rollback()
-            print(f"Error saving user: {e}")
+            print(f"Error saving project: {e}")
             import traceback
-            traceback.print_exc()
+            traceback.print_exc()  # Print the full error traceback for debugging
             return False
         finally:
-            close_connection(connection, cursor)
+            if connection and cursor:
+                close_connection(connection, cursor)
 
     @staticmethod
     def get_user_org_id(user_id):
@@ -364,15 +364,21 @@ class Project:
                 if result:
                     self.id = result[0]
 
-                    # Create project database by calling stored procedure
+                    # Create project database using Python function
                     try:
-                        # Create database name based on project number
-                        db_name = f"SPACELOGIC_{self.project_number.replace('-', '_')}"
-                        cursor.execute("CALL create_project_database(UUID_TO_BIN(%s), %s)", (self.id, db_name))
-                        connection.commit()
-                        print(f"Project database '{db_name}' created successfully")
+                        # Import the function here to avoid circular imports
+                        from server.utils.database_utils import create_project_database
+
+                        # Call the Python function to create the database
+                        result = create_project_database(self.id, self.project_number)
+
+                        if result:
+                            print(f"Project database for project {self.project_number} created successfully")
+                        else:
+                            print(f"Failed to create project database for project {self.project_number}")
                     except Exception as e:
                         print(f"Error creating project database: {e}")
+                        # Continue anyway, since the project itself was created successfully
 
 
             return True

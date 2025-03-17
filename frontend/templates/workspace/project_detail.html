@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - Spacelogic{% endblock %}
+
+{% block content %}
+<div class="project-detail-container">
+    <h1>{{ project.name }}</h1>
+    <p><strong>Description:</strong> {{ project.description }}</p>
+    <p><strong>Statut:</strong> <span class="project-status">{{ project.status }}</span></p>
+
+    <!-- Onglets -->
+    <div class="tabs">
+        <button class="tab-button active" data-tab="tab-exterior_fenestration">Fenestration Extérieure</button>
+        <button class="tab-button" data-tab="tab-interior_fenestration">Fenestration Intérieure</button>
+        <button class="tab-button" data-tab="tab-doors">Portes</button>
+        <button class="tab-button" data-tab="tab-built_in_fournitures">Mobilier intégré</button>
+        <button class="tab-button" data-tab="tab-accessories">Accessoires</button>
+        <button class="tab-button" data-tab="tab-plumbings">Plomberie</button>
+        <button class="tab-button" data-tab="tab-fire_protection">Protection Incendie</button>
+        <button class="tab-button" data-tab="tab-lighting">Éclairage</button>
+        <button class="tab-button" data-tab="tab-electrical_outlets">Prises Électriques</button>
+        <button class="tab-button" data-tab="tab-communication_security">Communication & Sécurité</button>
+        <button class="tab-button" data-tab="tab-medical_equipment">Équipements Médicaux</button>
+        <button class="tab-button" data-tab="tab-functionality">Fonctionnalité</button>
+        <button class="tab-button" data-tab="tab-arch_requirements">Exigences Archi.</button>
+        <button class="tab-button" data-tab="tab-struct_requirements">Exigences Struct.</button>
+        <button class="tab-button" data-tab="tab-risk_elements">Éléments à Risque</button>
+        <button class="tab-button" data-tab="tab-ventilation_cvac">Ventilation-CVAC</button>
+        <button class="tab-button" data-tab="tab-electricity">Électricité</button>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div class="tab-content-container">
+        {% for category, items in project_data.items() %}
+        <div id="tab-{{ category }}" class="tab-content {% if loop.first %}active{% endif %}">
+            <h2>{{ category.replace('_', ' ').capitalize() }}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        {% if items and items|length > 0 %}
+                            {% if category in columns_to_display %}
+                                {% for key in columns_to_display[category] if key in items[0] %}
+                                    <th>{{ key }}</th>
+                                {% endfor %}
+                            {% else %}
+                                {% for key in items[0].keys() %}
+                                    <th>{{ key }}</th>
+                                {% endfor %}
+                            {% endif %}
+                        {% else %}
+                            <p>Aucune donnée disponible.</p>
+                        {% endif %}
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        {% if category in columns_to_display %}
+                            {% for key in columns_to_display[category] if key in item %}
+                                <td>{{ item[key] }}</td>
+                            {% endfor %}
+                        {% else %}
+                            {% for value in item.values() %}
+                                <td>{{ value }}</td>
+                            {% endfor %}
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const tabButtons = document.querySelectorAll(".tab-button");
+        const tabContents = document.querySelectorAll(".tab-content");
+
+        tabButtons.forEach(button => {
+            button.addEventListener("click", function() {
+                tabButtons.forEach(btn => btn.classList.remove("active"));
+                tabContents.forEach(content => content.classList.remove("active"));
+
+                this.classList.add("active");
+                document.getElementById(this.dataset.tab).classList.add("active");
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 20px;
+    }
+
+    .tab-button {
+        padding: 8px 12px;
+        border: none;
+        background: #ddd;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .tab-button.active {
+        background: #3498db;
+        color: white;
+    }
+
+    .tab-content-container {
+        background: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    th, td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+
+    th {
+        background: #f5f5f5;
+    }
+</style>
+{% endblock %}

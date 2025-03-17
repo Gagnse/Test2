@@ -6,7 +6,7 @@
 <!-- Hero Section with Parallax -->
 <section class="parallax-hero">
     <div class="hero-content">
-        <h1>Bienvenue sur mon super design</h1>
+        <h1>Bienvenue chez SpaceLogic!</h1>
         <p> Chez SpaceLogic, nous vous aiderons à simplifier
             vos projets d'architecture. Cette plateforme en
             ligne est conçue pour accompagner les architectes
@@ -65,21 +65,21 @@
         <h2>Pourquoi choisir SpaceLogic?</h2>
         <p>-Outils pratiques pour optimiser votre travail</p>
         <p>-Facilitation de la communication avec les clients</p>
-        <button class="cta-button">Learn More</button>
+        <button class="cta-button" onclick="window.location.href='{{ url_for('services') }}'">Nos Services</button>
     </div>
 </section>
 
 <!-- About Section -->
 <section class="about">
     <div class="about-container">
-        <h2>About Us</h2>
+        <h2>À propos de nous</h2>
         <p> Nous sommes une équipe composée de quatre étudiants au
             baccalauréat en informatique à l'Université Laval. </p>
         <p>Nora Belattar <br>
         Sébastien Gagnon <br>
         Jessica Leroux <br>
         Rosalie Tremblay</p>
-        <button class="cta-button">En savoir plus</button>
+        <button class="cta-button" onclick="window.location.href='{{ url_for('about') }}'">En savoir plus</button>
     </div>
 </section>
 {% endblock %}

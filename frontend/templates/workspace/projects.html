@@ -48,7 +48,8 @@
 
     {% if projects %}
     <div class="projects-grid">
-        {% for project in projects %}
+    {% for project in projects %}
+    <a href="{{ url_for('workspace.project_detail', project_id=project.id) }}" class="project-card-link">
         <div class="project-card">
             <div class="project-card-header">
                 <p class="project-number">No. {{ project.project_number }}</p>
@@ -63,27 +64,14 @@
                 </div>
             </div>
             <div class="project-card-content">
-                <div class="project-image-container">
-                    <img src="../../static/images/project-placeholder.png" alt="Project Image" class="project-image">
-                </div>
                 <h3 class="project-title">{{ project.name }}</h3>
                 <p class="project-description">{{ project.description }}</p>
             </div>
-            <div class="project-card-footer">
-                <div class="project-name">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                    </svg>
-                    <span>{{ project.project_number }}</span>
-                </div>
-                <span class="project-status {{ project.status|lower if project.status else 'active' }}">
-                    {{ project.status if project.status else 'Actif' }}
-                </span>
-            </div>
         </div>
-        {% endfor %}
-    </div>
+    </a>
+    {% endfor %}
+</div>
+
     {% else %}
     <div class="empty-state">
         <div class="empty-icon">

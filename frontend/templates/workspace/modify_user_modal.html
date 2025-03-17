@@ -317,9 +317,15 @@
                 document.getElementById('display-user-last-active').textContent =
                     user.last_active ? new Date(user.last_active).toLocaleString() : 'N/A';
 
-                // Populate form fields
+                // Populate form fields with existing values (use empty string if null/undefined)
                 document.getElementById('user-department').value = user.department || '';
                 document.getElementById('user-location').value = user.location || '';
+
+                // Add debugging to verify values
+                console.log('User data from API:', user);
+                console.log('Department value:', user.department);
+                console.log('Location value:', user.location);
+                console.log('Role value:', user.role);
 
                 // Populate role dropdown
                 const roleSelect = document.getElementById('user-role');
@@ -461,29 +467,16 @@
                     modal.classList.remove('active');
                     modal.style.display = 'none';
 
-                    // Show success toast
-                    if (window.toast) {
-                        window.toast.success('Utilisateur modifié avec succès!');
-                    }
-
                     // Log the successful update
                     console.log('User updated successfully:', data);
 
-                    // Force a complete page reload bypassing cache
                     setTimeout(() => {
-                        console.log('Forcing complete page reload...');
-
-                        // Get current URL without hash
-                        const currentUrl = window.location.href.split('#')[0];
-
-                        // Add a cache-busting parameter
-                        const cacheBuster = 'cachebust=' + new Date().getTime();
-                        const separator = currentUrl.includes('?') ? '&' : '?';
-                        const refreshUrl = currentUrl + separator + cacheBuster;
-
-                        // Redirect to the same page with cache-busting parameter
-                        window.location.href = refreshUrl;
-                    }, 800);
+                        // Force a complete page reload
+                        window.location.href = window.location.pathname +
+                            (window.location.search ? window.location.search + '&' : '?') +
+                            'refresh=' + new Date().getTime() +
+                            (window.location.hash || '');
+                    }, 500);
                 } else {
                     throw new Error(data.message || 'Une erreur est survenue');
                 }

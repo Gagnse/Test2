@@ -384,6 +384,7 @@ def api_create_organisation():
     else:
         return jsonify({'success': False, 'message': 'Erreur lors de la création de l\'organisation'}), 500
 
+
 @api_bp.route('/users/<user_id>', methods=['GET'])
 def api_get_user(user_id):
     """Get a specific user by ID"""
@@ -395,15 +396,31 @@ def api_get_user(user_id):
     if not user:
         return jsonify({'success': False, 'message': 'Utilisateur non trouvé'}), 404
 
-    # Get the user's current organization
+    # Get the user's organization
     org_id = user.organization_id
     organization = Organizations.find_by_id(org_id) if org_id else None
 
-    # Get organization roles if organization exists
+    # Get roles for this user in the organization
     roles = []
     if organization:
-        roles = organization.get_roles()
+        # First check if the user is the super_admin
+        if user.id == organization.super_admin_id:
+            roles = [{'id': 'super-admin', 'name': 'Administrateur', 'description': 'Super Administrator'}]
+        else:
+            # Get roles from regular assignments
+            roles = organization.get_user_roles(user.id)
 
+    # If roles is still empty, add some default roles
+    if not roles:
+        default_roles = [
+            {'id': 'admin', 'name': 'Administrateur', 'description': 'Administrator'},
+            {'id': 'collab', 'name': 'Collaborateur', 'description': 'Collaborator'},
+            {'id': 'client', 'name': 'Client', 'description': 'Client'},
+            {'id': 'member', 'name': 'Membre', 'description': 'Member'}
+        ]
+        roles = default_roles
+
+    # Make sure we include all relevant fields
     user_data = {
         'id': user.id,
         'first_name': user.first_name,
@@ -412,10 +429,13 @@ def api_get_user(user_id):
         'created_at': user.created_at.isoformat() if user.created_at else None,
         'last_active': user.last_active.isoformat() if hasattr(user, 'last_active') and user.last_active else None,
         'is_active': user.is_active,
-        'department': getattr(user, 'department', None),
-        'location': getattr(user, 'location', None),
-        'role': getattr(user, 'role', None)
+        'department': user.department,
+        'location': user.location,
+        'role': user.role
     }
+
+    # Add debugging to verify data is being sent correctly
+    print(f"Sending user data to client: department={user.department}, location={user.location}, role={user.role}")
 
     return jsonify({
         'success': True,

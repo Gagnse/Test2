@@ -176,7 +176,7 @@ BEGIN
         interior_fenestration_name VARCHAR(200),
         interior_fenestration_commentary TEXT,
         interior_fenestration_quantity INT,
-        interior_fenestration_creation_date DATE,
+        interior_fenestration_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -188,7 +188,7 @@ BEGIN
         exterior_fenestration_name VARCHAR(200),
         exterior_fenestration_commentary TEXT,
         exterior_fenestration_quantity INT,
-        exterior_fenestration_creation_date DATE,
+        exterior_fenestration_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -200,7 +200,7 @@ BEGIN
         finishes_name VARCHAR(200),
         finishes_commentary TEXT,
         finishes_quantity INT,
-        finishes_creation_date DATE,
+        finishes_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -212,7 +212,7 @@ BEGIN
         doors_name VARCHAR(200),
         doors_commentary TEXT,
         doors_quantity INT,
-        doors_creation_date DATE,
+        doors_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -224,7 +224,7 @@ BEGIN
         built_in_fournitures_name VARCHAR(200),
         built_in_fournitures_commentary TEXT,
         built_in_fournitures_quantity INT,
-        built_in_fournitures_date DATE,
+        built_in_fournitures_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -236,7 +236,7 @@ BEGIN
         accessories_name VARCHAR(200),
         accessories_commentary TEXT,
         accessories_quantity INT,
-        accessories_creation_date DATE,
+        accessories_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -248,7 +248,7 @@ BEGIN
         plumbings_name VARCHAR(200),
         plumbings_commentary TEXT,
         plumbings_quantity INT,
-        plumbings_creation_date DATE,
+        plumbings_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -260,7 +260,7 @@ BEGIN
         fire_protection_name VARCHAR(200),
         fire_protection_commentary TEXT,
         fire_protection_quantity INT,
-        fire_protection_creation_date DATE,
+        fire_protection_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -272,7 +272,7 @@ BEGIN
         lighting_name VARCHAR(200),
         lighting_commentary TEXT,
         lighting_quantity INT,
-        lighting_creation_date DATE,
+        lighting_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -284,7 +284,7 @@ BEGIN
         electrical_outlets_name VARCHAR(200),
         electrical_outlets_commentary TEXT,
         electrical_outlets_quantity INT,
-        electrical_outlets_creation_date DATE,
+        electrical_outlets_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -296,7 +296,7 @@ BEGIN
         communication_security_name VARCHAR(200),
         communication_security_commentary TEXT,
         communication_security_quantity INT,
-        communication_security_creation_date DATE,
+        communication_security_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -308,7 +308,7 @@ BEGIN
         medical_equipment_name VARCHAR(200),
         medical_equipment_commentary TEXT,
         medical_equipment_quantity INT,
-        medical_equipment_creation_date DATE,
+        medical_equipment_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
     );
 
@@ -330,8 +330,8 @@ BEGIN
 		functionality_consideration_other TEXT DEFAULT NULL,
 		functionality_description TEXT,
 		functionality_proximity TEXT,
-		functionnality_commentary TEXT,
-		functionality_creation_date DATE,
+		functionality_commentary TEXT,
+		functionality_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 		);
 
@@ -352,7 +352,7 @@ BEGIN
 		arch_requirements_ext_fen_solar_blind TEXT DEFAULT NULL,
 		arch_requirements_ext_fen_opaque_blind TEXT DEFAULT NULL,
 		arch_requirements_commentary TEXT,
-		arch_requirements_creation_date DATE,
+		arch_requirements_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 		);
 
@@ -369,7 +369,7 @@ BEGIN
 		struct_requirements_vibrations_sensitivity INT,
 		struct_requirements_max_vibrations INT DEFAULT NULL,
 		struct_requirements_commentary TEXT,
-		struct_requirements_creation_date DATE,
+		struct_requirements_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 		);
 
@@ -390,9 +390,40 @@ BEGIN
 		risk_elements_other SET('NA', 'lasers', 'animals'),
 		risk_elements_chemical_products TEXT,
 		risk_elements_commentary TEXT,
-		risk_elements_creation_date DATE,
+		risk_elements_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 	);
+
+    CREATE TABLE ventilation_cvac (
+        ventilation_cvac_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        ventilation_care_area_type VARCHAR(100),
+        ventilation VARCHAR(200),
+        ventilation_special_mechanics TEXT,
+        ventilation_specific_exhaust TEXT,
+        ventilation_commentary TEXT,
+        ventilation_relative_room_pressure VARCHAR(50),
+        ventilation_pressurization VARCHAR(100),
+        ventilation_environmental_parameters TEXT,
+        ventilation_cvac_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE electricity (
+        electricity_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+        room_id BINARY(16) NOT NULL,
+        electricity_care_area_type VARCHAR(100),
+        electricity_smoke_fire_detection VARCHAR(100),
+        electricity_special_equipment TEXT,
+        electricity_lighting_type VARCHAR(100),
+        electricity_lighting_level VARCHAR(50),
+        electricity_lighting_control VARCHAR(100),
+        color_temperature VARCHAR(50),
+        electricity_lighting TEXT,
+        electricity_commentary TEXT,
+        electricity_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    );
 
 END //
 DELIMITER ;

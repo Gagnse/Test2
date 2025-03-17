@@ -5,8 +5,9 @@ from server.utils.database_utils import *
 
 
 class User:
-    def __init__(self, id=None, first_name=None, last_name=None, email=None, password=None, created_at=None,
-                 is_active=True, organization_id=None):
+    def __init__(self, id=None, first_name=None, last_name=None, email=None, password=None,
+                 created_at=None, is_active=True, organization_id=None, department=None,
+                 location=None, role=None):
         self.id = id
         self.first_name = first_name
         self.last_name = last_name
@@ -15,6 +16,9 @@ class User:
         self.created_at = created_at
         self.is_active = is_active
         self.organization_id = organization_id
+        self.department = department
+        self.location = location
+        self.role = role
 
     @staticmethod
     def hash_password(password):
@@ -75,7 +79,8 @@ class User:
             query = """
                 SELECT BIN_TO_UUID(id) as id, first_name, last_name, 
                 email, password, created_at, is_active, 
-                BIN_TO_UUID(organization_id) as organization_id 
+                BIN_TO_UUID(organization_id) as organization_id,
+                department, location, role  # Ensure these fields are included
                 FROM users WHERE id = UUID_TO_BIN(%s)
             """
             cursor.execute(query, (user_id,))
@@ -90,7 +95,10 @@ class User:
                     password=result['password'],
                     created_at=result['created_at'],
                     is_active=result['is_active'],
-                    organization_id=result['organization_id']
+                    organization_id=result['organization_id'],
+                    department=result.get('department'),
+                    location=result.get('location'),
+                    role=result.get('role')
                 )
         except Exception as e:
             print(f"Error finding user by ID: {e}")
@@ -181,6 +189,31 @@ class User:
             close_connection(connection, cursor)
 
         return organization_id
+
+
+    @staticmethod
+    def is_super_admin(user_id, organization_id):
+        """Check if the user is the super admin of the organization"""
+        connection = get_db_connection('users_db')
+        cursor = None
+        is_admin = False
+
+        try:
+            cursor = connection.cursor()
+            query = """
+                SELECT COUNT(*) 
+                FROM organizations 
+                WHERE id = UUID_TO_BIN(%s) AND super_admin_id = UUID_TO_BIN(%s)
+            """
+            cursor.execute(query, (organization_id, user_id))
+            result = cursor.fetchone()
+            is_admin = result[0] > 0 if result else False
+        except Exception as e:
+            print(f"Error checking super admin status: {e}")
+        finally:
+            close_connection(connection, cursor)
+
+        return is_admin
 
 class Project:
     def __init__(self, id=None, project_number=None, name=None, description=None,
@@ -643,12 +676,12 @@ class Organizations:
             print(f"Getting users for organization ID: {self.id}")
 
             query = """
-                SELECT BIN_TO_UUID(u.id) as id, u.last_name, u.first_name, u.email, 
-                u.created_at, u.is_active
-                FROM users u
-                JOIN organization_user ou ON u.id = ou.users_id
-                WHERE ou.organizations_id = UUID_TO_BIN(%s)
-            """
+                 SELECT BIN_TO_UUID(u.id) as id, u.last_name, u.first_name, u.email, 
+                 u.created_at, u.is_active, u.department, u.location, u.role
+                 FROM users u
+                 JOIN organization_user ou ON u.id = ou.users_id
+                 WHERE ou.organizations_id = UUID_TO_BIN(%s)
+             """
             cursor.execute(query, (self.id,))
             results = cursor.fetchall()
 
@@ -664,6 +697,13 @@ class Organizations:
                     created_at=result['created_at'],
                     is_active=result['is_active']
                 )
+                # Also set these attributes separately
+                if 'department' in result:
+                    user.department = result['department']
+                if 'location' in result:
+                    user.location = result['location']
+                if 'role' in result:
+                    user.role = result['role']
                 users.append(user)
         except Exception as e:
             print(f"Error getting users for organization: {e}")
@@ -677,14 +717,21 @@ class Organizations:
 
     def get_user_roles(self, user_id):
         """Get all roles for a specific user in the organization"""
-        connection = get_db_connection('project_db')
+        connection = get_db_connection('users_db')  # Use users_db, not project_db
         cursor = None
         roles = []
 
         try:
+            # First check if user is super admin - this takes precedence over assigned roles
+            if User.is_super_admin(user_id, self.id):
+                # Return Administrateur role for super admins
+                print(f"User {user_id} is super admin of organization {self.id}, returning Administrateur role")
+                return [{'id': 'super-admin', 'name': 'Administrateur', 'description': 'Super Administrator'}]
+
+            # Get role IDs from user_organisation_role table
             cursor = connection.cursor(dictionary=True)
             query = """
-                SELECT BIN_TO_UUID(r.id) as id, r.name, r.description, r.created_at
+                SELECT r.id, r.name, r.description, r.created_at
                 FROM organization_roles r
                 JOIN user_organisation_role uor ON r.id = uor.role_id
                 WHERE uor.user_id = UUID_TO_BIN(%s) 
@@ -693,16 +740,20 @@ class Organizations:
             cursor.execute(query, (user_id, self.id))
             results = cursor.fetchall()
 
-            for result in results:
-                role = {
-                    'id': result['id'],
-                    'name': result['name'],
-                    'description': result['description'],
-                    'created_at': result['created_at']
-                }
-                roles.append(role)
+            if results:
+                for result in results:
+                    role = {
+                        'id': result['id'],
+                        'name': result['name'],
+                        'description': result['description'],
+                        'created_at': result['created_at']
+                    }
+                    roles.append(role)
+                    print(f"Found assigned role {result['name']} for user {user_id}")
         except Exception as e:
-            print(f"Error getting roles for user {user_id} in organisation {self.id}: {e}")
+            print(f"Error getting roles for user {user_id} in organization {self.id}: {e}")
+            import traceback
+            traceback.print_exc()
         finally:
             close_connection(connection, cursor)
 

@@ -4,6 +4,7 @@ import os
 from datetime import timedelta
 from server.utils.cors import setup_cors
 
+
 app = Flask(__name__,
             static_folder='frontend/static',
             template_folder='frontend/templates')
@@ -60,6 +61,7 @@ def inject_auth_status():
         'is_authenticated': AuthService.is_authenticated(),
         'current_user_name': AuthService.get_current_user_name()
     }
+
 
 if __name__ == '__main__':
     app.run(debug=True)

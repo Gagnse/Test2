@@ -143,7 +143,7 @@
                     </div>
                     <div class="project-card-content">
                         <div class="project-image-container">
-                            <img src="/static/images/project-placeholder.png" alt="Project Image" class="project-image">
+                            <img src="{{ url_for('static', filename='images/project-placeholder.png') }}" alt="Project Image" class="project-image">
                         </div>
                         <h3 class="project-title">{{ project.name }}</h3>
                         <p class="project-description">{{ project.description }}</p>

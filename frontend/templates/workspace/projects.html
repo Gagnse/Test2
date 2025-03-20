@@ -64,8 +64,21 @@
                 </div>
             </div>
             <div class="project-card-content">
+                <div class="project-image-container">
+                    <img src="/static/images/project-placeholder.png" alt="Project Image" class="project-image">
+                </div>
                 <h3 class="project-title">{{ project.name }}</h3>
                 <p class="project-description">{{ project.description }}</p>
+            </div>
+             <div class="project-card-footer">
+                <div class="project-name">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <span>{{ project.project_number }}</span>
+                </div>
+                <span class="project-status {{ project.status|lower }}">{{ project.status }}</span>
             </div>
         </div>
     </a>
@@ -183,161 +196,175 @@
         background-color: #f7fafc;
     }
 
+    /* Unified Project Card Styles */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.project-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.project-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 100%;
+    max-height: 280px;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
+}
+
+.project-card-header {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.project-number {
+    font-size: 0.8rem;
+    color: #718096;
+    margin: 0;
+}
+
+.project-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.project-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #a0aec0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.project-action-btn:hover {
+    background-color: #f7fafc;
+    color: #4a5568;
+}
+
+.project-card-content {
+    padding: 15px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+.project-image-container {
+    margin-bottom: 15px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.project-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.project-title {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+    color: #2d3748;
+    width: 100%;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+}
+
+.project-description {
+    color: #4a5568;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    width: 100%;
+    text-align: left;
+}
+
+.project-card-footer {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+}
+
+.project-name {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #2d3748;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.project-status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.project-status.actif, .project-status.active {
+    background-color: #d1f9d1;
+    color: #237923;
+}
+
+.project-status.en.attente, .project-status.pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.project-status.terminé, .project-status.completed {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
     .projects-grid {
-        display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 20px;
-    }
-
-    .project-card {
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        border: 1px solid #e2e8f0;
-        overflow: hidden;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        max-width: 200px;
-        max-height: 200px;
-    }
-
-    .project-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
-    }
-
-    .project-card-header {
-        padding: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .project-status {
-        padding: 2px 6px;
-        border-radius: 12px;
-        font-size: 0.7rem;
-        font-weight: 500;
-    }
-
-    .project-status.active {
-        background-color: #d1f9d1;
-        color: #237923;
-    }
-
-    .project-status.pending {
-        background-color: #fff2cc;
-        color: #856404;
-    }
-
-    .project-status.completed {
-        background-color: #e2e8f0;
-        color: #4a5568;
-    }
-
-    .project-number {
-        font-size: 0.7rem;
-        color: #718096;
-        margin: 0;
-    }
-
-    .project-action-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: #a0aec0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 3px;
-        border-radius: 50%;
-        transition: background-color 0.2s ease;
-    }
-
-    .project-action-btn:hover {
-        background-color: #f7fafc;
-        color: #4a5568;
-    }
-
-    .project-card-content {
-        padding: 10px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        overflow: hidden;
-    }
-
-    .project-image-container {
-        margin-bottom: 10px;
-        width: 100%;
-        display: flex;
-        justify-content: center;
     }
 
     .project-image {
         width: 80px;
         height: 80px;
-        object-fit: cover;
-        border-radius: 6px;
     }
-
-    .project-title {
-        margin: 0 0 5px 0;
-        font-size: 0.9rem;
-        color: #2d3748;
-        width: 100%;
-        text-align: left;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .project-description {
-        color: #4a5568;
-        font-size: 0.8rem;
-        margin: 0;
-        line-height: 1.3;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-        overflow: hidden;
-        width: 100%;
-        text-align: left;
-    }
-
-    .project-card-footer {
-        padding: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-top: 1px solid #e2e8f0;
-        background-color: #f8fafc;
-    }
-
-    .project-name {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-        color: #2d3748;
-        font-size: 0.7rem;
-        font-weight: 500;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 70%;
-    }
-
-    .project-type {
-        padding: 2px 6px;
-        background-color: #edf2f7;
-        border-radius: 12px;
-        font-size: 0.7rem;
-        color: #4a5568;
-    }
-
+}
     .empty-state {
         text-align: center;
         padding: 60px 20px;

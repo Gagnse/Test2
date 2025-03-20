@@ -1,9 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 
 from server.services.auth import AuthService
 from server.utils.toast_helper import redirect_with_toast, set_toast
 from server.database.models import Project, Organizations
 from server.database.db_config import get_db_connection, database_exists
+import binascii
+import uuid
+import re
+
 
 workspace_bp = Blueprint('workspace', __name__)
 
@@ -294,13 +298,67 @@ def project_detail(project_id):
         "risk_elements", "ventilation_cvac", "electricity"
     ]
 
+#     for table in tables:
+#         try:
+# #            cursor.execute(f"SELECT * FROM {table};")
+#             cursor.execute(f"""
+#                 SELECT t.*, r.name AS room_name
+#                 FROM {table} t
+#                 JOIN rooms r ON t.room_id = r.id;
+#             """)
+#
+#             project_data[table] = cursor.fetchall() or []
+#             print(f"Erreur récupération {table} : {e}")
+#         except Exception as e:
+#             print(f"⚠️ Erreur récupération {table} : {e}")
+
     for table in tables:
         try:
-            cursor.execute(f"SELECT * FROM {table};")
-            project_data[table] = cursor.fetchall()
+            # 🔹 Identifier dynamiquement la colonne ID de la table
+            primary_key = f"{table}_id"
+
+            cursor.execute(f"""
+                SELECT {table}.*, {table}.{primary_key}, rooms.name AS room_name 
+                FROM {table} 
+                LEFT JOIN rooms ON {table}.room_id = rooms.id;
+            """)
+
+            project_data[table] = cursor.fetchall() or []  # Assure qu'on a une liste
+
+            import uuid
+
+            import uuid
+
+            for table in tables:
+                try:
+                    primary_key = f"{table}_id"
+
+                    cursor.execute(f"""
+                        SELECT {table}.*, {table}.{primary_key}, rooms.name AS room_name 
+                        FROM {table} 
+                        LEFT JOIN rooms ON {table}.room_id = rooms.id;
+                    """)
+
+                    rows = cursor.fetchall() or []  # Assure qu'on a une liste
+
+                    # 🔹 Convertir l'ID binaire en format UUID (plus facile à utiliser)
+                    for row in rows:
+                        if primary_key in row and isinstance(row[primary_key], bytes):
+                            row[primary_key] = str(uuid.UUID(bytes=row[primary_key]))  # Convertir en UUID string
+
+                    project_data[table] = rows
+
+                    print(f"🔹 {table}: {len(project_data[table])} lignes")
+
+                except Exception as err:
+                    print(f"⚠️ Erreur récupération {table} : {err}")
+                    project_data[table] = []  # Assure une liste vide en cas d'erreur
+
             print(f"🔹 {table}: {len(project_data[table])} lignes")
-        except Exception as e:
-            print(f"⚠️ Erreur récupération {table} : {e}")
+
+        except Exception as err:  # Utiliser `err` au lieu de `e`
+            print(f"⚠️ Erreur récupération {table} : {err}")  # Utilisation correcte de `err`
+            project_data[table] = []  # Assure une liste vide en cas d'erreur
 
     cursor.close()
     connection.close()
@@ -312,52 +370,184 @@ def project_detail(project_id):
         # 4️⃣ Définir les colonnes à afficher pour chaque catégorie
 
         columns_to_display = {
-            "interior_fenestration": ["interior_fenestration_category", "interior_fenestration_number",
+            "interior_fenestration": ["room_name", "interior_fenestration_category", "interior_fenestration_number",
                                       "interior_fenestration_name", "interior_fenestration_quantity"],
-            "exterior_fenestration": ["exterior_fenestration_category", "exterior_fenestration_number",
+            "exterior_fenestration": ["room_name", "exterior_fenestration_category", "exterior_fenestration_number",
                                       "exterior_fenestration_name", "exterior_fenestration_quantity"],
-            "finishes": ["finishes_category", "finishes_number", "finishes_name", "finishes_quantity"],
-            "doors": ["doors_category", "doors_number", "doors_name", "doors_quantity"],
-            "built_in_fournitures": ["built_in_fournitures_category", "built_in_fournitures_number",
+            "finishes": ["room_name", "finishes_category", "finishes_number", "finishes_name", "finishes_quantity"],
+            "doors": ["room_name", "doors_category", "doors_number", "doors_name", "doors_quantity"],
+            "built_in_fournitures": ["room_name", "built_in_fournitures_category", "built_in_fournitures_number",
                                      "built_in_fournitures_name", "built_in_fournitures_quantity"],
-            "accessories": ["accessories_category", "accessories_number", "accessories_name", "accessories_quantity"],
-            "plumbings": ["plumbings_category", "plumbings_number", "plumbings_name", "plumbings_quantity"],
-            "fire_protection": ["fire_protection_category", "fire_protection_number", "fire_protection_name",
+            "accessories": ["room_name", "accessories_category", "accessories_number", "accessories_name", "accessories_quantity"],
+            "plumbings": ["room_name", "plumbings_category", "plumbings_number", "plumbings_name", "plumbings_quantity"],
+            "fire_protection": ["room_name", "fire_protection_category", "fire_protection_number", "fire_protection_name",
                                 "fire_protection_quantity"],
-            "lighting": ["lighting_category", "lighting_number", "lighting_name", "lighting_quantity"],
-            "electrical_outlets": ["electrical_outlets_category", "electrical_outlets_number",
+            "lighting": ["room_name", "lighting_category", "lighting_number", "lighting_name", "lighting_quantity"],
+            "electrical_outlets": ["room_name", "electrical_outlets_category", "electrical_outlets_number",
                                    "electrical_outlets_name", "electrical_outlets_quantity"],
-            "communication_security": ["communication_security_category", "communication_security_number",
+            "communication_security": ["room_name", "communication_security_category", "communication_security_number",
                                        "communication_security_name", "communication_security_quantity"],
-            "medical_equipment": ["medical_equipment_category", "medical_equipment_number",
+            "medical_equipment": ["room_name", "medical_equipment_category", "medical_equipment_number",
                                   "medical_equipment_name", "medical_equipment_quantity"],
-            "functionality": ["functionality_occupants_number", "functionality_occupants_desk_number", "functionality_lab_number",
+            "functionality": ["room_name", "functionality_occupants_number", "functionality_occupants_desk_number", "functionality_lab_number",
                               "functionality_schedule", "functionality_access", "functionality_access_adj_room", "functionality_access_other",
                               "functionality_consideration", "functionality_consideration_other", "functionality_description",
                               "functionality_proximity"],
-            "arch_requirements": ["arch_requirements_critic_length", "arch_requirements_critic_width", "arch_requirements_critic_height",
+            "arch_requirements": ["room_name", "arch_requirements_critic_length", "arch_requirements_critic_width", "arch_requirements_critic_height",
                                   "arch_requirements_validation_req", "arch_requirements_acoustic", "arch_requirements_int_fenestration",
                                   "arch_requirements_int_fen_adj_room", "arch_requirements_int_fen_other",
                                   "arch_requirements_ext_fenestration", "arch_requirements_ext_fen_solar_blind",
                                   "arch_requirements_ext_fen_opaque_blind"],
-            "struct_requirements": ["struct_requirements_floor_overload_required", "struct_requirements_overload",
+            "struct_requirements": ["room_name", "struct_requirements_floor_overload_required", "struct_requirements_overload",
                                     "struct_requirements_equipment_weight", "struct_requirements_floor_flatness",
                                     "struct_requirements_ditch_gutter", "struct_requirements_steel_sensitivity",
                                     "struct_requirements_equipment_other", "struct_requirements_vibrations_sensitivity",
                                     "struct_requirements_max_vibrations"],
-            "risk_elements": ["risk_elements_general", "risk_elements_general_radioactive", "risk_elements_biological",
+            "risk_elements": ["room_name", "risk_elements_general", "risk_elements_general_radioactive", "risk_elements_biological",
                               "risk_elements_gas", "risk_elements_gas_qty", "risk_elements_gas_toxic_gas",
                               "risk_elements_liquids", "risk_elements_liquids_qty", "risk_elements_liquids_cryogenic",
                               "risk_elements_other", "risk_elements_chemical_products"],
-            "ventilation_cvac": ["ventilation_care_area_type", "ventilation", "ventilation_special_mechanics",
+            "ventilation_cvac": ["room_name", "ventilation_care_area_type", "ventilation", "ventilation_special_mechanics",
                                  "ventilation_specific_exhaust", "ventilation_relative_room_pressure",
                                  "ventilation_pressurization", "ventilation_environmental_parameters",],
-            "electicity": ["electricity_care_area_type", "electricity_smoke_fire_detection", "electricity_special_equipment",
+            "electricity": ["room_name", "electricity_care_area_type", "electricity_smoke_fire_detection", "electricity_special_equipment",
                            "electricity_lighting_type", "electricity_lighting_level", "electricity_lighting_control",
                            "color_temperature", "electricity_lighting"]
         }
 
+    print(f"📊 Données envoyées à `project_detail.html` : {list(project_data.keys())}")
+
     return render_template("workspace/project_detail.html",
-                           project={"id": project_id, "name": project_name, "description": "Détails du projet"},
+                           project={"id": project_id, "name": project_name, "project_number": project_number, "description": "Détails du projet"},
                            project_data=project_data,
                            columns_to_display=columns_to_display)
+
+
+@workspace_bp.route('/projects/<project_id>/edit_item', methods=['POST'])
+def edit_item(project_id):
+    """Modification d'un élément spécifique"""
+
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
+
+    item_id = data.get("id")
+    category = data.get("category")
+    updated_data = data.get("updatedData")
+
+    if not item_id or not category or not updated_data:
+        return jsonify({"success": False, "message": "Données incomplètes"}), 400
+
+    project_db_name = f"SPACELOGIC_{project_id}"
+    if not database_exists(project_db_name):
+        return jsonify({"success": False, "message": "Base de données introuvable"}), 404
+
+    connection = get_db_connection(project_db_name)
+    cursor = connection.cursor()
+
+    # 🔍 **Vérifier et corriger l'ID**
+    try:
+        if isinstance(item_id, str):
+            item_id = item_id.strip()
+
+            # **Si l'ID est une chaîne de type "b'...'": Extraction et conversion**
+            if item_id.startswith("b'") and item_id.endswith("'"):
+                # Supprimer le `b'` et `'` autour de l'ID
+                item_id = item_id[2:-1]
+                # Convertir chaque `\xhh` en hex (si présent)
+                hex_str = item_id.replace("\\x", "")
+                item_id = bytes.fromhex(hex_str)
+            else:
+                # **Si c'est déjà un UUID sous forme hexadécimale**
+                item_id = uuid.UUID(item_id).bytes
+
+        elif isinstance(item_id, bytes) and len(item_id) == 16:
+            pass  # ID déjà sous forme correcte
+        else:
+            raise ValueError("Format ID invalide")
+
+    except ValueError as e:
+        return jsonify({"success": False, "message": f"ID invalide : {e}"}), 400
+
+    # **Vérifier que l'ID existe dans la base avant de l'update**
+    check_query = f"SELECT COUNT(*) FROM {category} WHERE {category}_id = %s"
+    cursor.execute(check_query, (item_id,))
+    result = cursor.fetchone()
+
+    if result[0] == 0:
+        return jsonify({"success": False, "message": "ID introuvable en base de données"}), 404
+
+    # **Construction de la requête SQL**
+    set_clause = ", ".join(f"{key} = %s" for key in updated_data.keys())
+    values = list(updated_data.values()) + [item_id]
+
+    query = f"UPDATE {category} SET {set_clause} WHERE {category}_id = %s"
+
+    try:
+        cursor.execute(query, values)
+        connection.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "message": "Aucune modification effectuée"}), 404
+        return jsonify({"success": True, "message": "Modification enregistrée"})
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"success": False, "message": f"Erreur SQL : {e}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+
+@workspace_bp.route('/projects/<project_id>/delete_item', methods=['POST'])
+def delete_item(project_id):
+    """Supprime un élément d'une table spécifique"""
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
+
+    category = data.get("category")
+    item_id = data.get("id")
+
+    if not category or not item_id:
+        return jsonify({"success": False, "message": "Données invalides"}), 400
+
+    project_db_name = f"SPACELOGIC_{project_id}"
+
+    if not database_exists(project_db_name):
+        return jsonify({"success": False, "message": "Base de données introuvable"}), 404
+
+    connection = get_db_connection(project_db_name)
+    cursor = connection.cursor()
+
+    # 🔹 Convertir l'ID en format UUID (attendu par MySQL)
+    try:
+        item_id = uuid.UUID(item_id).bytes
+    except ValueError:
+        return jsonify({"success": False, "message": "ID invalide"}), 400
+
+    # Vérifier si l'ID existe avant suppression
+    check_query = f"SELECT COUNT(*) FROM {category} WHERE {category}_id = %s"
+    cursor.execute(check_query, (item_id,))
+    result = cursor.fetchone()
+
+    if result[0] == 0:
+        return jsonify({"success": False, "message": "ID introuvable en base de données"}), 404
+
+    # Supprimer le tuple
+    delete_query = f"DELETE FROM {category} WHERE {category}_id = %s"
+
+    try:
+        cursor.execute(delete_query, (item_id,))
+        connection.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "message": "Aucune suppression effectuée"}), 404
+        else:
+            return jsonify({"success": True, "message": "Suppression réussie"})
+    finally:
+        cursor.close()
+        connection.close()
+
+
+

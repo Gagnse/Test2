@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, session
 from server.services.auth import AuthService
-from server.database.models import User, Project, Organizations
+from server.database.models import User, Project, Organizations, Invitation
 from server.database.db_config import get_db_connection, close_connection
+from server.utils.email_sender import email_sender
 import json
 
 api_bp = Blueprint('api', __name__)
@@ -481,3 +482,274 @@ def api_update_user(user_id):
         return jsonify({'success': True, 'message': 'Utilisateur mis à jour avec succès'})
     else:
         return jsonify({'success': False, 'message': 'Erreur lors de la mise à jour de l\'utilisateur'}), 500
+
+
+@api_bp.route('/organisations/<org_id>/users/<user_id>', methods=['DELETE'])
+def api_remove_user_from_org(org_id, user_id):
+    """Remove a user from an organization"""
+    print(f"API request to remove user {user_id} from organization {org_id}")
+
+    if not AuthService.is_authenticated():
+        print("Authentication required")
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    current_user_id = AuthService.get_current_user_id()
+    print(f"Request made by user: {current_user_id}")
+
+    # Get the organization
+    org = Organizations.find_by_id(org_id)
+
+    if not org:
+        print(f"Organization {org_id} not found")
+        return jsonify({'success': False, 'message': 'Organisation non trouvée'}), 404
+
+    # Check if the current user has permission to remove users
+    # Only allow if the current user is the super admin of the organization
+    if org.super_admin_id != current_user_id:
+        print(f"Permission denied: current user {current_user_id} is not the super admin {org.super_admin_id}")
+        return jsonify(
+            {'success': False, 'message': 'Permission denied - only organization administrators can remove users'}), 403
+
+    # Prevent removing the super admin (organization owner)
+    if user_id == org.super_admin_id:
+        print("Cannot remove super admin from organization")
+        return jsonify(
+            {'success': False, 'message': 'Le super administrateur ne peut pas être supprimé de l\'organisation'}), 400
+
+    # Remove the user from the organization
+    print(f"Attempting to remove user {user_id} from organization {org_id}")
+    success = org.remove_user(user_id)
+
+    if success:
+        print(f"Successfully removed user {user_id} from organization {org_id}")
+        return jsonify({
+            'success': True,
+            'message': 'Utilisateur supprimé de l\'organisation avec succès'
+        })
+    else:
+        print(f"Error removing user {user_id} from organization {org_id}")
+        return jsonify({
+            'success': False,
+            'message': 'Erreur lors de la suppression de l\'utilisateur'
+        }), 500
+
+
+@api_bp.route('/invitations', methods=['POST'])
+def api_create_invitation():
+    """Create a new invitation"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    data = request.get_json()
+
+    # Validate required fields
+    if not data or not all(k in data for k in ('email', 'first_name', 'last_name', 'role', 'organisation_id')):
+        return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+
+    # Get current user as inviter
+    current_user_id = AuthService.get_current_user_id()
+
+    # Check if user has permission to invite to this organization
+    # Get their organization ID
+    user_org_id = User.get_user_org_id(current_user_id)
+
+    # Check if the organization ID from the request matches the user's organization
+    if user_org_id != data['organisation_id']:
+        return jsonify({
+            'success': False,
+            'message': 'Vous n\'avez pas la permission d\'inviter des utilisateurs à cette organisation'
+        }), 403
+
+    # Check if the user is a super admin of the organization
+    organization = Organizations.find_by_id(user_org_id)
+    if not organization or organization.super_admin_id != current_user_id:
+        # Could be more specific here and check roles, but for now only super_admin
+        return jsonify({
+            'success': False,
+            'message': 'Seul l\'administrateur de l\'organisation peut envoyer des invitations'
+        }), 403
+
+    # Check if there's already a pending invitation for this email in this organization
+    existing_invitation = Invitation.find_by_email_and_org(data['email'], data['organisation_id'])
+    if existing_invitation:
+        return jsonify({
+            'success': False,
+            'message': 'Une invitation est déjà en cours pour cet email. Veuillez attendre qu\'elle soit acceptée ou annulée.'
+        }), 400
+
+    # Check if a user with this email already exists
+    existing_user = User.find_by_email(data['email'])
+    if existing_user:
+        return jsonify({
+            'success': False,
+            'message': 'Un utilisateur avec cet email existe déjà. Veuillez utiliser une autre adresse email.'
+        }), 400
+
+    # Create the invitation
+    invitation = Invitation.create(
+        organization_id=data['organisation_id'],
+        email=data['email'],
+        first_name=data['first_name'],
+        last_name=data['last_name'],
+        role=data['role'],
+        department=data.get('department'),
+        location=data.get('location'),
+        invited_by=current_user_id
+    )
+
+    if not invitation:
+        return jsonify({
+            'success': False,
+            'message': 'Une erreur est survenue lors de la création de l\'invitation.'
+        }), 500
+
+    # Add organization name to the invitation object for the email
+    invitation.organization_name = organization.name
+
+    # Send invitation email
+    custom_message = data.get('message')
+    base_url = request.host_url.rstrip('/')
+
+    # Send invitation email
+    email_success = email_sender.send_invitation_email(invitation, base_url, custom_message)
+
+    if not email_success:
+        # If email fails, we keep the invitation but inform the user
+        return jsonify({
+            'success': True,
+            'warning': True,
+            'message': 'Invitation créée mais l\'email n\'a pas pu être envoyé. Veuillez vérifier l\'adresse email.'
+        })
+
+    # Success!
+    return jsonify({
+        'success': True,
+        'message': 'Invitation envoyée avec succès',
+        'invitation': {
+            'id': invitation.id,
+            'email': invitation.email,
+            'expires_at': invitation.expires_at.isoformat()
+        }
+    })
+
+
+@api_bp.route('/invitations/<invitation_id>', methods=['DELETE'])
+def api_cancel_invitation(invitation_id):
+    """Cancel an invitation"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    # Get current user as inviter
+    current_user_id = AuthService.get_current_user_id()
+
+    # Find the invitation
+    connection = get_db_connection('users_db')
+    cursor = None
+    invitation = None
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+        query = """
+            SELECT BIN_TO_UUID(id) as id, BIN_TO_UUID(organization_id) as organization_id,
+            BIN_TO_UUID(invited_by) as invited_by
+            FROM organization_invitations
+            WHERE id = UUID_TO_BIN(%s) AND status = 'pending'
+        """
+        cursor.execute(query, (invitation_id,))
+        result = cursor.fetchone()
+
+        if not result:
+            return jsonify({'success': False, 'message': 'Invitation not found or not pending'}), 404
+
+        invitation = {
+            'id': result['id'],
+            'organization_id': result['organization_id'],
+            'invited_by': result['invited_by']
+        }
+    except Exception as e:
+        print(f"Error finding invitation: {e}")
+        return jsonify({'success': False, 'message': 'Error retrieving invitation'}), 500
+    finally:
+        close_connection(connection, cursor)
+
+    # Check if user is allowed to cancel this invitation
+    # Either they are the one who invited the user or they are the super admin
+    if invitation['invited_by'] != current_user_id:
+        # Check if they are super admin
+        organization = Organizations.find_by_id(invitation['organization_id'])
+        if not organization or organization.super_admin_id != current_user_id:
+            return jsonify({
+                'success': False,
+                'message': 'You do not have permission to cancel this invitation'
+            }), 403
+
+    # Cancel the invitation
+    connection = get_db_connection('users_db')
+    cursor = None
+
+    try:
+        cursor = connection.cursor()
+        query = """
+            UPDATE organization_invitations
+            SET status = 'cancelled'
+            WHERE id = UUID_TO_BIN(%s)
+        """
+        cursor.execute(query, (invitation_id,))
+        connection.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Invitation cancelled successfully'
+        })
+    except Exception as e:
+        print(f"Error cancelling invitation: {e}")
+        if connection:
+            connection.rollback()
+        return jsonify({'success': False, 'message': 'Error cancelling invitation'}), 500
+    finally:
+        close_connection(connection, cursor)
+
+
+@api_bp.route('/organizations/<org_id>/invitations', methods=['GET'])
+def api_get_organization_invitations(org_id):
+    """Get all pending invitations for an organization"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    # Get current user as inviter
+    current_user_id = AuthService.get_current_user_id()
+
+    # Check if user has permission to view this organization's invitations
+    # Get their organization ID
+    user_org_id = User.get_user_org_id(current_user_id)
+
+    # Check if the organization ID from the request matches the user's organization
+    if user_org_id != org_id:
+        return jsonify({
+            'success': False,
+            'message': 'You do not have permission to view invitations for this organization'
+        }), 403
+
+    # Get all pending invitations
+    invitations = Invitation.get_pending_invitations_for_organization(org_id)
+
+    # Format the invitations for JSON response
+    invitations_data = []
+    for invitation in invitations:
+        invitations_data.append({
+            'id': invitation.id,
+            'email': invitation.email,
+            'first_name': invitation.first_name,
+            'last_name': invitation.last_name,
+            'role': invitation.role,
+            'department': invitation.department,
+            'location': invitation.location,
+            'created_at': invitation.created_at.isoformat() if invitation.created_at else None,
+            'expires_at': invitation.expires_at.isoformat() if invitation.expires_at else None,
+            'invited_by': invitation.invited_by
+        })
+
+    return jsonify({
+        'success': True,
+        'invitations': invitations_data
+    })

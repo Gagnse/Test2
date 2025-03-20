@@ -9,6 +9,16 @@ app = Flask(__name__,
             static_folder='frontend/static',
             template_folder='frontend/templates')
 
+# Définir un filtre personnalisé pour récupérer la première clé d'un dictionnaire
+def get_first_key(item):
+    """Retourne la première clé d'un dictionnaire, ou une chaîne vide si le dictionnaire est vide."""
+    if isinstance(item, dict) and item:
+        return next(iter(item.keys()))
+    return ""
+
+# Ajouter le filtre dans Jinja2
+app.jinja_env.filters['get_first_key'] = get_first_key
+
 # Configure app
 app.secret_key = os.environ.get('SECRET_KEY', 'spacelogic-dev-key')  # Change this in production!
 app.permanent_session_lifetime = timedelta(days=1)
@@ -20,11 +30,13 @@ setup_cors(app)
 from server.routes.auth import auth_bp
 from server.routes.workspace import workspace_bp
 from server.routes.api import api_bp
+from server.routes.invitation import invitation_bp
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='')
 app.register_blueprint(workspace_bp, url_prefix='/workspace')
 app.register_blueprint(api_bp, url_prefix='/api')  # Register API blueprint with /api prefix
+app.register_blueprint(invitation_bp, url_prefix='')  # New invitation blueprint
 
 @app.route('/')
 def home():

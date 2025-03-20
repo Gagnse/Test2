@@ -59,9 +59,32 @@ CREATE TABLE projects (
     end_date DATETIME,
     status VARCHAR(50) DEFAULT 'active',
     type VARCHAR(50),
+    image_url VARCHAR(255) DEFAULT ('/static/images/project-placeholder.png'),
     FOREIGN KEY (organization_id) REFERENCES organizations(id),
     UNIQUE(project_number)
 );
+
+-- Create invitations table
+CREATE TABLE IF NOT EXISTS organization_invitations (
+    id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+    organization_id BINARY(16) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    department VARCHAR(100),
+    location VARCHAR(100),
+    token VARCHAR(100) NOT NULL,
+    invited_by BINARY(16) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME NOT NULL,
+    status ENUM('pending', 'accepted', 'expired', 'cancelled') DEFAULT 'pending',
+    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+    FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY (email, organization_id, status)
+);
+
+CREATE INDEX idx_token ON organization_invitations(token);
 
 #-----------------------------RELATIONS-----------------------------
 

@@ -1,0 +1,208 @@
+<!-- User Invitation Modal -->
+<div id="invite-user-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Inviter un nouvel utilisateur</h2>
+            <button class="close-modal-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="invite-user-form">
+                <!-- Error container will appear here when needed -->
+                <input type="hidden" id="organisation-id" name="organisation_id" value="{{ organisation.id }}">
+
+                <div class="form-group">
+                    <label for="invite-email">Email</label>
+                    <input type="email" id="invite-email" name="email" required placeholder="email@exemple.com">
+                    <div class="form-help">L'adresse email de la personne à inviter</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="invite-first-name">Prénom</label>
+                    <input type="text" id="invite-first-name" name="first_name" required placeholder="Prénom">
+                </div>
+
+                <div class="form-group">
+                    <label for="invite-last-name">Nom</label>
+                    <input type="text" id="invite-last-name" name="last_name" required placeholder="Nom">
+                </div>
+
+                <div class="form-group">
+                    <label for="invite-role">Rôle</label>
+                    <select id="invite-role" name="role" required>
+                        <!-- Roles will be populated dynamically based on organization's roles -->
+                        {% if organisation.roles %}
+                            {% for role in organisation.roles %}
+                                <option value="{{ role.name }}">{{ role.name }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="Membre">Membre</option>
+                            <option value="Collaborateur">Collaborateur</option>
+                            <option value="Client">Client</option>
+                            <option value="Administrateur">Administrateur</option>
+                        {% endif %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="invite-department">Département (optionnel)</label>
+                    <input type="text" id="invite-department" name="department" placeholder="ex: Architecture">
+                </div>
+
+                <div class="form-group">
+                    <label for="invite-location">Emplacement (optionnel)</label>
+                    <input type="text" id="invite-location" name="location" placeholder="ex: Montréal">
+                </div>
+
+                <div class="form-group">
+                    <label for="invite-message">Message personnalisé (optionnel)</label>
+                    <textarea id="invite-message" name="message" rows="3" placeholder="Message d'invitation personnalisé..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary cancel-btn">Annuler</button>
+                    <button type="submit" class="btn btn-primary send-btn">
+                        <span class="btn-text">Envoyer l'invitation</span>
+                        <span class="btn-spinner" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get modal elements
+        const modal = document.getElementById('invite-user-modal');
+        const closeButton = modal.querySelector('.close-modal-btn');
+        const cancelButton = modal.querySelector('.cancel-btn');
+        const form = document.getElementById('invite-user-form');
+
+        // Close modal when close button is clicked
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                modal.classList.remove('active');
+                modal.style.display = 'none';
+            });
+        }
+
+        // Close modal when cancel button is clicked
+        if (cancelButton) {
+            cancelButton.addEventListener('click', function() {
+                modal.classList.remove('active');
+                modal.style.display = 'none';
+            });
+        }
+
+        // Close modal when clicking outside the modal content
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.classList.remove('active');
+                modal.style.display = 'none';
+            }
+        });
+
+        // Handle form submission
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                // Get submit button elements
+                const submitButton = form.querySelector('.send-btn');
+                const buttonText = submitButton.querySelector('.btn-text');
+                const buttonSpinner = submitButton.querySelector('.btn-spinner');
+
+                // Show loading state
+                submitButton.disabled = true;
+                buttonText.style.display = 'none';
+                buttonSpinner.style.display = 'inline-block';
+
+                // Remove any existing error messages
+                const existingError = form.querySelector('.form-error');
+                if (existingError) {
+                    existingError.remove();
+                }
+
+                // Get form data and convert to JSON
+                const formData = new FormData(form);
+                const inviteData = {
+                    organisation_id: formData.get('organisation_id'),
+                    email: formData.get('email'),
+                    first_name: formData.get('first_name'),
+                    last_name: formData.get('last_name'),
+                    role: formData.get('role'),
+                    department: formData.get('department'),
+                    location: formData.get('location'),
+                    message: formData.get('message')
+                };
+
+                // Send request to create invitation using the API
+                fetch('/api/invitations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(inviteData),
+                    credentials: 'same-origin' // Include cookies
+                })
+                .then(response => {
+                    // Always parse JSON first to get any error message
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            throw new Error(data.message || `Erreur: ${response.status}`);
+                        }
+                        return data;
+                    });
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Close modal and show success toast
+                        modal.classList.remove('active');
+                        modal.style.display = 'none';
+
+                        // Show success toast
+                        if (window.toast) {
+                            window.toast.success('Invitation envoyée avec succès!');
+                        }
+
+                        // Reset the form
+                        form.reset();
+                    } else {
+                        throw new Error(data.message || 'Une erreur est survenue');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending invitation:', error);
+
+                    // Reset button state
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'inline';
+                    buttonSpinner.style.display = 'none';
+
+                    // Create error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error';
+                    errorDiv.textContent = error.message || 'Une erreur est survenue lors de l\'envoi de l\'invitation. Veuillez réessayer.';
+
+                    // Add the error at the top of the form
+                    form.prepend(errorDiv);
+
+                    // Show error toast
+                    if (window.toast) {
+                        window.toast.error(error.message || 'Erreur lors de l\'envoi de l\'invitation');
+                    }
+                });
+            });
+        }
+    });
+</script>

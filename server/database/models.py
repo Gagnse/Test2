@@ -1,5 +1,7 @@
 import uuid
 import bcrypt
+import secrets
+import datetime
 from server.database.db_config import get_db_connection, close_connection
 from server.utils.database_utils import *
 
@@ -134,13 +136,22 @@ class User:
                 # Hash the password for new users
                 hashed_password = self.hash_password(self.password)
 
+                # Handle case where organization_id is provided
+                org_id_param = self.organization_id if hasattr(self,
+                                                               'organization_id') and self.organization_id else None
+
                 query = """
-                    INSERT INTO users (first_name, last_name, email, password, organization_id, is_active)
-                    VALUES (%s, %s, %s, %s, UUID_TO_BIN(%s), %s)
+                    INSERT INTO users (first_name, last_name, email, password, 
+                                       organization_id, department, location, role, is_active)
+                    VALUES (%s, %s, %s, %s, UUID_TO_BIN(%s), %s, %s, %s, %s)
                 """
                 values = (
                     self.first_name, self.last_name, self.email,
-                    hashed_password, self.organization_id, self.is_active
+                    hashed_password, org_id_param,
+                    getattr(self, 'department', None),
+                    getattr(self, 'location', None),
+                    getattr(self, 'role', None),
+                    self.is_active
                 )
 
             cursor.execute(query, values)
@@ -406,6 +417,24 @@ class Project:
             return False
         finally:
             close_connection(connection, cursor)
+
+    def save_image(self, image_file):
+        """Save project image and update image_url field"""
+        # Create unique filename using project ID
+        filename = f"project_{self.id}.{image_file.filename.split('.')[-1]}"
+
+        # Define path to save
+        save_path = os.path.join('frontend', 'static', 'uploads', 'project_images', filename)
+
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+        # Save the file
+        image_file.save(save_path)
+
+        # Update the image_url in database
+        self.image_url = f"/static/uploads/project_images/{filename}"
+        self.save()  # Save to database
 
     def add_user(self, user_id):
         """Add a user to the project"""
@@ -869,3 +898,259 @@ class Organizations:
             return False
         finally:
             close_connection(connection, cursor)
+
+
+class Invitation:
+    def __init__(self, id=None, organization_id=None, email=None, first_name=None, last_name=None,
+                 role=None, department=None, location=None, token=None, invited_by=None,
+                 created_at=None, expires_at=None, status='pending'):
+        self.id = id
+        self.organization_id = organization_id
+        self.email = email
+        self.first_name = first_name
+        self.last_name = last_name
+        self.role = role
+        self.department = department
+        self.location = location
+        self.token = token or secrets.token_urlsafe(64)
+        self.invited_by = invited_by
+        self.created_at = created_at
+        # Default expiration is 7 days from now
+        self.expires_at = expires_at or (datetime.datetime.now() + datetime.timedelta(days=7))
+        self.status = status
+
+    @staticmethod
+    def create(organization_id, email, first_name, last_name, role, invited_by,
+               department=None, location=None, expires_in_days=7):
+        """Create a new invitation and save it to the database"""
+        # Generate expiration date
+        expires_at = datetime.datetime.now() + datetime.timedelta(days=expires_in_days)
+
+        # Create new invitation
+        invitation = Invitation(
+            organization_id=organization_id,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            role=role,
+            department=department,
+            location=location,
+            invited_by=invited_by,
+            expires_at=expires_at
+        )
+
+        # Save to database and return the invitation with ID
+        if invitation.save():
+            return invitation
+        return None
+
+    def save(self):
+        """Save invitation to database"""
+        connection = get_db_connection('users_db')
+        cursor = None
+
+        try:
+            cursor = connection.cursor()
+
+            if self.id:  # Update existing invitation
+                query = """
+                    UPDATE organization_invitations
+                    SET email = %s, first_name = %s, last_name = %s, role = %s,
+                        department = %s, location = %s, status = %s, expires_at = %s
+                    WHERE id = UUID_TO_BIN(%s)
+                """
+                values = (
+                    self.email, self.first_name, self.last_name, self.role,
+                    self.department, self.location, self.status, self.expires_at,
+                    self.id
+                )
+            else:  # Create new invitation
+                query = """
+                    INSERT INTO organization_invitations (
+                        organization_id, email, first_name, last_name, role,
+                        department, location, token, invited_by, expires_at
+                    ) VALUES (
+                        UUID_TO_BIN(%s), %s, %s, %s, %s, %s, %s, %s, UUID_TO_BIN(%s), %s
+                    )
+                """
+                values = (
+                    self.organization_id, self.email, self.first_name, self.last_name, self.role,
+                    self.department, self.location, self.token, self.invited_by, self.expires_at
+                )
+
+            cursor.execute(query, values)
+            connection.commit()
+
+            # Get the auto-generated ID for a new invitation
+            if not self.id:
+                cursor.execute("""
+                    SELECT BIN_TO_UUID(id) 
+                    FROM organization_invitations 
+                    WHERE email = %s AND organization_id = UUID_TO_BIN(%s) AND token = %s
+                """, (self.email, self.organization_id, self.token))
+
+                result = cursor.fetchone()
+                if result:
+                    self.id = result[0]
+
+            return True
+        except Exception as e:
+            if connection:
+                connection.rollback()
+            print(f"Error saving invitation: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+        finally:
+            close_connection(connection, cursor)
+
+    @staticmethod
+    def find_by_token(token):
+        """Find an invitation by token"""
+        connection = get_db_connection('users_db')
+        cursor = None
+        invitation = None
+
+        try:
+            cursor = connection.cursor(dictionary=True)
+            query = """
+                SELECT BIN_TO_UUID(id) as id, BIN_TO_UUID(organization_id) as organization_id,
+                email, first_name, last_name, role, department, location, token,
+                BIN_TO_UUID(invited_by) as invited_by, created_at, expires_at, status
+                FROM organization_invitations
+                WHERE token = %s
+            """
+            cursor.execute(query, (token,))
+            result = cursor.fetchone()
+
+            if result:
+                invitation = Invitation(
+                    id=result['id'],
+                    organization_id=result['organization_id'],
+                    email=result['email'],
+                    first_name=result['first_name'],
+                    last_name=result['last_name'],
+                    role=result['role'],
+                    department=result['department'],
+                    location=result['location'],
+                    token=result['token'],
+                    invited_by=result['invited_by'],
+                    created_at=result['created_at'],
+                    expires_at=result['expires_at'],
+                    status=result['status']
+                )
+        except Exception as e:
+            print(f"Error finding invitation by token: {e}")
+        finally:
+            close_connection(connection, cursor)
+
+        return invitation
+
+    @staticmethod
+    def find_by_email_and_org(email, organization_id):
+        """Find a pending invitation by email and organization"""
+        connection = get_db_connection('users_db')
+        cursor = None
+        invitation = None
+
+        try:
+            cursor = connection.cursor(dictionary=True)
+            query = """
+                SELECT BIN_TO_UUID(id) as id, BIN_TO_UUID(organization_id) as organization_id,
+                email, first_name, last_name, role, department, location, token,
+                BIN_TO_UUID(invited_by) as invited_by, created_at, expires_at, status
+                FROM organization_invitations
+                WHERE email = %s AND organization_id = UUID_TO_BIN(%s) AND status = 'pending'
+            """
+            cursor.execute(query, (email, organization_id))
+            result = cursor.fetchone()
+
+            if result:
+                invitation = Invitation(
+                    id=result['id'],
+                    organization_id=result['organization_id'],
+                    email=result['email'],
+                    first_name=result['first_name'],
+                    last_name=result['last_name'],
+                    role=result['role'],
+                    department=result['department'],
+                    location=result['location'],
+                    token=result['token'],
+                    invited_by=result['invited_by'],
+                    created_at=result['created_at'],
+                    expires_at=result['expires_at'],
+                    status=result['status']
+                )
+        except Exception as e:
+            print(f"Error finding invitation by email and org: {e}")
+        finally:
+            close_connection(connection, cursor)
+
+        return invitation
+
+    def accept(self):
+        """Mark invitation as accepted"""
+        self.status = 'accepted'
+        return self.save()
+
+    def cancel(self):
+        """Mark invitation as cancelled"""
+        self.status = 'cancelled'
+        return self.save()
+
+    def expire(self):
+        """Mark invitation as expired"""
+        self.status = 'expired'
+        return self.save()
+
+    def is_expired(self):
+        """Check if the invitation is expired"""
+        return datetime.datetime.now() > self.expires_at or self.status == 'expired'
+
+    def is_valid(self):
+        """Check if the invitation is valid for acceptance"""
+        return self.status == 'pending' and not self.is_expired()
+
+    @staticmethod
+    def get_pending_invitations_for_organization(organization_id):
+        """Get all pending invitations for an organization"""
+        connection = get_db_connection('users_db')
+        cursor = None
+        invitations = []
+
+        try:
+            cursor = connection.cursor(dictionary=True)
+            query = """
+                SELECT BIN_TO_UUID(id) as id, BIN_TO_UUID(organization_id) as organization_id,
+                email, first_name, last_name, role, department, location, token,
+                BIN_TO_UUID(invited_by) as invited_by, created_at, expires_at, status
+                FROM organization_invitations
+                WHERE organization_id = UUID_TO_BIN(%s) AND status = 'pending'
+                ORDER BY created_at DESC
+            """
+            cursor.execute(query, (organization_id,))
+            results = cursor.fetchall()
+
+            for result in results:
+                invitation = Invitation(
+                    id=result['id'],
+                    organization_id=result['organization_id'],
+                    email=result['email'],
+                    first_name=result['first_name'],
+                    last_name=result['last_name'],
+                    role=result['role'],
+                    department=result['department'],
+                    location=result['location'],
+                    token=result['token'],
+                    invited_by=result['invited_by'],
+                    created_at=result['created_at'],
+                    expires_at=result['expires_at'],
+                    status=result['status']
+                )
+                invitations.append(invitation)
+        except Exception as e:
+            print(f"Error getting pending invitations: {e}")
+        finally:
+            close_connection(connection, cursor)
+
+        return invitations

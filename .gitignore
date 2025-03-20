@@ -18,3 +18,7 @@ server/database/__pycache__/__init__.cpython-312.pyc
 .idea/sqldialects.xml
 .idea/vcs.xml
 .idea/sqldialects.xml
+/server/routes/__pycache__
+/server/database/__pycache__
+/server/utils/__pycache__
+/server/services/__pycache__

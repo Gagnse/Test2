@@ -1,5 +1,132 @@
 {% extends "base.html" %}
 
+{% set column_titles = {
+
+    "room_name": "Salle",
+
+    "interior_fenestration_id": "ID Fenêtre Intérieure",
+    "room_id": "ID Salle",
+    "interior_fenestration_category": "Catégorie",
+    "interior_fenestration_number": "Numéro",
+    "interior_fenestration_name": "Nom",
+    "interior_fenestration_commentary": "Commentaire",
+    "interior_fenestration_quantity": "Quantité",
+    "interior_fenestration_creation_date": "Date de Création",
+
+    "exterior_fenestration_id": "ID Fenêtre Extérieure",
+    "exterior_fenestration_category": "Catégorie",
+    "exterior_fenestration_number": "Numéro",
+    "exterior_fenestration_name": "Nom",
+    "exterior_fenestration_commentary": "Commentaire",
+    "exterior_fenestration_quantity": "Quantité",
+    "exterior_fenestration_creation_date": "Date de Création",
+
+    "doors_id": "ID Porte",
+    "doors_category": "Catégorie",
+    "doors_number": "Numéro",
+    "doors_name": "Nom",
+    "doors_commentary": "Commentaire",
+    "doors_quantity": "Quantité",
+    "doors_creation_date": "Date de Création",
+
+    "built_in_fournitures_id": "ID Mobilier intégré",
+    "built_in_fournitures_category": "Catégorie",
+    "built_in_fournitures_number": "Numéro",
+    "built_in_fournitures_name": "Nom",
+    "built_in_fournitures_commentary": "Commentaire",
+    "built_in_fournitures_quantity": "Quantité",
+    "built_in_fournitures_creation_date": "Date de Création",
+
+    "accessories_id": "ID Accessoire",
+    "accessories_category": "Catégorie",
+    "accessories_number": "Numéro",
+    "accessories_name": "Nom",
+    "accessories_commentary": "Commentaire",
+    "accessories_quantity": "Quantité",
+    "accessories_creation_date": "Date de Création",
+
+    "plumbings_id": "ID Plomberie",
+    "plumbings_category": "Catégorie",
+    "plumbings_number": "Numéro",
+    "plumbings_name": "Nom",
+    "plumbings_commentary": "Commentaire",
+    "plumbings_quantity": "Quantité",
+    "plumbings_creation_date": "Date de Création",
+
+    "fire_protection_id": "ID Protection Incendie",
+    "fire_protection_category": "Catégorie",
+    "fire_protection_number": "Numéro",
+    "fire_protection_name": "Nom",
+    "fire_protection_commentary": "Commentaire",
+    "fire_protection_quantity": "Quantité",
+    "fire_protection_date": "Date de Création",
+
+    "lighting_id": "ID Éclairage",
+    "lighting_category": "Catégorie",
+    "lighting_number": "Numéro",
+    "lighting_name": "Nom",
+    "lighting_commentary": "Commentaire",
+    "lighting_quantity": "Quantité",
+    "lighting_creation_date": "Date de Création",
+
+    "electrical_outlets_id": "ID Prise Électrique",
+    "electrical_outlets_category": "Catégorie",
+    "electrical_outlets_number": "Numéro",
+    "electrical_outlets_name": "Nom",
+    "electrical_outlets_commentary": "Commentaire",
+    "electrical_outlets_quantity": "Quantité",
+    "electrical_outlets_creation_date": "Date de Création",
+
+    "communication_security_id": "ID Communication & sécurité",
+    "communication_security_category": "Catégorie",
+    "communication_security_number": "Numéro",
+    "communication_security_name": "Nom",
+    "communication_security_commentary": "Commentaire",
+    "communication_security_quantity": "Quantité",
+    "communication_security_creation_date": "Date de Création",
+
+    "medical_equipment_id": "ID Équipement Médical",
+    "medical_equipment_category": "Catégorie",
+    "medical_equipment_number": "Numéro",
+    "medical_equipment_name": "Nom",
+    "medical_equipment_commentary": "Commentaire",
+    "medical_equipment_quantity": "Quantité",
+    "medical_equipment_creation_date": "Date de Création",
+
+    "electricity_id": "ID Électricité",
+    "electricity_care_area_type": "Type de Zone",
+    "electricity_smoke_fire_detection": "Détection Incendie",
+    "electricity_special_equipment": "Équipement Spécial",
+    "electricity_lighting_type": "Type d'Éclairage",
+    "electricity_lighting_level": "Niveau d'Éclairage",
+    "electricity_lighting_control": "Contrôle Éclairage",
+    "color_temperature": "Température Couleur",
+    "electricity_lighting": "Éclairage",
+    "electricity_commentary": "Commentaire"
+} %}
+
+{% set tab_titles = {
+    "exterior_fenestration": "Fenestration Extérieure",
+    "interior_fenestration": "Fenestration Intérieure",
+    "doors": "Portes",
+    "built_in_fournitures": "Mobilier Intégré",
+    "accessories": "Accessoires",
+    "plumbings": "Plomberie",
+    "fire_protection": "Protection Incendie",
+    "lighting": "Éclairage",
+    "electrical_outlets": "Prises Électriques",
+    "communication_security": "Communication & Sécurité",
+    "medical_equipment": "Équipements Médicaux",
+    "functionality": "Fonctionnalité",
+    "arch_requirements": "Exigences Architecturales",
+    "struct_requirements": "Exigences Structurales",
+    "risk_elements": "Éléments à Risque",
+    "ventilation_cvac": "Ventilation CVAC",
+    "electricity": "Électricité"
+} %}
+
+
+
 {% block title %}{{ project.name }} - Spacelogic{% endblock %}
 
 {% block content %}
@@ -7,11 +134,12 @@
     <h1>{{ project.name }}</h1>
     <p><strong>Description:</strong> {{ project.description }}</p>
     <p><strong>Statut:</strong> <span class="project-status">{{ project.status }}</span></p>
+    <p>Numéro du projet : {{ project.project_number }}</p>
 
     <!-- Onglets -->
     <div class="tabs">
-        <button class="tab-button active" data-tab="tab-exterior_fenestration">Fenestration Extérieure</button>
-        <button class="tab-button" data-tab="tab-interior_fenestration">Fenestration Intérieure</button>
+        <button class="tab-button active" data-tab="tab-interior_fenestration">Fenestration Intérieure</button>
+        <button class="tab-button" data-tab="tab-exterior_fenestration">Fenestration Extérieure</button>
         <button class="tab-button" data-tab="tab-doors">Portes</button>
         <button class="tab-button" data-tab="tab-built_in_fournitures">Mobilier intégré</button>
         <button class="tab-button" data-tab="tab-accessories">Accessoires</button>
@@ -33,41 +161,54 @@
     <div class="tab-content-container">
         {% for category, items in project_data.items() %}
         <div id="tab-{{ category }}" class="tab-content {% if loop.first %}active{% endif %}">
-            <h2>{{ category.replace('_', ' ').capitalize() }}</h2>
+            <h2>{{ tab_titles.get(category, category.replace('_', ' ').capitalize()) }}</h2>
             <table>
                 <thead>
                     <tr>
                         {% if items and items|length > 0 %}
                             {% if category in columns_to_display %}
                                 {% for key in columns_to_display[category] if key in items[0] %}
-                                    <th>{{ key }}</th>
+                                        <th class="sortable" data-column="{{ key }}" data-order="none">
+                                            {{ column_titles.get(key, key) }}
+                                            <span class="sort-icon">↕️</span>
+                                        </th>
                                 {% endfor %}
                             {% else %}
                                 {% for key in items[0].keys() %}
-                                    <th>{{ key }}</th>
+                                        <th class="sortable" data-column="{{ key }}" data-order="none">
+                                            {{ column_titles.get(key, key) }}
+                                            <span class="sort-icon">↕️</span>
+                                        </th>
                                 {% endfor %}
                             {% endif %}
+                            <th>Actions</th>
                         {% else %}
                             <p>Aucune donnée disponible.</p>
                         {% endif %}
                     </tr>
                 </thead>
 
-                <tbody>
-                    {% for item in items %}
-                    <tr>
-                        {% if category in columns_to_display %}
-                            {% for key in columns_to_display[category] if key in item %}
-                                <td>{{ item[key] }}</td>
-                            {% endfor %}
-                        {% else %}
-                            {% for value in item.values() %}
-                                <td>{{ value }}</td>
-                            {% endfor %}
-                        {% endif %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
+<tbody>
+    {% for item in items %}
+    <tr data-id="{{ item[category ~ '_id'] }}" data-category="{{ category }}">
+        {% if category in columns_to_display %}
+            {% for key in columns_to_display[category] if key in item %}
+                <td contenteditable="false" data-key="{{ key }}">{{ item[key] }}</td>
+            {% endfor %}
+        {% else %}
+            {% for key, value in item.items() %}
+                <td contenteditable="false" data-key="{{ key }}">{{ value }}</td>
+            {% endfor %}
+        {% endif %}
+        <td>
+            <span class="edit-icon" title="Modifier">&#9998;</span>
+            <span class="delete-icon" title="Supprimer">&#128465;</span>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+
+
             </table>
         </div>
         {% endfor %}
@@ -81,6 +222,7 @@
         const tabButtons = document.querySelectorAll(".tab-button");
         const tabContents = document.querySelectorAll(".tab-content");
 
+        // Gérer le changement d'onglet
         tabButtons.forEach(button => {
             button.addEventListener("click", function() {
                 tabButtons.forEach(btn => btn.classList.remove("active"));
@@ -90,12 +232,158 @@
                 document.getElementById(this.dataset.tab).classList.add("active");
             });
         });
+
+        // Tri des colonnes avec flèches
+        document.querySelectorAll(".sortable").forEach(header => {
+            header.addEventListener("click", function() {
+                const column = this.getAttribute("data-column");
+                const table = this.closest("table");
+                const tbody = table.querySelector("tbody");
+                const rows = Array.from(tbody.querySelectorAll("tr"));
+                const currentOrder = this.dataset.order;
+
+                let newOrder;
+                if (currentOrder === "asc") {
+                    newOrder = "desc";
+                } else {
+                    newOrder = "asc";
+                }
+                this.dataset.order = newOrder;
+
+                // Déterminer si les valeurs sont numériques ou textuelles
+                const isNumeric = !isNaN(parseFloat(rows[0].querySelector(`[data-key='${column}']`)?.textContent));
+
+                rows.sort((rowA, rowB) => {
+                    let a = rowA.querySelector(`[data-key='${column}']`)?.textContent.trim();
+                    let b = rowB.querySelector(`[data-key='${column}']`)?.textContent.trim();
+
+                    if (isNumeric) {
+                        a = parseFloat(a);
+                        b = parseFloat(b);
+                    } else {
+                        a = a.toLowerCase();
+                        b = b.toLowerCase();
+                    }
+
+                    return newOrder === "asc" ? (a > b ? 1 : -1) : (a < b ? 1 : -1);
+                });
+
+                tbody.innerHTML = "";
+                rows.forEach(row => tbody.appendChild(row));
+
+                // Mettre à jour l'affichage des icônes de tri
+                document.querySelectorAll(".sort-icon").forEach(icon => icon.textContent = "↕️");
+                this.querySelector(".sort-icon").textContent = newOrder === "asc" ? "⬆️" : "⬇️";
+            });
+        });
     });
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const tables = document.querySelectorAll("table");
+
+    tables.forEach(table => {
+        table.addEventListener("click", function (event) {
+            const target = event.target;
+            const row = target.closest("tr");
+            const rowId = row.getAttribute("data-id");
+            const category = row.getAttribute("data-category");
+
+            if (target.classList.contains("edit-icon")) {
+                // 🔹 Activer l'édition
+                const cells = row.querySelectorAll("td[contenteditable]");
+                cells.forEach(cell => cell.setAttribute("contenteditable", "true"));
+                cells[0].focus(); // Focus sur le premier champ éditable
+            }
+
+            if (target.classList.contains("delete-icon")) {
+                if (confirm("Voulez-vous vraiment supprimer cet élément ?")) {
+                    fetch(`/workspace/projects/{{ project.project_number }}/delete_item`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: rowId, category })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("Suppression réussie !");
+                            row.remove();
+                        } else {
+                            alert("Erreur : " + data.message);
+                        }
+                    })
+                    .catch(error => console.error("❌ Erreur fetch :", error));
+                }
+            }
+        });
+
+        // 🔹 Détecter la touche Enter pour sauvegarder
+        table.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Empêche le saut de ligne
+
+                const cell = event.target;
+                if (cell.getAttribute("contenteditable") === "true") {
+                    const row = cell.closest("tr");
+                    const rowId = row.getAttribute("data-id");
+                    const category = row.getAttribute("data-category");
+
+                    // 🔹 Récupérer la seule donnée modifiée
+                    const updatedData = {};
+                    updatedData[cell.getAttribute("data-key")] = cell.innerText.trim();
+
+                    console.log("🔹 Données modifiées :", updatedData);
+
+                    // 🔹 Envoyer la modification au serveur
+                    fetch(`/workspace/projects/{{ project.project_number }}/edit_item`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: rowId, category, updatedData })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("Modification enregistrée !");
+                            cell.setAttribute("contenteditable", "false"); // 🔹 Désactiver l'édition
+                        } else {
+                            alert("Erreur : " + data.message);
+                        }
+                    })
+                    .catch(error => console.error("❌ Erreur fetch :", error));
+                }
+            }
+        });
+    });
+});
+
+</script>
+
 {% endblock %}
+
+
 
 {% block extra_css %}
 <style>
+
+    .edit-icon, .delete-icon {
+        cursor: pointer;
+        padding: 5px;
+        font-size: 16px;
+        margin-left: 8px;
+    }
+
+    .edit-icon:hover {
+        color: #3498db;
+    }
+
+    .delete-icon:hover {
+        color: red;
+    }
+
+    td[contenteditable="true"] {
+        background-color: #ffffcc;
+    }
     .tabs {
         display: flex;
         flex-wrap: wrap;
@@ -145,6 +433,18 @@
 
     th {
         background: #f5f5f5;
+    }
+
+    .sortable {
+        cursor: pointer;
+        position: relative;
+        padding-right: 20px;
+    }
+
+    .sort-icon {
+        font-size: 14px;
+        margin-left: 5px;
+        color: #666;
     }
 </style>
 {% endblock %}

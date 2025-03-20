@@ -9,12 +9,11 @@ from server.database.models import User
 
 class AuthService:
     @staticmethod
-    def register_user(nom=None, prenom=None, last_name=None, first_name=None, email=None, password=None):
+    def register_user(nom=None, prenom=None, last_name=None, first_name=None, email=None, password=None,
+                      organization_id=None, department=None, location=None, role=None):
         """
         Register a new user
         Returns (success, message)
-
-
         """
         # Use either the English or French parameter names
         last_name = last_name or nom
@@ -33,10 +32,21 @@ class AuthService:
             last_name=last_name,
             first_name=first_name,
             email=email,
-            password=password  # Will be hashed in the save method
+            password=password,  # Will be hashed in the save method
+            organization_id=organization_id,
+            department=department,
+            location=location,
+            role=role
         )
 
         if new_user.save():
+            # If organization_id is provided, add the user to the organization
+            if organization_id:
+                from server.database.models import Organizations
+                org = Organizations.find_by_id(organization_id)
+                if org:
+                    org.add_user(new_user.id)
+
             return True, "Inscription réussie!"
         else:
             return False, "Une erreur est survenue lors de l'inscription."

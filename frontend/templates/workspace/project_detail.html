@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 
 {% set column_titles = {
-
 "room_name": "Salle",
-
 "interior_fenestration_id": "ID Fenêtre Intérieure",
 "room_id": "ID Salle",
 "interior_fenestration_category": "Catégorie",
@@ -12,7 +10,6 @@
 "interior_fenestration_commentary": "Commentaire",
 "interior_fenestration_quantity": "Quantité",
 "interior_fenestration_creation_date": "Date de Création",
-
 "exterior_fenestration_id": "ID Fenêtre Extérieure",
 "exterior_fenestration_category": "Catégorie",
 "exterior_fenestration_number": "Numéro",
@@ -20,7 +17,6 @@
 "exterior_fenestration_commentary": "Commentaire",
 "exterior_fenestration_quantity": "Quantité",
 "exterior_fenestration_creation_date": "Date de Création",
-
 "doors_id": "ID Porte",
 "doors_category": "Catégorie",
 "doors_number": "Numéro",
@@ -28,7 +24,6 @@
 "doors_commentary": "Commentaire",
 "doors_quantity": "Quantité",
 "doors_creation_date": "Date de Création",
-
 "built_in_fournitures_id": "ID Mobilier intégré",
 "built_in_fournitures_category": "Catégorie",
 "built_in_fournitures_number": "Numéro",
@@ -36,7 +31,6 @@
 "built_in_fournitures_commentary": "Commentaire",
 "built_in_fournitures_quantity": "Quantité",
 "built_in_fournitures_creation_date": "Date de Création",
-
 "accessories_id": "ID Accessoire",
 "accessories_category": "Catégorie",
 "accessories_number": "Numéro",
@@ -44,7 +38,6 @@
 "accessories_commentary": "Commentaire",
 "accessories_quantity": "Quantité",
 "accessories_creation_date": "Date de Création",
-
 "plumbings_id": "ID Plomberie",
 "plumbings_category": "Catégorie",
 "plumbings_number": "Numéro",
@@ -52,7 +45,6 @@
 "plumbings_commentary": "Commentaire",
 "plumbings_quantity": "Quantité",
 "plumbings_creation_date": "Date de Création",
-
 "fire_protection_id": "ID Protection Incendie",
 "fire_protection_category": "Catégorie",
 "fire_protection_number": "Numéro",
@@ -60,7 +52,6 @@
 "fire_protection_commentary": "Commentaire",
 "fire_protection_quantity": "Quantité",
 "fire_protection_date": "Date de Création",
-
 "lighting_id": "ID Éclairage",
 "lighting_category": "Catégorie",
 "lighting_number": "Numéro",
@@ -68,7 +59,6 @@
 "lighting_commentary": "Commentaire",
 "lighting_quantity": "Quantité",
 "lighting_creation_date": "Date de Création",
-
 "electrical_outlets_id": "ID Prise Électrique",
 "electrical_outlets_category": "Catégorie",
 "electrical_outlets_number": "Numéro",
@@ -76,7 +66,6 @@
 "electrical_outlets_commentary": "Commentaire",
 "electrical_outlets_quantity": "Quantité",
 "electrical_outlets_creation_date": "Date de Création",
-
 "communication_security_id": "ID Communication & sécurité",
 "communication_security_category": "Catégorie",
 "communication_security_number": "Numéro",
@@ -84,7 +73,6 @@
 "communication_security_commentary": "Commentaire",
 "communication_security_quantity": "Quantité",
 "communication_security_creation_date": "Date de Création",
-
 "medical_equipment_id": "ID Équipement Médical",
 "medical_equipment_category": "Catégorie",
 "medical_equipment_number": "Numéro",
@@ -92,7 +80,6 @@
 "medical_equipment_commentary": "Commentaire",
 "medical_equipment_quantity": "Quantité",
 "medical_equipment_creation_date": "Date de Création",
-
 "electricity_id": "ID Électricité",
 "electricity_care_area_type": "Type de Zone",
 "electricity_smoke_fire_detection": "Détection Incendie",
@@ -125,204 +112,229 @@
 "electricity": "Électricité"
 } %}
 
-
 {% block title %}{{ project.name }} - Spacelogic{% endblock %}
 
 {% block content %}
-<div class="project-container">
-    <!-- 📌 Menu en arborescence -->
-    <div class="sidebar">
-        {% if room_hierarchy %}
-        <ul>
-            {% for functional_unit, sectors in room_hierarchy.items() %}
-            <li>
-                <span class="toggle">📂 <strong>Unité Fonctionnelle {{ functional_unit }}</strong></span>
-                <ul class="nested">
-                    {% for sector, rooms in sectors.items() %}
-                    <li>
-                        <span class="toggle">📁 <strong>Secteur {{ sector }}</strong></span>
-                        <ul class="nested">
-                            {% for room in rooms %}
-                            <li class="room-item" data-room-id="{{ room.id }}">🏥 {{ room.name }}</li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>Aucune salle disponible.</p>
-        {% endif %}
-    </div>
-
-    <!-- 📌 Informations du projet -->
-    <div class="content">
-        <h1>{{ project.name }}</h1>
-        <p><strong>Description:</strong> {{ project.description }}</p>
-        <p><strong>Statut:</strong> <span class="project-status">{{ project.status }}</span></p>
-        <p>Numéro du projet : {{ project.project_number }}</p>
-
-        <!-- Onglets -->
-        <div class="tabs">
-            {% for category, title in tab_titles.items() %}
-            <button class="tab-button" data-tab="tab-{{ category }}">{{ title }}</button>
-            {% endfor %}
+<!-- Workspace Secondary Navbar -->
+<div class="workspace-navbar">
+    <div class="workspace-navbar-container">
+        <div class="workspace-nav-items">
+            <a href="{{ url_for('workspace.projects') }}" class="workspace-nav-item {% if request.endpoint == 'workspace.projects' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Mes projets</span>
+            </a>
+            <a href="{{ url_for('workspace.organisations') }}" class="workspace-nav-item {% if request.endpoint == 'workspace.organisations' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"></path>
+                    <circle cx="12" cy="8" r="2"></circle>
+                    <path d="M12 10c-2.21 0-4 1.79-4 4v2h8v-2c0-2.21-1.79-4-4-4z"></path>
+                </svg>
+                <span>Organisations</span>
+            </a>
         </div>
-
-        <!-- Contenu des onglets -->
-        <div class="tab-content-container">
-            {% for category, items in project_data.items() %}
-            <!--Onglet fonctionalité-->
-            {% if category == "functionality" %}
-            <div id="tab-functionality" class="tab-content {% if loop.first %}active{% endif %}">
-                <div class="special-tab-container">
-                    <h1>Fonctionnalité <span class="edit-icon" title="Modifier">&#9998;</span></h1>
-                    {% if items %}
-                    {% for item in items %}
-                    <form class="functionality-form" data-room-id="{{ item.room_id }}" style="display: none;">
-                        <div class="section">
-                            <h2>Général</h2>
-                            <div class="row">
-                                <div class="column">
-                                    <label><strong>Nb occupants:</strong> <span id="occupants">{{ item.functionality_occupants_number or 'N/A' }}</span>
-                                        Qté</label>
-                                    <label><strong>Nb postes travail - Bureau:</strong> <span id="desk">{{ item.functionality_desk_number or 0 }}</span>
-                                        Qté</label>
-                                    <label><strong>Nb postes travail - Labo:</strong> <span id="lab">{{ item.functionality_lab_number or 0 }}</span>
-                                        Qté</label>
-                                    <label><strong>Horaire typique:</strong> <span id="schedule">{{ item.functionality_schedule or 'N/A' }}</span></label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="section">
-                            <h2>Accès</h2>
-                            <div class="row">
-                                <div class="column">
-                                    {% set access_options = {
-                                    'client_access': 'Accessibilité à la clientèle',
-                                    'stretcher_access': 'Accessibilité aux civières',
-                                    'bed_access': 'Accessibilité aux lits',
-                                    'patients_access': 'Accessibilité aux patients bariatriques',
-                                    'exterior_access': 'Accessibilité de l\'extérieur',
-                                    'hallway_access': 'Accessibilité via corridor',
-                                    'adj_room_access': 'Accessibilité via pièce adjacente',
-                                    'other': 'Autre'
-                                    } %}
-                                    {% for key, label in access_options.items() %}
-                                    <label>
-                                        <input type="checkbox" name="functionality_access" value="{{ key }}"
-                                               {% if key in item.functionality_access %}checked{% endif %} disabled>
-                                        {{ label }}
-                                    </label>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="section">
-                            <h2>Considérations et classifications</h2>
-                            <div class="row">
-                                <div class="column">
-                                    {% set consideration_options = {
-                                    'NA': 'N/A',
-                                    'anti_suicide': 'Aménagement antisuicide',
-                                    'waterproof': 'Étanchéité',
-                                    'radiation': 'Radioactivité/Radiation',
-                                    'electromagnetic': 'Électromagnétiques',
-                                    'sterile': 'Milieu stérile',
-                                    'vibrations_sensitivity': 'Sensible vibrations',
-                                    'wet_lab': 'Labo humide',
-                                    'dry_lab': 'Labo sec',
-                                    'biosecurity': 'Biosécurité',
-                                    'pet_shop': 'Animalerie'
-                                    } %}
-                                    {% for key, label in consideration_options.items() %}
-                                    <label>
-                                        <input type="checkbox" name="functionality_consideration" value="{{ key }}"
-                                               {% if key in item.functionality_consideration %}checked{% endif %}
-                                               disabled>
-                                        {{ label }}
-                                    </label>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="section">
-                            <h2>Description des activités</h2>
-                            <p id="description">{{ item.functionality_description or 'Aucune description' }}</p>
-                        </div>
-
-                        <div class="section">
-                            <h2>Liens de proximité et/ou fonctionnels</h2>
-                            <p id="proximity">{{ item.functionality_proximity or 'Aucun lien spécifié' }}</p>
-                        </div>
-
-                        <div class="section">
-                            <h2>Commentaires de l'établissement</h2>
-                            <p id="commentary">{{ item.functionality_commentary or 'Aucun commentaire' }}</p>
-                        </div>
-                    </form>
-                    {% endfor %}
-                    {% else %}
-                    <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!--Onglets avec tableaux normaux-->
-            {% else %}
-            <div id="tab-{{ category }}" class="tab-content {% if loop.first %}active{% endif %}">
-                <h2>{{ tab_titles.get(category, category.replace('_', ' ').capitalize()) }}</h2>
-                <h3 class="selected-room-name">Salle sélectionnée : <span></span></h3>
-                <table>
-                    <thead>
-                    <tr>
-                        {% for key in columns_to_display[category] if key in items[0] %}
-                            <th class="sortable" data-column="{{ key }}" data-order="none">
-                                {{ column_titles.get(key, key) }}
-                                <span class="sort-icon">↕️</span>
-                             </th>
-                        {% endfor %}
-
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for item in items %}
-                    <tr data-id="{{ item[category ~ '_id'] }}"
-                        data-category="{{ category }}"
-                        data-room-id="{{ item['room_id'] if 'room_id' in item else '' }}"
-                        data-room-name="{{ item['room_name'] if 'room_name' in item else '' }}">
-
-                        <!-- 🔹 Colonnes cachées pour l'ID et le nom de la salle -->
-                        <td style="display: none;">{{ item['room_id'] if 'room_id' in item else '' }}</td>
-                        <td style="display: none;">{{ item['room_name'] if 'room_name' in item else '' }}</td>
-
-                        {% for key in columns_to_display[category] if key in item %}
-                        <td contenteditable="false" data-key="{{ key }}">{{ item[key] }}</td>
-                        {% endfor %}
-                        <td>
-                            <span class="edit-icon" title="Modifier">&#9998;</span>
-                            <span class="delete-icon" title="Supprimer">&#128465;</span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
-            {% endfor %}
+        <div class="workspace-context">
+            {% block workspace_context %}{% endblock %}
         </div>
     </div>
 </div>
+
+<!-- Workspace Content Area -->
+<div class="workspace-content">
+    <div class="project-container">
+        <!-- 📌 Menu en arborescence -->
+        <div class="sidebar">
+            {% if room_hierarchy %}
+            <ul>
+                {% for functional_unit, sectors in room_hierarchy.items() %}
+                <li>
+                    <span class="toggle">📂 <strong>Unité Fonctionnelle {{ functional_unit }}</strong></span>
+                    <ul class="nested">
+                        {% for sector, rooms in sectors.items() %}
+                        <li>
+                            <span class="toggle">📁 <strong>Secteur {{ sector }}</strong></span>
+                            <ul class="nested">
+                                {% for room in rooms %}
+                                <li class="room-item" data-room-id="{{ room.id }}">🏥 {{ room.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>Aucune salle disponible.</p>
+            {% endif %}
+        </div>
+
+        <!-- 📌 Informations du projet -->
+        <div class="content">
+            <h1>{{ project.name }}</h1>
+            <p><strong>Description:</strong> {{ project.description }}</p>
+            <p><strong>Statut:</strong> <span class="project-status">{{ project.status }}</span></p>
+            <p>Numéro du projet : {{ project.project_number }}</p>
+
+            <!-- Onglets -->
+            <div class="tabs">
+                {% for category, title in tab_titles.items() %}
+                <button class="tab-button" data-tab="tab-{{ category }}">{{ title }}</button>
+                {% endfor %}
+            </div>
+
+            <!-- Contenu des onglets -->
+            <div class="tab-content-container">
+                {% for category, items in project_data.items() %}
+                <!--Onglet fonctionalité-->
+                {% if category == "functionality" %}
+                <div id="tab-functionality" class="tab-content {% if loop.first %}active{% endif %}">
+                    <div class="special-tab-container">
+                        <h1>Fonctionnalité <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                        {% if items %}
+                        {% for item in items %}
+                        <form class="functionality-form" data-room-id="{{ item.room_id }}" style="display: none;">
+                            <div class="section">
+                                <h2>Général</h2>
+                                <div class="row">
+                                    <div class="column">
+                                        <label><strong>Nb occupants:</strong> <span id="occupants">{{ item.functionality_occupants_number or 'N/A' }}</span>
+                                            Qté</label>
+                                        <label><strong>Nb postes travail - Bureau:</strong> <span id="desk">{{ item.functionality_desk_number or 0 }}</span>
+                                            Qté</label>
+                                        <label><strong>Nb postes travail - Labo:</strong> <span id="lab">{{ item.functionality_lab_number or 0 }}</span>
+                                            Qté</label>
+                                        <label><strong>Horaire typique:</strong> <span id="schedule">{{ item.functionality_schedule or 'N/A' }}</span></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="section">
+                                <h2>Accès</h2>
+                                <div class="row">
+                                    <div class="column">
+                                        {% set access_options = {
+                                        'client_access': 'Accessibilité à la clientèle',
+                                        'stretcher_access': 'Accessibilité aux civières',
+                                        'bed_access': 'Accessibilité aux lits',
+                                        'patients_access': 'Accessibilité aux patients bariatriques',
+                                        'exterior_access': 'Accessibilité de l\'extérieur',
+                                        'hallway_access': 'Accessibilité via corridor',
+                                        'adj_room_access': 'Accessibilité via pièce adjacente',
+                                        'other': 'Autre'
+                                        } %}
+                                        {% for key, label in access_options.items() %}
+                                        <label>
+                                            <input type="checkbox" name="functionality_access" value="{{ key }}"
+                                                   {% if key in item.functionality_access %}checked{% endif %} disabled>
+                                            {{ label }}
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="section">
+                                <h2>Considérations et classifications</h2>
+                                <div class="row">
+                                    <div class="column">
+                                        {% set consideration_options = {
+                                        'NA': 'N/A',
+                                        'anti_suicide': 'Aménagement antisuicide',
+                                        'waterproof': 'Étanchéité',
+                                        'radiation': 'Radioactivité/Radiation',
+                                        'electromagnetic': 'Électromagnétiques',
+                                        'sterile': 'Milieu stérile',
+                                        'vibrations_sensitivity': 'Sensible vibrations',
+                                        'wet_lab': 'Labo humide',
+                                        'dry_lab': 'Labo sec',
+                                        'biosecurity': 'Biosécurité',
+                                        'pet_shop': 'Animalerie'
+                                        } %}
+                                        {% for key, label in consideration_options.items() %}
+                                        <label>
+                                            <input type="checkbox" name="functionality_consideration" value="{{ key }}"
+                                                   {% if key in item.functionality_consideration %}checked{% endif %}
+                                                   disabled>
+                                            {{ label }}
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="section">
+                                <h2>Description des activités</h2>
+                                <p id="description">{{ item.functionality_description or 'Aucune description' }}</p>
+                            </div>
+
+                            <div class="section">
+                                <h2>Liens de proximité et/ou fonctionnels</h2>
+                                <p id="proximity">{{ item.functionality_proximity or 'Aucun lien spécifié' }}</p>
+                            </div>
+
+                            <div class="section">
+                                <h2>Commentaires de l'établissement</h2>
+                                <p id="commentary">{{ item.functionality_commentary or 'Aucun commentaire' }}</p>
+                            </div>
+                        </form>
+                        {% endfor %}
+                        {% else %}
+                        <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!--Onglets avec tableaux normaux-->
+                {% else %}
+                <div id="tab-{{ category }}" class="tab-content {% if loop.first %}active{% endif %}">
+                    <h2>{{ tab_titles.get(category, category.replace('_', ' ').capitalize()) }}</h2>
+                    <h3 class="selected-room-name">Salle sélectionnée : <span></span></h3>
+                    <table>
+                        <thead>
+                        <tr>
+                            {% for key in columns_to_display[category] if key in items[0] %}
+                                <th class="sortable" data-column="{{ key }}" data-order="none">
+                                    {{ column_titles.get(key, key) }}
+                                    <span class="sort-icon">↕️</span>
+                                 </th>
+                            {% endfor %}
+
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in items %}
+                        <tr data-id="{{ item[category ~ '_id'] }}"
+                            data-category="{{ category }}"
+                            data-room-id="{{ item['room_id'] if 'room_id' in item else '' }}"
+                            data-room-name="{{ item['room_name'] if 'room_name' in item else '' }}">
+
+                            <!-- 🔹 Colonnes cachées pour l'ID et le nom de la salle -->
+                            <td style="display: none;">{{ item['room_id'] if 'room_id' in item else '' }}</td>
+                            <td style="display: none;">{{ item['room_name'] if 'room_name' in item else '' }}</td>
+
+                            {% for key in columns_to_display[category] if key in item %}
+                            <td contenteditable="false" data-key="{{ key }}">{{ item[key] }}</td>
+                            {% endfor %}
+                            <td>
+                                <span class="edit-icon" title="Modifier">&#9998;</span>
+                                <span class="delete-icon" title="Supprimer">&#128465;</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // 🔹 Gestion des dossiers ouverts/fermés
@@ -630,187 +642,350 @@
         }
     });
 </script>
-
-
 {% endblock %}
 
-
 {% block extra_css %}
+{{ super() }}
 <style>
+    /* Workspace Navbar Styles */
+.workspace-navbar {
+    background-color: #f0f4f8;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 70px;
+    z-index: 900;
+}
 
-    .edit-icon, .delete-icon {
-        cursor: pointer;
-        padding: 5px;
-        font-size: 16px;
-        margin-left: 8px;
-    }
+.workspace-navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 50px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
 
-    .edit-icon:hover {
-        color: #3498db;
-    }
+.workspace-nav-items {
+    display: flex;
+    gap: 10px;
+}
 
-    .delete-icon:hover {
-        color: red;
-    }
+.workspace-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    border-radius: 5px;
+    color: #4a5568;
+    transition: all 0.2s ease;
+}
 
-    td[contenteditable="true"] {
-        background-color: #ffffcc;
-    }
+.workspace-nav-item svg {
+    margin-right: 8px;
+}
 
-    .tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 20px;
-    }
+.workspace-nav-item:hover {
+    background-color: #e2e8f0;
+}
 
-    .tab-button {
-        padding: 8px 12px;
-        border: none;
-        background: #ddd;
-        cursor: pointer;
-        font-weight: bold;
-    }
+.workspace-nav-item.active {
+    background-color: #3498db;
+    color: white;
+}
 
-    .tab-button.active {
-        background: #3498db;
-        color: white;
-    }
+.workspace-nav-item.active svg {
+    stroke: white;
+}
 
-    .tab-content-container {
-        background: white;
-        padding: 20px;
-        border-radius: 5px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
+.workspace-context {
+    display: flex;
+    align-items: center;
+}
 
-    .tab-content {
-        display: none;
-    }
+/* Workspace Actions */
+.workspace-actions {
+    display: flex;
+    gap: 10px;
+}
 
-    .tab-content.active {
-        display: block;
-    }
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-    }
+.btn svg {
+    margin-right: 8px;
+}
 
-    th, td {
-        padding: 10px;
-        border: 1px solid #ddd;
-        text-align: left;
-    }
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
 
-    th {
-        background: #f5f5f5;
-    }
+.btn-primary:hover {
+    background-color: #2980b9;
+}
 
-    .sortable {
-        cursor: pointer;
-        position: relative;
-        padding-right: 20px;
-    }
+.btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
 
-    .sort-icon {
-        font-size: 14px;
-        margin-left: 5px;
-        color: #666;
-    }
+.btn-secondary:hover {
+    background-color: #cbd5e0;
+}
 
+/* Workspace Content Styles */
+.workspace-content {
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 20px;
+    min-height: calc(100vh - 220px); /* Account for header, navbar, and footer */
+}
+
+/* Main container adjustment for workspace */
+main .container {
+    max-width: 100%;
+    width: 100%;
+    padding: 0;
+}
+
+/* Project specific styles */
+.edit-icon, .delete-icon {
+    cursor: pointer;
+    padding: 5px;
+    font-size: 16px;
+    margin-left: 8px;
+}
+
+.edit-icon:hover {
+    color: #3498db;
+}
+
+.delete-icon:hover {
+    color: red;
+}
+
+td[contenteditable="true"] {
+    background-color: #ffffcc;
+}
+
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    padding: 8px 12px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.tab-button.active {
+    background: #3498db;
+    color: white;
+}
+
+.tab-content-container {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #f5f5f5;
+}
+
+.sortable {
+    cursor: pointer;
+    position: relative;
+    padding-right: 20px;
+}
+
+.sort-icon {
+    font-size: 14px;
+    margin-left: 5px;
+    color: #666;
+}
+
+.project-container {
+    display: flex;
+    align-items: flex-start;
+}
+
+.sidebar {
+    width: 250px; /* Ajuste selon la largeur souhaitée */
+    padding: 10px;
+    background: #f5f5f5;
+    border-right: 1px solid #ddd;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.content {
+    flex: 1;
+    padding: 20px;
+}
+
+.nested {
+    display: none;
+    margin-left: 20px;
+}
+
+.toggle {
+    cursor: pointer;
+    font-weight: bold;
+    display: block;
+}
+
+.active {
+    display: block;
+}
+
+.active-room {
+    font-weight: bold;
+    color: #3498db;
+}
+
+.special-tab-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* Styles for sidebar tree */
+.sidebar ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.sidebar > ul > li {
+    margin-bottom: 8px;
+}
+
+.sidebar li {
+    margin: 4px 0;
+}
+
+.sidebar .room-item {
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+}
+
+.sidebar .room-item:hover {
+    background-color: #e2e8f0;
+}
+
+/* Project status styles */
+.project-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background-color: #d1fae5;
+    color: #047857;
+}
+
+/* Section styles for functionality tab */
+.section {
+    background-color: #f8fafc;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+}
+
+.section h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+    color: #334155;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.column {
+    flex: 1;
+    min-width: 250px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
     .project-container {
-        display: flex;
-    }
-
-    .room-menu {
-        width: 250px;
-        padding: 15px;
-        background: #f7f7f7;
-        border-right: 1px solid #ddd;
-        height: 100vh;
-        overflow-y: auto;
-    }
-
-    .tree-menu {
-        list-style-type: none;
-        padding-left: 10px;
-    }
-
-    .tree-menu li {
-        margin: 5px 0;
-        cursor: pointer;
-    }
-
-    .folder-toggle {
-        font-weight: bold;
-        display: block;
-        cursor: pointer;
-    }
-
-    .folder-toggle::before {
-        content: "▶";
-        margin-right: 5px;
-    }
-
-    .folder-toggle.open::before {
-        content: "▼";
-    }
-
-    .room-item {
-        cursor: pointer;
-        padding: 2px 5px;
-        border-radius: 3px;
-    }
-
-    .room-item:hover {
-        background-color: #ddd;
-    }
-
-    .project-container {
-        display: flex;
-        align-items: flex-start;
+        flex-direction: column;
     }
 
     .sidebar {
-        width: 250px; /* Ajuste selon la largeur souhaitée */
-        padding: 10px;
-        background: #f5f5f5;
-        border-right: 1px solid #ddd;
-        height: 100vh;
-        overflow-y: auto;
+        width: 100%;
+        max-height: 300px;
+        margin-bottom: 20px;
     }
 
     .content {
-        flex: 1;
-        padding: 20px;
+        width: 100%;
     }
 
-    .nested {
-        display: none;
-        margin-left: 20px;
+    .tabs {
+        overflow-x: auto;
     }
 
-    .toggle {
-        cursor: pointer;
-        font-weight: bold;
-        display: block;
+    .workspace-navbar-container {
+        flex-direction: column;
+        height: auto;
+        padding: 10px;
     }
 
-    .active {
-        display: block;
+    .workspace-nav-items {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 10px;
     }
 
-    .active-room {
-        font-weight: bold;
-        color: #3498db;
+    .workspace-context {
+        width: 100%;
+        justify-content: center;
+        padding-top: 10px;
+        border-top: 1px solid #e2e8f0;
     }
-
-    .special-tab-container label {
-        display: block;
-        margin-bottom: 5px;
-    }
-
+}
 </style>
 {% endblock %}

@@ -4,9 +4,7 @@ from server.services.auth import AuthService
 from server.utils.toast_helper import redirect_with_toast, set_toast
 from server.database.models import Project, Organizations
 from server.database.db_config import get_db_connection, database_exists
-import binascii
 import uuid
-import re
 
 
 workspace_bp = Blueprint('workspace', __name__)
@@ -94,28 +92,6 @@ def new_project():
             return redirect(url_for('workspace.projects'))
         else:
             set_toast('Erreur lors de la création du projet.', 'error')
-
-# @workspace_bp.route('/projects/<project_id>')
-# def project_detail(project_id):
-#     """Project detail page"""
-#     # Get the project details using the Project model
-#     project_obj = Project.find_by_id(project_id)
-#
-#     if not project_obj:
-#         set_toast('Projet non trouvé.', 'error')
-#         return redirect(url_for('workspace.projects'))
-#
-#     project = {
-#         'id': project_obj.id,
-#         'name': project_obj.name,
-#         'project_number': project_obj.project_number,
-#         'description': project_obj.description,
-#         'start_date': project_obj.start_date,
-#         'status': project_obj.status or 'active',
-#         'type': project_obj.type or 'N/A'
-#     }
-#
-#     return render_template('workspace/project_detail.html', project=project)
 
 
 @workspace_bp.route('/organisations')
@@ -254,7 +230,9 @@ def organisation_detail(org_id):
 
 @workspace_bp.route('/projects/<project_id>')
 def project_detail(project_id):
-    # 1️⃣ Se connecter à `SPACELOGIC_ADMIN_DB` pour récupérer le nom du projet
+    """Affiche les détails d'un projet"""
+
+    # 1️⃣ Se connecter à `users_db` pour récupérer le nom du projet
     connection = get_db_connection('users_db')
     cursor = connection.cursor(dictionary=True)
 
@@ -266,7 +244,6 @@ def project_detail(project_id):
 
     # 2️⃣ Vérifier si le projet existe
     if not project:
-        print(f"❌ Erreur : Aucun projet trouvé avec l'ID {project_id}")
         return "Erreur : Projet introuvable", 404
 
     project_number = project['project_number']
@@ -277,17 +254,16 @@ def project_detail(project_id):
 
     # 3️⃣ Vérifier si la base existe avant de se connecter
     if not database_exists(project_db_name):
-        print(f"❌ La base {project_db_name} n'existe pas.")
         return f"Erreur : La base de données {project_db_name} n'existe pas", 404
 
     # 4️⃣ Connexion à la base spécifique au projet
     connection = get_db_connection(project_db_name)
     if not connection:
-        print(f"❌ Impossible de se connecter à {project_db_name}")
         return f"Erreur : Impossible de se connecter à {project_db_name}", 500
 
     cursor = connection.cursor(dictionary=True)
 
+    # 5️⃣ Récupération des données des différentes tables
     project_data = {}
     tables = [
         "interior_fenestration", "exterior_fenestration", "doors",
@@ -298,129 +274,128 @@ def project_detail(project_id):
         "risk_elements", "ventilation_cvac", "electricity"
     ]
 
-#     for table in tables:
-#         try:
-# #            cursor.execute(f"SELECT * FROM {table};")
-#             cursor.execute(f"""
-#                 SELECT t.*, r.name AS room_name
-#                 FROM {table} t
-#                 JOIN rooms r ON t.room_id = r.id;
-#             """)
-#
-#             project_data[table] = cursor.fetchall() or []
-#             print(f"Erreur récupération {table} : {e}")
-#         except Exception as e:
-#             print(f"⚠️ Erreur récupération {table} : {e}")
-
     for table in tables:
         try:
-            # 🔹 Identifier dynamiquement la colonne ID de la table
             primary_key = f"{table}_id"
 
             cursor.execute(f"""
-                SELECT {table}.*, {table}.{primary_key}, rooms.name AS room_name 
+                SELECT {table}.*, {table}.{primary_key}, rooms.id AS room_id, rooms.name AS room_name 
                 FROM {table} 
                 LEFT JOIN rooms ON {table}.room_id = rooms.id;
             """)
 
-            project_data[table] = cursor.fetchall() or []  # Assure qu'on a une liste
+            rows = cursor.fetchall() or []
 
-            import uuid
+            # 🔹 Convertir l'ID binaire en format UUID (plus facile à utiliser)
+            for row in rows:
+                if primary_key in row and isinstance(row[primary_key], bytes):
+                    row[primary_key] = str(uuid.UUID(bytes=row[primary_key]))  # Convertir en UUID string
+                if "room_id" in row and isinstance(row["room_id"], bytes):
+                    row["room_id"] = str(uuid.UUID(bytes=row["room_id"]))  # Convertir en UUID string
 
-            import uuid
+            project_data[table] = rows
+            print(f"🔹 {table}: {len(rows)} lignes")
 
-            for table in tables:
-                try:
-                    primary_key = f"{table}_id"
-
-                    cursor.execute(f"""
-                        SELECT {table}.*, {table}.{primary_key}, rooms.name AS room_name 
-                        FROM {table} 
-                        LEFT JOIN rooms ON {table}.room_id = rooms.id;
-                    """)
-
-                    rows = cursor.fetchall() or []  # Assure qu'on a une liste
-
-                    # 🔹 Convertir l'ID binaire en format UUID (plus facile à utiliser)
-                    for row in rows:
-                        if primary_key in row and isinstance(row[primary_key], bytes):
-                            row[primary_key] = str(uuid.UUID(bytes=row[primary_key]))  # Convertir en UUID string
-
-                    project_data[table] = rows
-
-                    print(f"🔹 {table}: {len(project_data[table])} lignes")
-
-                except Exception as err:
-                    print(f"⚠️ Erreur récupération {table} : {err}")
-                    project_data[table] = []  # Assure une liste vide en cas d'erreur
-
-            print(f"🔹 {table}: {len(project_data[table])} lignes")
-
-        except Exception as err:  # Utiliser `err` au lieu de `e`
-            print(f"⚠️ Erreur récupération {table} : {err}")  # Utilisation correcte de `err`
+        except Exception as err:
+            print(f"⚠️ Erreur récupération {table} : {err}")
             project_data[table] = []  # Assure une liste vide en cas d'erreur
+
+    # 6️⃣ Récupération des salles groupées par unité fonctionnelle et secteur
+    cursor.execute("""
+        SELECT id, name, sector, functional_unit 
+        FROM rooms
+        ORDER BY functional_unit, sector, name;
+    """)
+    rooms = cursor.fetchall()
+
+    if not rooms:
+        print("⚠️ Aucune salle récupérée depuis la base de données !")
+
+    # 7️⃣ Organisation des données sous forme d'arborescence {Unité fonctionnelle -> Secteur -> Salles}
+    room_hierarchy = {}
+    for room in rooms:
+        room_id = str(uuid.UUID(bytes=room['id']))  # Convertir en UUID string
+        room_name = room['name']
+        sector = room['sector']
+        functional_unit = room['functional_unit']
+
+        if functional_unit not in room_hierarchy:
+            room_hierarchy[functional_unit] = {}
+
+        if sector not in room_hierarchy[functional_unit]:
+            room_hierarchy[functional_unit][sector] = []
+
+        room_hierarchy[functional_unit][sector].append({'id': room_id, 'name': room_name})
+
+    # 🔹 Trier numériquement les unités fonctionnelles
+    room_hierarchy = {k: room_hierarchy[k] for k in sorted(room_hierarchy.keys(), key=lambda x: int(x))}
+
+    print(f"📂 Hiérarchie des salles triée : {room_hierarchy}")
 
     cursor.close()
     connection.close()
 
-    print(f"📊 Données récupérées pour {project_db_name}:")
-    for table, data in project_data.items():
-        print(f"  🔹 {table}: {len(data)} lignes")
-
-        # 4️⃣ Définir les colonnes à afficher pour chaque catégorie
-
-        columns_to_display = {
-            "interior_fenestration": ["room_name", "interior_fenestration_category", "interior_fenestration_number",
-                                      "interior_fenestration_name", "interior_fenestration_quantity"],
-            "exterior_fenestration": ["room_name", "exterior_fenestration_category", "exterior_fenestration_number",
-                                      "exterior_fenestration_name", "exterior_fenestration_quantity"],
-            "finishes": ["room_name", "finishes_category", "finishes_number", "finishes_name", "finishes_quantity"],
-            "doors": ["room_name", "doors_category", "doors_number", "doors_name", "doors_quantity"],
-            "built_in_fournitures": ["room_name", "built_in_fournitures_category", "built_in_fournitures_number",
-                                     "built_in_fournitures_name", "built_in_fournitures_quantity"],
-            "accessories": ["room_name", "accessories_category", "accessories_number", "accessories_name", "accessories_quantity"],
-            "plumbings": ["room_name", "plumbings_category", "plumbings_number", "plumbings_name", "plumbings_quantity"],
-            "fire_protection": ["room_name", "fire_protection_category", "fire_protection_number", "fire_protection_name",
-                                "fire_protection_quantity"],
-            "lighting": ["room_name", "lighting_category", "lighting_number", "lighting_name", "lighting_quantity"],
-            "electrical_outlets": ["room_name", "electrical_outlets_category", "electrical_outlets_number",
-                                   "electrical_outlets_name", "electrical_outlets_quantity"],
-            "communication_security": ["room_name", "communication_security_category", "communication_security_number",
-                                       "communication_security_name", "communication_security_quantity"],
-            "medical_equipment": ["room_name", "medical_equipment_category", "medical_equipment_number",
-                                  "medical_equipment_name", "medical_equipment_quantity"],
-            "functionality": ["room_name", "functionality_occupants_number", "functionality_occupants_desk_number", "functionality_lab_number",
-                              "functionality_schedule", "functionality_access", "functionality_access_adj_room", "functionality_access_other",
-                              "functionality_consideration", "functionality_consideration_other", "functionality_description",
-                              "functionality_proximity"],
-            "arch_requirements": ["room_name", "arch_requirements_critic_length", "arch_requirements_critic_width", "arch_requirements_critic_height",
-                                  "arch_requirements_validation_req", "arch_requirements_acoustic", "arch_requirements_int_fenestration",
-                                  "arch_requirements_int_fen_adj_room", "arch_requirements_int_fen_other",
-                                  "arch_requirements_ext_fenestration", "arch_requirements_ext_fen_solar_blind",
-                                  "arch_requirements_ext_fen_opaque_blind"],
-            "struct_requirements": ["room_name", "struct_requirements_floor_overload_required", "struct_requirements_overload",
-                                    "struct_requirements_equipment_weight", "struct_requirements_floor_flatness",
-                                    "struct_requirements_ditch_gutter", "struct_requirements_steel_sensitivity",
-                                    "struct_requirements_equipment_other", "struct_requirements_vibrations_sensitivity",
-                                    "struct_requirements_max_vibrations"],
-            "risk_elements": ["room_name", "risk_elements_general", "risk_elements_general_radioactive", "risk_elements_biological",
-                              "risk_elements_gas", "risk_elements_gas_qty", "risk_elements_gas_toxic_gas",
-                              "risk_elements_liquids", "risk_elements_liquids_qty", "risk_elements_liquids_cryogenic",
-                              "risk_elements_other", "risk_elements_chemical_products"],
-            "ventilation_cvac": ["room_name", "ventilation_care_area_type", "ventilation", "ventilation_special_mechanics",
-                                 "ventilation_specific_exhaust", "ventilation_relative_room_pressure",
-                                 "ventilation_pressurization", "ventilation_environmental_parameters",],
-            "electricity": ["room_name", "electricity_care_area_type", "electricity_smoke_fire_detection", "electricity_special_equipment",
-                           "electricity_lighting_type", "electricity_lighting_level", "electricity_lighting_control",
-                           "color_temperature", "electricity_lighting"]
-        }
+    # 8️⃣ Définir les colonnes à afficher pour chaque catégorie
+    columns_to_display = {
+        "interior_fenestration": ["interior_fenestration_category", "interior_fenestration_number", "interior_fenestration_name", "interior_fenestration_quantity"],
+        "exterior_fenestration": ["exterior_fenestration_category", "exterior_fenestration_number", "exterior_fenestration_name", "exterior_fenestration_quantity"],
+        "doors": ["doors_category", "doors_number", "doors_name", "doors_quantity"],
+        "built_in_fournitures": ["built_in_fournitures_category", "built_in_fournitures_number", "built_in_fournitures_name", "built_in_fournitures_quantity"],
+        "accessories": ["accessories_category", "accessories_number", "accessories_name", "accessories_quantity"],
+        "plumbings": ["plumbings_category", "plumbings_number", "plumbings_name", "plumbings_quantity"],
+        "fire_protection": ["fire_protection_category", "fire_protection_number", "fire_protection_name", "fire_protection_quantity"],
+        "lighting": ["lighting_category", "lighting_number", "lighting_name", "lighting_quantity"],
+        "electrical_outlets": ["electrical_outlets_category", "electrical_outlets_number", "electrical_outlets_name", "electrical_outlets_quantity"],
+        "communication_security": ["communication_security_category", "communication_security_number", "communication_security_name", "communication_security_quantity"],
+        "medical_equipment": ["medical_equipment_category", "medical_equipment_number", "medical_equipment_name", "medical_equipment_quantity"],
+        "functionality": ["functionality_occupants_number", "functionality_schedule", "functionality_access", "functionality_description"],
+        "arch_requirements": ["arch_requirements_critic_length", "arch_requirements_critic_width", "arch_requirements_critic_height"],
+        "struct_requirements": ["struct_requirements_floor_overload_required", "struct_requirements_vibrations_sensitivity"],
+        "risk_elements": ["risk_elements_general", "risk_elements_gas", "risk_elements_liquids"],
+        "ventilation_cvac": ["ventilation_care_area_type", "ventilation_specific_exhaust"],
+        "electricity": ["electricity_lighting_type", "electricity_lighting_level"]
+    }
 
     print(f"📊 Données envoyées à `project_detail.html` : {list(project_data.keys())}")
 
+    selected_room_id = request.args.get('room_id', None)
+    selected_room_name = None
+
+    # Filtrer les données pour les onglets spéciaux
+    filtered_functionality = []
+    if selected_room_id:
+        filtered_functionality = [f for f in project_data.get("functionality", []) if
+                                  f.get("room_id") == selected_room_id]
+
+        # Trouver le nom de la salle
+        for f in project_data.get("functionality", []):
+            if f.get("room_id") == selected_room_id:
+                selected_room_name = f.get("room_name")
+                break
+
+    # Convertir les sets en listes pour JSON
+    def convert_sets_to_lists(data):
+        if isinstance(data, dict):
+            return {k: convert_sets_to_lists(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [convert_sets_to_lists(v) for v in data]
+        elif isinstance(data, set):
+            return list(data)  # Convertir les sets en liste
+        return data
+
+    # Appliquer la conversion
+    project_data = convert_sets_to_lists(project_data)
+
     return render_template("workspace/project_detail.html",
-                           project={"id": project_id, "name": project_name, "project_number": project_number, "description": "Détails du projet"},
+                           project={"id": project_id, "name": project_name, "project_number": project_number,
+                                    "description": "Détails du projet"},
                            project_data=project_data,
-                           columns_to_display=columns_to_display)
+                           filtered_functionality=filtered_functionality,
+                           columns_to_display=columns_to_display,
+                           room_hierarchy=room_hierarchy,
+                           selected_room_id=selected_room_id,
+                           selected_room_name=selected_room_name,
+                           )
 
 
 @workspace_bp.route('/projects/<project_id>/edit_item', methods=['POST'])

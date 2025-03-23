@@ -585,8 +585,8 @@ def api_create_invitation():
             'message': 'Un utilisateur avec cet email existe déjà. Veuillez utiliser une autre adresse email.'
         }), 400
 
-    # Create the invitation
-    invitation = Invitation.create(
+    # Create invitation object but don't save to database yet
+    temp_invitation = Invitation(
         organization_id=data['organisation_id'],
         email=data['email'],
         first_name=data['first_name'],
@@ -597,40 +597,53 @@ def api_create_invitation():
         invited_by=current_user_id
     )
 
-    if not invitation:
-        return jsonify({
-            'success': False,
-            'message': 'Une erreur est survenue lors de la création de l\'invitation.'
-        }), 500
-
     # Add organization name to the invitation object for the email
-    invitation.organization_name = organization.name
+    temp_invitation.organization_name = organization.name
 
-    # Send invitation email
+    # Send invitation email BEFORE saving to database
     custom_message = data.get('message')
     base_url = request.host_url.rstrip('/')
 
-    # Send invitation email
-    email_success = email_sender.send_invitation_email(invitation, base_url, custom_message)
+    # Try to send invitation email with proper error handling
+    try:
+        email_success = email_sender.send_invitation_email(temp_invitation, base_url, custom_message)
 
-    if not email_success:
-        # If email fails, we keep the invitation but inform the user
+        if not email_success:
+            # If email fails, don't create the invitation record
+            return jsonify({
+                'success': False,
+                'message': 'L\'email d\'invitation n\'a pas pu être envoyé. Veuillez vérifier l\'adresse email ou votre configuration SMTP.'
+            }), 500
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        # Log the full error details for debugging
+        import traceback
+        traceback.print_exc()
+
+        # Return an error and don't save the invitation
+        return jsonify({
+            'success': False,
+            'message': f'Erreur lors de l\'envoi de l\'email: {str(e)}'
+        }), 500
+
+    # Only save the invitation to the database if the email was sent successfully
+    if temp_invitation.save():
+        # Success!
         return jsonify({
             'success': True,
-            'warning': True,
-            'message': 'Invitation créée mais l\'email n\'a pas pu être envoyé. Veuillez vérifier l\'adresse email.'
+            'message': 'Invitation envoyée avec succès',
+            'invitation': {
+                'id': temp_invitation.id,
+                'email': temp_invitation.email,
+                'expires_at': temp_invitation.expires_at.isoformat()
+            }
         })
-
-    # Success!
-    return jsonify({
-        'success': True,
-        'message': 'Invitation envoyée avec succès',
-        'invitation': {
-            'id': invitation.id,
-            'email': invitation.email,
-            'expires_at': invitation.expires_at.isoformat()
-        }
-    })
+    else:
+        # Failed to save to database (unlikely at this point, but still possible)
+        return jsonify({
+            'success': False,
+            'message': 'L\'email a été envoyé mais l\'invitation n\'a pas pu être enregistrée dans la base de données.'
+        }), 500
 
 
 @api_bp.route('/invitations/<invitation_id>', methods=['DELETE'])

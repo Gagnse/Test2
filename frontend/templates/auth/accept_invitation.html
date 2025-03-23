@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}Accepter l'invitation - Spacelogic{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-form-container invitation-form">
+        <div class="invitation-header">
+            <div class="org-avatar">
+                {{ organization.name[0] | upper }}
+            </div>
+            <h1>Invitation à rejoindre {{ organization.name }}</h1>
+        </div>
+        
+        <div class="invitation-details">
+            <p>Vous avez été invité(e) à rejoindre l'organisation <strong>{{ organization.name }}</strong> sur SpaceLogic.</p>
+            <p>Veuillez compléter la création de votre compte en définissant un mot de passe.</p>
+            
+            <div class="user-info">
+                <div class="info-item">
+                    <span class="info-label">Email :</span>
+                    <span class="info-value">{{ invitation.email }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Nom :</span>
+                    <span class="info-value">{{ invitation.last_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Prénom :</span>
+                    <span class="info-value">{{ invitation.first_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Rôle :</span>
+                    <span class="info-value">{{ invitation.role }}</span>
+                </div>
+                {% if invitation.department %}
+                <div class="info-item">
+                    <span class="info-label">Département :</span>
+                    <span class="info-value">{{ invitation.department }}</span>
+                </div>
+                {% endif %}
+                {% if invitation.location %}
+                <div class="info-item">
+                    <span class="info-label">Emplacement :</span>
+                    <span class="info-value">{{ invitation.location }}</span>
+                </div>
+                {% endif %}
+                <div class="info-item">
+                    <span class="info-label">Expiration :</span>
+                    <span class="info-value">{{ invitation.expires_at.strftime('%d/%m/%Y à %H:%M') }}</span>
+                </div>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('invitation.complete_invitation', token=invitation.token) }}" class="auth-form">
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" required class="form-control">
+                <div class="password-requirements">
+                    <p>Votre mot de passe doit contenir au moins :</p>
+                    <ul>
+                        <li>8 caractères</li>
+                        <li>Une lettre minuscule</li>
+                        <li>Une lettre majuscule</li>
+                        <li>Un chiffre</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm_password">Confirmer le mot de passe</label>
+                <input type="password" id="confirm_password" name="confirm_password" required class="form-control">
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Accepter l'invitation</button>
+            </div>
+            
+            <div class="auth-links">
+                <p>Déjà inscrit? <a href="{{ url_for('auth.login') }}">Se connecter</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+    }
+    
+    .auth-form-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        width: 100%;
+        max-width: 600px;
+    }
+    
+    .invitation-form {
+        max-width: 600px;
+    }
+    
+    .invitation-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .org-avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 10px;
+        background-color: #3498db;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .invitation-header h1 {
+        font-size: 1.8rem;
+        color: #333;
+        margin: 0;
+    }
+    
+    .invitation-details {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .invitation-details p {
+        margin-bottom: 15px;
+    }
+    
+    .user-info {
+        border-top: 1px solid #e2e8f0;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+    
+    .info-item {
+        display: flex;
+        margin-bottom: 8px;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        width: 120px;
+        color: #4a5568;
+    }
+    
+    .info-value {
+        color: #2d3748;
+    }
+    
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+    
+    .password-requirements {
+        margin-top: 10px;
+        font-size: 0.85rem;
+        color: #718096;
+    }
+    
+    .password-requirements p {
+        margin-bottom: 5px;
+    }
+    
+    .password-requirements ul {
+        padding-left: 20px;
+        margin: 0;
+    }
+    
+    .form-actions {
+        margin-top: 20px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background-color: #3498db;
+        color: white;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+    
+    .auth-links {
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    .auth-links a {
+        color: #3498db;
+    }
+    
+    .alert {
+        padding: 12px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+    
+    .alert-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+    
+    @media (max-width: 768px) {
+        .info-item {
+            flex-direction: column;
+        }
+        
+        .info-label {
+            width: 100%;
+            margin-bottom: 3px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        const submitButton = document.querySelector('button[type="submit"]');
+        
+        // Function to check if passwords match
+        function checkPasswordsMatch() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                confirmPasswordInput.setCustomValidity('Les mots de passe ne correspondent pas');
+            } else {
+                confirmPasswordInput.setCustomValidity('');
+            }
+        }
+        
+        // Add event listeners for input changes
+        passwordInput.addEventListener('input', checkPasswordsMatch);
+        confirmPasswordInput.addEventListener('input', checkPasswordsMatch);
+        
+        // Prevent form submission if passwords don't match
+        document.querySelector('form').addEventListener('submit', function(event) {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (password !== confirmPassword) {
+                event.preventDefault();
+                alert('Les mots de passe ne correspondent pas');
+            }
+        });
+    });
+</script>
+{% endblock %}

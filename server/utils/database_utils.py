@@ -1,19 +1,18 @@
 # server/utils/database_utils.py
 from server.database.db_config import get_db_connection, close_connection
 
-def create_project_database(project_id, project_number):
+def create_project_database(project_id):
     """
     Creates a new project-specific database and tables
 
     Args:
         project_id (str): The UUID of the project
-        project_number (str): The project number to use in the database name
 
     Returns:
         bool: True if successful, False otherwise
     """
     # Sanitize project number for database name
-    db_name = f"SPACELOGIC_{project_number.replace('-', '_')}"
+    db_name = f"SPACELOGIC_{project_id.replace('-', '_')}"
 
     # Get a connection to the database
     connection = get_db_connection('users_db')

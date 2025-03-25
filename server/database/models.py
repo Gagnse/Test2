@@ -396,17 +396,16 @@ class Project:
                         # Import the function here to avoid circular imports
                         from server.utils.database_utils import create_project_database
 
-                        # Call the Python function to create the database
+                        # Call the Python function to create the database with UUID
                         result = create_project_database(self.id, self.project_number)
 
                         if result:
-                            print(f"Project database for project {self.project_number} created successfully")
+                            print(f"Project database for project {self.id} created successfully")
                         else:
-                            print(f"Failed to create project database for project {self.project_number}")
+                            print(f"Failed to create project database for project {self.id}")
                     except Exception as e:
                         print(f"Error creating project database: {e}")
                         # Continue anyway, since the project itself was created successfully
-
 
             return True
         except Exception as e:

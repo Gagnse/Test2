@@ -133,7 +133,7 @@ def api_create_project():
         return jsonify({'success': False, 'message': 'User is not associated with any organization'}), 400
 
     try:
-        # Sanitize project number (remove spaces, special characters) for database name
+        # Sanitize project number (remove spaces, special characters) for display purposes
         sanitized_number = ''.join(c for c in data['project_number'] if c.isalnum() or c in '-_')
 
         # Check if project number already exists
@@ -153,6 +153,7 @@ def api_create_project():
         finally:
             close_connection(connection, cursor)
 
+        # Create the project object
         project = Project(
             project_number=sanitized_number,
             name=data['name'],
@@ -162,10 +163,26 @@ def api_create_project():
             organization_id=organization_id
         )
 
+        # Save the project to database
         if project.save():
             # Add the user to the project
             project.add_user(user_id)
 
+            # Ensure we have a valid project.id
+            if not project.id:
+                # This shouldn't normally happen, but add a safeguard
+                return jsonify({'success': False, 'message': 'Error getting project ID after save'}), 500
+
+            # Format UUID without hyphens for database name (handle potential errors)
+            try:
+                formatted_uuid = project.id.replace('-', '')
+                db_name = f"SPACELOGIC_{formatted_uuid}"
+            except (AttributeError, TypeError) as e:
+                # If there's an issue formatting the UUID, use a fallback
+                print(f"Error formatting project UUID: {e}")
+                db_name = f"SPACELOGIC_project_{sanitized_number}"
+
+            # Return the result with proper project info
             return jsonify({
                 'success': True,
                 'message': 'Projet créé avec succès',
@@ -174,7 +191,7 @@ def api_create_project():
                     'name': project.name,
                     'project_number': project.project_number,
                     'organization_id': organization_id,
-                    'database_name': f"SPACELOGIC_{sanitized_number.replace('-', '_')}"
+                    'database_name': db_name
                 }
             }), 201
         else:

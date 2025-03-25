@@ -1,18 +1,32 @@
 # server/utils/database_utils.py
 from server.database.db_config import get_db_connection, close_connection
+import uuid
 
-def create_project_database(project_id):
+
+def create_project_database(project_id, project_number=None):
     """
     Creates a new project-specific database and tables
 
     Args:
         project_id (str): The UUID of the project
+        project_number (str, optional): The project number (not used for DB name anymore)
 
     Returns:
         bool: True if successful, False otherwise
     """
-    # Sanitize project number for database name
-    db_name = f"SPACELOGIC_{project_id.replace('-', '_')}"
+    # Create database name using project UUID (removing hyphens)
+    try:
+        # Ensure project_id is a valid UUID string and convert any hyphens
+        if isinstance(project_id, bytes):
+            # If it's binary, convert to UUID string
+            project_id = str(uuid.UUID(bytes=project_id))
+
+        # Create database name using sanitized UUID (removing hyphens)
+        clean_uuid = str(project_id).replace('-', '')
+        db_name = f"SPACELOGIC_{clean_uuid}"
+    except Exception as e:
+        print(f"Error formatting UUID for database name: {e}")
+        return False
 
     # Get a connection to the database
     connection = get_db_connection('users_db')

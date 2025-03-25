@@ -252,7 +252,10 @@ def project_detail(project_id):
 
     project_number = project['project_number']
     project_name = project['name']
-    project_db_name = f"SPACELOGIC_{project_number}"
+
+    # Create database name using UUID without hyphens
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
 
     # Créer un dictionnaire complet avec toutes les informations du projet
     project_details = {
@@ -344,7 +347,8 @@ def project_detail(project_id):
         room_hierarchy[functional_unit][sector].append({'id': room_id, 'name': room_name})
 
     # 🔹 Trier numériquement les unités fonctionnelles
-    room_hierarchy = {k: room_hierarchy[k] for k in sorted(room_hierarchy.keys(), key=lambda x: int(x))}
+    room_hierarchy = {k: room_hierarchy[k] for k in
+                      sorted(room_hierarchy.keys(), key=lambda x: int(x) if x.isdigit() else float('inf'))}
 
     print(f"📂 Hiérarchie des salles triée : {room_hierarchy}")
 
@@ -422,24 +426,13 @@ def project_detail(project_id):
                            selected_room_name=selected_room_name,
                            )
 
-
 @workspace_bp.route('/projects/<project_id>/edit_item', methods=['POST'])
 def edit_item(project_id):
     """Modification d'un élément spécifique"""
 
-    # 🔍 Aller chercher le project_number via le project_id
-    connection_users = get_db_connection('users_db')
-    cursor_users = connection_users.cursor(dictionary=True)
-    cursor_users.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
-    result = cursor_users.fetchone()
-    cursor_users.close()
-    connection_users.close()
-
-    if not result:
-        return jsonify({"success": False, "message": "Projet introuvable"}), 404
-
-    project_number = result["project_number"]
-    project_db_name = f"SPACELOGIC_{project_number}"
+    # Create database name using UUID without hyphens
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
 
     # 🔄 Traiter les données reçues
     data = request.get_json(silent=True)
@@ -510,91 +503,13 @@ def edit_item(project_id):
         connection.close()
 
 
-@workspace_bp.route('/projects/<project_id>/delete_item', methods=['POST'])
-def delete_item(project_id):
-    """Supprime un élément d'une table spécifique"""
-
-    # 🔍 Aller chercher le project_number à partir du project_id
-    connection_users = get_db_connection('users_db')
-    cursor_users = connection_users.cursor(dictionary=True)
-    cursor_users.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
-    result = cursor_users.fetchone()
-    cursor_users.close()
-    connection_users.close()
-
-    if not result:
-        return jsonify({"success": False, "message": "Projet introuvable"}), 404
-
-    project_number = result["project_number"]
-    project_db_name = f"SPACELOGIC_{project_number}"
-
-    # 🔄 Traitement des données reçues
-    data = request.get_json(silent=True)
-    if not data:
-        return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
-
-    category = data.get("category")
-    item_id = data.get("id")
-
-    if not category or not item_id:
-        return jsonify({"success": False, "message": "Données invalides"}), 400
-
-    if not database_exists(project_db_name):
-        return jsonify({"success": False, "message": "Base de données introuvable"}), 404
-
-    connection = get_db_connection(project_db_name)
-    cursor = connection.cursor()
-
-    # 🔄 Convertir l'ID en format UUID
-    try:
-        item_id = uuid.UUID(item_id).bytes
-    except ValueError:
-        return jsonify({"success": False, "message": "ID invalide"}), 400
-
-    # 🔎 Vérifier si l'élément existe
-    check_query = f"SELECT COUNT(*) FROM {category} WHERE {category}_id = %s"
-    cursor.execute(check_query, (item_id,))
-    result = cursor.fetchone()
-
-    if result[0] == 0:
-        return jsonify({"success": False, "message": "ID introuvable en base de données"}), 404
-
-    # 🧹 Supprimer
-    delete_query = f"DELETE FROM {category} WHERE {category}_id = %s"
-    try:
-        cursor.execute(delete_query, (item_id,))
-        connection.commit()
-
-        if cursor.rowcount == 0:
-            return jsonify({"success": False, "message": "Aucune suppression effectuée"}), 404
-        return jsonify({"success": True, "message": "Suppression réussie"})
-
-    except Exception as e:
-        connection.rollback()
-        return jsonify({"success": False, "message": f"Erreur SQL : {e}"}), 500
-
-    finally:
-        cursor.close()
-        connection.close()
-
-
 @workspace_bp.route('/projects/<project_id>/edit_functionality', methods=['POST'])
 def edit_functionality(project_id):
     """Modification des données de fonctionnalité d'une salle"""
 
-    # 🔍 Récupérer le project_number à partir du project_id
-    connection_users = get_db_connection('users_db')
-    cursor_users = connection_users.cursor(dictionary=True)
-    cursor_users.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
-    result = cursor_users.fetchone()
-    cursor_users.close()
-    connection_users.close()
-
-    if not result:
-        return jsonify({"success": False, "message": "Projet introuvable"}), 404
-
-    project_number = result["project_number"]
-    project_db_name = f"SPACELOGIC_{project_number}"
+    # Create database name using UUID without hyphens
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
 
     # 🔄 Lire les données du corps de la requête
     data = request.get_json(silent=True)
@@ -662,19 +577,9 @@ def edit_arch_requirements(project_id):
     """Modification des exigences architecturales d'une salle"""
     import json
 
-    # 🔍 Récupérer le project_number à partir du project_id
-    connection_users = get_db_connection('users_db')
-    cursor_users = connection_users.cursor(dictionary=True)
-    cursor_users.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
-    result = cursor_users.fetchone()
-    cursor_users.close()
-    connection_users.close()
-
-    if not result:
-        return jsonify({"success": False, "message": "Projet introuvable"}), 404
-
-    project_number = result["project_number"]
-    project_db_name = f"SPACELOGIC_{project_number}"
+    # Create database name using UUID without hyphens
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
 
     data = request.get_json(silent=True)
     print("📥 Données reçues :", json.dumps(data, indent=2))
@@ -756,19 +661,9 @@ def edit_struct_requirements(project_id):
     except Exception:
         return jsonify({"success": False, "message": "ID de salle invalide"}), 400
 
-    # Aller chercher le vrai project_number pour construire le nom de la BD
-    connection = get_db_connection("users_db")
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
-    row = cursor.fetchone()
-    cursor.close()
-    connection.close()
-
-    if not row:
-        return jsonify({"success": False, "message": "Projet introuvable"}), 404
-
-    project_number = row['project_number']
-    project_db_name = f"SPACELOGIC_{project_number}"
+    # Create database name using UUID without hyphens
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
 
     if not database_exists(project_db_name):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
@@ -828,19 +723,9 @@ def edit_risk_elements(project_id):
     except Exception:
         return jsonify({"success": False, "message": "ID de salle invalide"}), 400
 
-    # Aller chercher le project_number à partir du project_id
-    connection = get_db_connection("users_db")
-    cursor = connection.cursor()
-    cursor.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
-    result = cursor.fetchone()
-    cursor.close()
-    connection.close()
-
-    if not result:
-        return jsonify({"success": False, "message": "Projet introuvable"}), 404
-
-    project_number = result[0]
-    project_db_name = f"SPACELOGIC_{project_number}"
+    # Create database name using UUID without hyphens
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
 
     if not database_exists(project_db_name):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
@@ -909,18 +794,10 @@ def edit_ventilation_cvac(project_id):
     except Exception:
         return jsonify({"success": False, "message": "ID de salle invalide"}), 400
 
-    # Aller chercher le numéro de projet pour formuler le nom de la base
-    connection = get_db_connection("users_db")
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s)", (project_id,))
-    project = cursor.fetchone()
-    cursor.close()
-    connection.close()
+    # Create database name using UUID without hyphens
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
 
-    if not project:
-        return jsonify({"success": False, "message": "Projet introuvable"}), 404
-
-    project_db_name = f"SPACELOGIC_{project['project_number']}"
     if not database_exists(project_db_name):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
 
@@ -968,7 +845,7 @@ def edit_ventilation_cvac(project_id):
 
 @workspace_bp.route('/projects/<project_id>/edit_electricity', methods=['POST'])
 def edit_electricity(project_id):
-    """Mise à jour des données d’électricité pour une salle donnée"""
+    """Mise à jour des données d'électricité pour une salle donnée"""
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
@@ -980,18 +857,9 @@ def edit_electricity(project_id):
     except Exception:
         return jsonify({"success": False, "message": "ID de salle invalide"}), 400
 
-    # Récupération du project_number
-    connection_users = get_db_connection("users_db")
-    cursor_users = connection_users.cursor(dictionary=True)
-    cursor_users.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
-    result = cursor_users.fetchone()
-    cursor_users.close()
-    connection_users.close()
-
-    if not result:
-        return jsonify({"success": False, "message": "Projet introuvable"}), 404
-
-    project_db_name = f"SPACELOGIC_{result['project_number']}"
+    # Create database name using UUID without hyphens
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
 
     if not database_exists(project_db_name):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404

@@ -6,7 +6,6 @@ from server.database.models import Project, Organizations
 from server.database.db_config import get_db_connection, database_exists
 import uuid
 
-
 workspace_bp = Blueprint('workspace', __name__)
 
 
@@ -228,15 +227,20 @@ def organisation_detail(org_id):
 
     return render_template('workspace/organisation_detail.html', organisation=organisation)
 
+
 @workspace_bp.route('/projects/<project_id>')
 def project_detail(project_id):
     """Affiche les détails d'un projet"""
 
-    # 1️⃣ Se connecter à `users_db` pour récupérer le nom du projet
+    # 1️⃣ Se connecter à `users_db` pour récupérer les détails complets du projet
     connection = get_db_connection('users_db')
     cursor = connection.cursor(dictionary=True)
 
-    cursor.execute("SELECT project_number, name FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
+    cursor.execute("""
+        SELECT project_number, name, description, start_date, end_date, status, type 
+        FROM projects 
+        WHERE id = UUID_TO_BIN(%s);
+    """, (project_id,))
     project = cursor.fetchone()
 
     cursor.close()
@@ -249,6 +253,18 @@ def project_detail(project_id):
     project_number = project['project_number']
     project_name = project['name']
     project_db_name = f"SPACELOGIC_{project_number}"
+
+    # Créer un dictionnaire complet avec toutes les informations du projet
+    project_details = {
+        'id': project_id,
+        'name': project_name,
+        'project_number': project_number,
+        'description': project.get('description', 'Détails du projet'),
+        'start_date': project.get('start_date'),
+        'end_date': project.get('end_date'),
+        'status': project.get('status', 'Actif'),
+        'type': project.get('type', 'Non défini')
+    }
 
     print(f"✅ Projet trouvé : {project_name} → Connexion à {project_db_name}")
 
@@ -337,20 +353,30 @@ def project_detail(project_id):
 
     # 8️⃣ Définir les colonnes à afficher pour chaque catégorie
     columns_to_display = {
-        "interior_fenestration": ["interior_fenestration_category", "interior_fenestration_number", "interior_fenestration_name", "interior_fenestration_quantity"],
-        "exterior_fenestration": ["exterior_fenestration_category", "exterior_fenestration_number", "exterior_fenestration_name", "exterior_fenestration_quantity"],
+        "interior_fenestration": ["interior_fenestration_category", "interior_fenestration_number",
+                                  "interior_fenestration_name", "interior_fenestration_quantity"],
+        "exterior_fenestration": ["exterior_fenestration_category", "exterior_fenestration_number",
+                                  "exterior_fenestration_name", "exterior_fenestration_quantity"],
         "doors": ["doors_category", "doors_number", "doors_name", "doors_quantity"],
-        "built_in_fournitures": ["built_in_fournitures_category", "built_in_fournitures_number", "built_in_fournitures_name", "built_in_fournitures_quantity"],
+        "built_in_fournitures": ["built_in_fournitures_category", "built_in_fournitures_number",
+                                 "built_in_fournitures_name", "built_in_fournitures_quantity"],
         "accessories": ["accessories_category", "accessories_number", "accessories_name", "accessories_quantity"],
         "plumbings": ["plumbings_category", "plumbings_number", "plumbings_name", "plumbings_quantity"],
-        "fire_protection": ["fire_protection_category", "fire_protection_number", "fire_protection_name", "fire_protection_quantity"],
+        "fire_protection": ["fire_protection_category", "fire_protection_number", "fire_protection_name",
+                            "fire_protection_quantity"],
         "lighting": ["lighting_category", "lighting_number", "lighting_name", "lighting_quantity"],
-        "electrical_outlets": ["electrical_outlets_category", "electrical_outlets_number", "electrical_outlets_name", "electrical_outlets_quantity"],
-        "communication_security": ["communication_security_category", "communication_security_number", "communication_security_name", "communication_security_quantity"],
-        "medical_equipment": ["medical_equipment_category", "medical_equipment_number", "medical_equipment_name", "medical_equipment_quantity"],
-        "functionality": ["functionality_occupants_number", "functionality_schedule", "functionality_access", "functionality_description"],
-        "arch_requirements": ["arch_requirements_critic_length", "arch_requirements_critic_width", "arch_requirements_critic_height"],
-        "struct_requirements": ["struct_requirements_floor_overload_required", "struct_requirements_vibrations_sensitivity"],
+        "electrical_outlets": ["electrical_outlets_category", "electrical_outlets_number", "electrical_outlets_name",
+                               "electrical_outlets_quantity"],
+        "communication_security": ["communication_security_category", "communication_security_number",
+                                   "communication_security_name", "communication_security_quantity"],
+        "medical_equipment": ["medical_equipment_category", "medical_equipment_number", "medical_equipment_name",
+                              "medical_equipment_quantity"],
+        "functionality": ["functionality_occupants_number", "functionality_schedule", "functionality_access",
+                          "functionality_description"],
+        "arch_requirements": ["arch_requirements_critic_length", "arch_requirements_critic_width",
+                              "arch_requirements_critic_height"],
+        "struct_requirements": ["struct_requirements_floor_overload_required",
+                                "struct_requirements_vibrations_sensitivity"],
         "risk_elements": ["risk_elements_general", "risk_elements_gas", "risk_elements_liquids"],
         "ventilation_cvac": ["ventilation_care_area_type", "ventilation_specific_exhaust"],
         "electricity": ["electricity_lighting_type", "electricity_lighting_level"]
@@ -387,8 +413,7 @@ def project_detail(project_id):
     project_data = convert_sets_to_lists(project_data)
 
     return render_template("workspace/project_detail.html",
-                           project={"id": project_id, "name": project_name, "project_number": project_number,
-                                    "description": "Détails du projet"},
+                           project=project_details,  # Utiliser les détails complets du projet
                            project_data=project_data,
                            filtered_functionality=filtered_functionality,
                            columns_to_display=columns_to_display,
@@ -402,6 +427,21 @@ def project_detail(project_id):
 def edit_item(project_id):
     """Modification d'un élément spécifique"""
 
+    # 🔍 Aller chercher le project_number via le project_id
+    connection_users = get_db_connection('users_db')
+    cursor_users = connection_users.cursor(dictionary=True)
+    cursor_users.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
+    result = cursor_users.fetchone()
+    cursor_users.close()
+    connection_users.close()
+
+    if not result:
+        return jsonify({"success": False, "message": "Projet introuvable"}), 404
+
+    project_number = result["project_number"]
+    project_db_name = f"SPACELOGIC_{project_number}"
+
+    # 🔄 Traiter les données reçues
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
@@ -413,38 +453,33 @@ def edit_item(project_id):
     if not item_id or not category or not updated_data:
         return jsonify({"success": False, "message": "Données incomplètes"}), 400
 
-    project_db_name = f"SPACELOGIC_{project_id}"
     if not database_exists(project_db_name):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
 
     connection = get_db_connection(project_db_name)
     cursor = connection.cursor()
 
-    # 🔍 **Vérifier et corriger l'ID**
+    # 🔍 Vérifier et corriger l'ID
     try:
         if isinstance(item_id, str):
             item_id = item_id.strip()
 
-            # **Si l'ID est une chaîne de type "b'...'": Extraction et conversion**
             if item_id.startswith("b'") and item_id.endswith("'"):
-                # Supprimer le `b'` et `'` autour de l'ID
                 item_id = item_id[2:-1]
-                # Convertir chaque `\xhh` en hex (si présent)
                 hex_str = item_id.replace("\\x", "")
                 item_id = bytes.fromhex(hex_str)
             else:
-                # **Si c'est déjà un UUID sous forme hexadécimale**
                 item_id = uuid.UUID(item_id).bytes
 
         elif isinstance(item_id, bytes) and len(item_id) == 16:
-            pass  # ID déjà sous forme correcte
+            pass
         else:
             raise ValueError("Format ID invalide")
 
     except ValueError as e:
         return jsonify({"success": False, "message": f"ID invalide : {e}"}), 400
 
-    # **Vérifier que l'ID existe dans la base avant de l'update**
+    # Vérifier que l'ID existe dans la base
     check_query = f"SELECT COUNT(*) FROM {category} WHERE {category}_id = %s"
     cursor.execute(check_query, (item_id,))
     result = cursor.fetchone()
@@ -452,7 +487,7 @@ def edit_item(project_id):
     if result[0] == 0:
         return jsonify({"success": False, "message": "ID introuvable en base de données"}), 404
 
-    # **Construction de la requête SQL**
+    # Construire la requête UPDATE
     set_clause = ", ".join(f"{key} = %s" for key in updated_data.keys())
     values = list(updated_data.values()) + [item_id]
 
@@ -465,9 +500,11 @@ def edit_item(project_id):
         if cursor.rowcount == 0:
             return jsonify({"success": False, "message": "Aucune modification effectuée"}), 404
         return jsonify({"success": True, "message": "Modification enregistrée"})
+
     except Exception as e:
         connection.rollback()
         return jsonify({"success": False, "message": f"Erreur SQL : {e}"}), 500
+
     finally:
         cursor.close()
         connection.close()
@@ -476,8 +513,23 @@ def edit_item(project_id):
 @workspace_bp.route('/projects/<project_id>/delete_item', methods=['POST'])
 def delete_item(project_id):
     """Supprime un élément d'une table spécifique"""
-    data = request.get_json(silent=True)
 
+    # 🔍 Aller chercher le project_number à partir du project_id
+    connection_users = get_db_connection('users_db')
+    cursor_users = connection_users.cursor(dictionary=True)
+    cursor_users.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
+    result = cursor_users.fetchone()
+    cursor_users.close()
+    connection_users.close()
+
+    if not result:
+        return jsonify({"success": False, "message": "Projet introuvable"}), 404
+
+    project_number = result["project_number"]
+    project_db_name = f"SPACELOGIC_{project_number}"
+
+    # 🔄 Traitement des données reçues
+    data = request.get_json(silent=True)
     if not data:
         return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
 
@@ -487,21 +539,19 @@ def delete_item(project_id):
     if not category or not item_id:
         return jsonify({"success": False, "message": "Données invalides"}), 400
 
-    project_db_name = f"SPACELOGIC_{project_id}"
-
     if not database_exists(project_db_name):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
 
     connection = get_db_connection(project_db_name)
     cursor = connection.cursor()
 
-    # 🔹 Convertir l'ID en format UUID (attendu par MySQL)
+    # 🔄 Convertir l'ID en format UUID
     try:
         item_id = uuid.UUID(item_id).bytes
     except ValueError:
         return jsonify({"success": False, "message": "ID invalide"}), 400
 
-    # Vérifier si l'ID existe avant suppression
+    # 🔎 Vérifier si l'élément existe
     check_query = f"SELECT COUNT(*) FROM {category} WHERE {category}_id = %s"
     cursor.execute(check_query, (item_id,))
     result = cursor.fetchone()
@@ -509,20 +559,486 @@ def delete_item(project_id):
     if result[0] == 0:
         return jsonify({"success": False, "message": "ID introuvable en base de données"}), 404
 
-    # Supprimer le tuple
+    # 🧹 Supprimer
     delete_query = f"DELETE FROM {category} WHERE {category}_id = %s"
-
     try:
         cursor.execute(delete_query, (item_id,))
         connection.commit()
 
         if cursor.rowcount == 0:
             return jsonify({"success": False, "message": "Aucune suppression effectuée"}), 404
-        else:
-            return jsonify({"success": True, "message": "Suppression réussie"})
+        return jsonify({"success": True, "message": "Suppression réussie"})
+
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"success": False, "message": f"Erreur SQL : {e}"}), 500
+
     finally:
         cursor.close()
         connection.close()
 
 
+@workspace_bp.route('/projects/<project_id>/edit_functionality', methods=['POST'])
+def edit_functionality(project_id):
+    """Modification des données de fonctionnalité d'une salle"""
+
+    # 🔍 Récupérer le project_number à partir du project_id
+    connection_users = get_db_connection('users_db')
+    cursor_users = connection_users.cursor(dictionary=True)
+    cursor_users.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
+    result = cursor_users.fetchone()
+    cursor_users.close()
+    connection_users.close()
+
+    if not result:
+        return jsonify({"success": False, "message": "Projet introuvable"}), 404
+
+    project_number = result["project_number"]
+    project_db_name = f"SPACELOGIC_{project_number}"
+
+    # 🔄 Lire les données du corps de la requête
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
+
+    room_id = data.get("room_id")
+    try:
+        room_id = uuid.UUID(room_id).bytes
+    except Exception:
+        return jsonify({"success": False, "message": "ID de salle invalide"}), 400
+
+    if not database_exists(project_db_name):
+        return jsonify({"success": False, "message": "Base de données introuvable"}), 404
+
+    connection = get_db_connection(project_db_name)
+    cursor = connection.cursor()
+
+    try:
+        query = """
+            UPDATE functionality
+            SET functionality_occupants_number = %s,
+                functionality_desk_number = %s,
+                functionality_lab_number = %s,
+                functionality_schedule = %s,
+                functionality_access = %s,
+                functionality_description = %s,
+                functionality_proximity = %s,
+                functionality_commentary = %s,
+                functionality_consideration = %s
+            WHERE room_id = %s
+        """
+        values = (
+            data.get("functionality_occupants_number"),
+            data.get("functionality_desk_number"),
+            data.get("functionality_lab_number"),
+            data.get("functionality_schedule"),
+            ",".join(data.get("functionality_access", [])),
+            data.get("functionality_description"),
+            data.get("functionality_proximity"),
+            data.get("functionality_commentary"),
+            ",".join(data.get("functionality_consideration", [])),
+            room_id
+        )
+
+        cursor.execute(query, values)
+        connection.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "message": "Aucune ligne modifiée"}), 404
+
+        return jsonify({"success": True, "message": "Modification enregistrée"})
+
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"success": False, "message": f"Erreur SQL : {e}"}), 500
+
+    finally:
+        cursor.close()
+        connection.close()
+
+
+@workspace_bp.route('/projects/<project_id>/edit_arch_requirements', methods=['POST'])
+def edit_arch_requirements(project_id):
+    """Modification des exigences architecturales d'une salle"""
+    import json
+
+    # 🔍 Récupérer le project_number à partir du project_id
+    connection_users = get_db_connection('users_db')
+    cursor_users = connection_users.cursor(dictionary=True)
+    cursor_users.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
+    result = cursor_users.fetchone()
+    cursor_users.close()
+    connection_users.close()
+
+    if not result:
+        return jsonify({"success": False, "message": "Projet introuvable"}), 404
+
+    project_number = result["project_number"]
+    project_db_name = f"SPACELOGIC_{project_number}"
+
+    data = request.get_json(silent=True)
+    print("📥 Données reçues :", json.dumps(data, indent=2))
+
+    if not data:
+        return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
+
+    try:
+        room_id = uuid.UUID(data.get("room_id")).bytes
+    except Exception:
+        return jsonify({"success": False, "message": "ID de salle invalide"}), 400
+
+    if not database_exists(project_db_name):
+        return jsonify({"success": False, "message": "Base de données introuvable"}), 404
+
+    connection = get_db_connection(project_db_name)
+    cursor = connection.cursor()
+
+    try:
+        query = """
+            UPDATE arch_requirements
+            SET
+                arch_requirements_critic_length = %s,
+                arch_requirements_critic_width = %s,
+                arch_requirements_critic_height = %s,
+                arch_requirements_validation_req = %s,
+                arch_requirements_acoustic = %s,
+                arch_requirements_int_fenestration = %s,
+                arch_requirements_int_fen_adj_room = %s,
+                arch_requirements_int_fen_other = %s,
+                arch_requirements_ext_fenestration = %s,
+                arch_requirements_ext_fen_solar_blind = %s,
+                arch_requirements_ext_fen_opaque_blind = %s,
+                arch_requirements_commentary = %s
+            WHERE room_id = %s
+        """
+        values = (
+            data.get("arch_requirements_critic_length"),
+            data.get("arch_requirements_critic_width"),
+            data.get("arch_requirements_critic_height"),
+            data.get("arch_requirements_validation_req"),
+            data.get("arch_requirements_acoustic"),
+            ",".join(data.get("arch_requirements_int_fenestration", [])),
+            data.get("arch_requirements_int_fen_adj_room"),
+            data.get("arch_requirements_int_fen_other"),
+            ",".join(data.get("arch_requirements_ext_fenestration", [])),
+            data.get("arch_requirements_ext_fen_solar_blind"),
+            data.get("arch_requirements_ext_fen_opaque_blind"),
+            data.get("arch_requirements_commentary"),
+            room_id
+        )
+
+        cursor.execute(query, values)
+        connection.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "message": "Aucune ligne modifiée"}), 404
+
+        return jsonify({"success": True, "message": "Modifications enregistrées"})
+
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"success": False, "message": f"Erreur SQL : {e}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+
+
+@workspace_bp.route('/projects/<project_id>/edit_struct_requirements', methods=['POST'])
+def edit_struct_requirements(project_id):
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
+
+    room_id = data.get("room_id")
+    try:
+        room_id = uuid.UUID(room_id).bytes
+    except Exception:
+        return jsonify({"success": False, "message": "ID de salle invalide"}), 400
+
+    # Aller chercher le vrai project_number pour construire le nom de la BD
+    connection = get_db_connection("users_db")
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
+    row = cursor.fetchone()
+    cursor.close()
+    connection.close()
+
+    if not row:
+        return jsonify({"success": False, "message": "Projet introuvable"}), 404
+
+    project_number = row['project_number']
+    project_db_name = f"SPACELOGIC_{project_number}"
+
+    if not database_exists(project_db_name):
+        return jsonify({"success": False, "message": "Base de données introuvable"}), 404
+
+    connection = get_db_connection(project_db_name)
+    cursor = connection.cursor()
+
+    try:
+        query = """
+            UPDATE struct_requirements
+            SET struct_requirements_floor_overload_required = %s,
+                struct_requirements_overload = %s,
+                struct_requirements_equipment_weight = %s,
+                struct_requirements_floor_flatness = %s,
+                struct_requirements_ditch_gutter = %s,
+                struct_requirements_steel_sensitivity = %s,
+                struct_requirements_equipment_other = %s,
+                struct_requirements_vibrations_sensitivity = %s,
+                struct_requirements_max_vibrations = %s,
+                struct_requirements_commentary = %s
+            WHERE room_id = %s
+        """
+        values = (
+            data.get("struct_requirements_floor_overload_required"),
+            data.get("struct_requirements_overload"),
+            data.get("struct_requirements_equipment_weight"),
+            data.get("struct_requirements_floor_flatness"),
+            data.get("struct_requirements_ditch_gutter"),
+            data.get("struct_requirements_steel_sensitivity"),
+            data.get("struct_requirements_equipment_other"),
+            data.get("struct_requirements_vibrations_sensitivity"),
+            data.get("struct_requirements_max_vibrations"),
+            data.get("struct_requirements_commentary"),
+            room_id
+        )
+        cursor.execute(query, values)
+        connection.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"success": False, "message": f"Erreur SQL : {e}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+
+@workspace_bp.route('/projects/<project_id>/edit_risk_elements', methods=['POST'])
+def edit_risk_elements(project_id):
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
+
+    room_id = data.get("room_id")
+    try:
+        room_id = uuid.UUID(room_id).bytes
+    except Exception:
+        return jsonify({"success": False, "message": "ID de salle invalide"}), 400
+
+    # Aller chercher le project_number à partir du project_id
+    connection = get_db_connection("users_db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    connection.close()
+
+    if not result:
+        return jsonify({"success": False, "message": "Projet introuvable"}), 404
+
+    project_number = result[0]
+    project_db_name = f"SPACELOGIC_{project_number}"
+
+    if not database_exists(project_db_name):
+        return jsonify({"success": False, "message": "Base de données introuvable"}), 404
+
+    connection = get_db_connection(project_db_name)
+    cursor = connection.cursor()
+
+    try:
+        query = """
+            UPDATE risk_elements
+            SET risk_elements_general = %s,
+                risk_elements_general_radioactive = %s,
+                risk_elements_biological = %s,
+                risk_elements_gas = %s,
+                risk_elements_gas_qty = %s,
+                risk_elements_gas_toxic_gas = %s,
+                risk_elements_liquids = %s,
+                risk_elements_liquids_qty = %s,
+                risk_elements_liquids_cryogenic = %s,
+                risk_elements_other = %s,
+                risk_elements_chemical_products = %s,
+                risk_elements_commentary = %s
+            WHERE room_id = %s
+        """
+
+        values = (
+            ",".join(data.get("risk_elements_general", [])),
+            data.get("risk_elements_general_radioactive"),
+            ",".join(data.get("risk_elements_biological", [])),
+            ",".join(data.get("risk_elements_gas", [])),
+            data.get("risk_elements_gas_qty"),
+            data.get("risk_elements_gas_toxic_gas"),
+            ",".join(data.get("risk_elements_liquids", [])),
+            data.get("risk_elements_liquids_qty"),
+            data.get("risk_elements_liquids_cryogenic"),
+            ",".join(data.get("risk_elements_other", [])),
+            data.get("risk_elements_chemical_products"),
+            data.get("risk_elements_commentary"),
+            room_id
+        )
+
+        cursor.execute(query, values)
+        connection.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "message": "Aucune ligne modifiée"}), 404
+
+        return jsonify({"success": True, "message": "Modifications enregistrées"})
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"success": False, "message": f"Erreur SQL : {e}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+@workspace_bp.route('/projects/<project_id>/edit_ventilation_cvac', methods=['POST'])
+def edit_ventilation_cvac(project_id):
+    """Mise à jour des données de ventilation CVAC pour une salle donnée."""
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
+
+    room_id = data.get("room_id")
+    try:
+        room_id = uuid.UUID(room_id).bytes
+    except Exception:
+        return jsonify({"success": False, "message": "ID de salle invalide"}), 400
+
+    # Aller chercher le numéro de projet pour formuler le nom de la base
+    connection = get_db_connection("users_db")
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s)", (project_id,))
+    project = cursor.fetchone()
+    cursor.close()
+    connection.close()
+
+    if not project:
+        return jsonify({"success": False, "message": "Projet introuvable"}), 404
+
+    project_db_name = f"SPACELOGIC_{project['project_number']}"
+    if not database_exists(project_db_name):
+        return jsonify({"success": False, "message": "Base de données introuvable"}), 404
+
+    connection = get_db_connection(project_db_name)
+    cursor = connection.cursor()
+
+    try:
+        query = """
+            UPDATE ventilation_cvac
+            SET ventilation_care_area_type = %s,
+                ventilation = %s,
+                ventilation_special_mechanics = %s,
+                ventilation_specific_exhaust = %s,
+                ventilation_commentary = %s,
+                ventilation_relative_room_pressure = %s,
+                ventilation_pressurization = %s,
+                ventilation_environmental_parameters = %s
+            WHERE room_id = %s
+        """
+        values = (
+            data.get("ventilation_care_area_type"),
+            data.get("ventilation"),
+            data.get("ventilation_special_mechanics"),
+            data.get("ventilation_specific_exhaust"),
+            data.get("ventilation_commentary"),
+            data.get("ventilation_relative_room_pressure"),
+            data.get("ventilation_pressurization"),
+            data.get("ventilation_environmental_parameters"),
+            room_id
+        )
+
+        cursor.execute(query, values)
+        connection.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "message": "Aucune ligne modifiée"}), 404
+
+        return jsonify({"success": True, "message": "Modification enregistrée"})
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"success": False, "message": f"Erreur SQL : {e}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+@workspace_bp.route('/projects/<project_id>/edit_electricity', methods=['POST'])
+def edit_electricity(project_id):
+    """Mise à jour des données d’électricité pour une salle donnée"""
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
+
+    # Vérification de room_id
+    room_id = data.get("room_id")
+    try:
+        room_id = uuid.UUID(room_id).bytes
+    except Exception:
+        return jsonify({"success": False, "message": "ID de salle invalide"}), 400
+
+    # Récupération du project_number
+    connection_users = get_db_connection("users_db")
+    cursor_users = connection_users.cursor(dictionary=True)
+    cursor_users.execute("SELECT project_number FROM projects WHERE id = UUID_TO_BIN(%s);", (project_id,))
+    result = cursor_users.fetchone()
+    cursor_users.close()
+    connection_users.close()
+
+    if not result:
+        return jsonify({"success": False, "message": "Projet introuvable"}), 404
+
+    project_db_name = f"SPACELOGIC_{result['project_number']}"
+
+    if not database_exists(project_db_name):
+        return jsonify({"success": False, "message": "Base de données introuvable"}), 404
+
+    # Connexion à la base projet
+    connection = get_db_connection(project_db_name)
+    cursor = connection.cursor()
+
+    try:
+        query = """
+            UPDATE electricity
+            SET electricity_care_area_type = %s,
+                electricity_smoke_fire_detection = %s,
+                electricity_special_equipment = %s,
+                electricity_lighting_type = %s,
+                electricity_lighting_level = %s,
+                electricity_lighting_control = %s,
+                color_temperature = %s,
+                electricity_lighting = %s,
+                electricity_commentary = %s
+            WHERE room_id = %s
+        """
+        values = (
+            data.get("electricity_care_area_type"),
+            data.get("electricity_smoke_fire_detection"),
+            data.get("electricity_special_equipment"),
+            data.get("electricity_lighting_type"),
+            data.get("electricity_lighting_level"),
+            data.get("electricity_lighting_control"),
+            data.get("color_temperature"),
+            data.get("electricity_lighting"),
+            data.get("electricity_commentary"),
+            room_id
+        )
+
+        cursor.execute(query, values)
+        connection.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "message": "Aucune ligne modifiée"}), 404
+
+        return jsonify({"success": True, "message": "Modification enregistrée"})
+
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"success": False, "message": f"Erreur SQL : {e}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
 

@@ -131,14 +131,18 @@
 <div class="workspace-navbar">
     <div class="workspace-navbar-container">
         <div class="workspace-nav-items">
-            <a href="{{ url_for('workspace.projects') }}" class="workspace-nav-item {% if request.endpoint == 'workspace.projects' %}active{% endif %}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <a href="{{ url_for('workspace.projects') }}"
+               class="workspace-nav-item {% if request.endpoint == 'workspace.projects' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                 </svg>
                 <span>Mes projets</span>
             </a>
-            <a href="{{ url_for('workspace.organisations') }}" class="workspace-nav-item {% if request.endpoint == 'workspace.organisations' %}active{% endif %}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <a href="{{ url_for('workspace.organisations') }}"
+               class="workspace-nav-item {% if request.endpoint == 'workspace.organisations' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"></path>
                     <circle cx="12" cy="8" r="2"></circle>
                     <path d="M12 10c-2.21 0-4 1.79-4 4v2h8v-2c0-2.21-1.79-4-4-4z"></path>
@@ -154,996 +158,1785 @@
 
 <!-- Workspace Content Area -->
 <div class="workspace-content">
-<!-- 📌 Informations du projet -->
-<div class="content">
-    <div class="project-info-header">
-        <div class="project-info-main">
-            <div class="project-title-container">
-                <!-- Logo du projet à côté du nom -->
-                <div class="project-title-with-logo">
-                    <div class="project-type-logo">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                        </svg>
+    <!-- 📌 Informations du projet -->
+    <div class="content">
+        <div class="project-info-header">
+            <div class="project-info-main">
+                <div class="project-title-container">
+                    <!-- Logo du projet à côté du nom -->
+                    <div class="project-title-with-logo">
+                        <div class="project-type-logo">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                            </svg>
+                        </div>
+                        <h1>{{ project.name }}</h1>
                     </div>
-                    <h1>{{ project.name }}</h1>
-                </div>
-                <!-- Status badge à droite du nom sur la même ligne -->
-                <div class="project-status-badge">
-                    <span class="project-status {{ project.status|lower }}">{{ project.status }}</span>
-                </div>
-            </div>
-
-            <div class="project-number">
-                <span class="project-number-label">Numéro : </span>
-                <span>{{ project.project_number }}</span>
-            </div>
-        </div>
-        <div class="project-info-details">
-            <div class="info-item">
-                <div class="info-label">Description</div>
-                <div class="info-value">{{ project.description }}</div>
-            </div>
-            <div class="info-columns">
-                <div class="info-item">
-                    <div class="info-label">Date de début</div>
-                    <div class="info-value">{{ project.start_date.strftime('%d/%m/%Y') if project.start_date else 'Non définie' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Date de fin</div>
-                    <div class="info-value">{{ project.end_date.strftime('%d/%m/%Y') if project.end_date else 'Non définie' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Type</div>
-                    <div class="info-value">{{ project.type or 'Non défini' }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="project-container">
-        <!-- 📌 Menu en arborescence -->
-        <div class="sidebar">
-            {% if room_hierarchy %}
-            <ul>
-                {% for functional_unit, sectors in room_hierarchy.items() %}
-                <li>
-                    <span class="toggle">📂 <strong>Unité Fonctionnelle {{ functional_unit }}</strong></span>
-                    <ul class="nested">
-                        {% for sector, rooms in sectors.items() %}
-                        <li>
-                            <span class="toggle">📁 <strong>Secteur {{ sector }}</strong></span>
-                            <ul class="nested">
-                                {% for room in rooms %}
-                                <li class="room-item" data-room-id="{{ room.id }}">🏥 {{ room.name }}</li>
-                                {% endfor %}
-                            </ul>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p>Aucune salle disponible.</p>
-            {% endif %}
-        </div>
-
-        <!-- 📌 Informations du projet -->
-        <div class="content">
-            <h1>{{ project.name }}</h1>
-            <p><strong>Description:</strong> {{ project.description }}</p>
-            <p><strong>Statut:</strong> <span class="project-status">{{ project.status }}</span></p>
-            <p>Numéro du projet : {{ project.project_number }}</p>
-
-            <!-- Onglets -->
-            <div class="tabs">
-                {% for category, title in tab_titles.items() %}
-                <button class="tab-button" data-tab="tab-{{ category }}">{{ title }}</button>
-                {% endfor %}
-            </div>
-
-            <!-- Contenu des onglets -->
-            <div class="tab-content-container">
-                {% for category, items in project_data.items() %}
-                <!--Onglet fonctionalité-->
-                {% if category == "functionality" %}
-                <div id="tab-functionality" class="tab-content {% if loop.first %}active{% endif %}">
-                    <div class="special-tab-container">
-                        <h1>Fonctionnalité <span class="edit-icon" title="Modifier">&#9998;</span></h1>
-                        {% if items %}
-                        {% for item in items %}
-                        <form class="functionality-form" data-room-id="{{ item.room_id }}" style="display: none;">
-                            <div class="section">
-                                <h2>Général</h2>
-                                <div class="row">
-                                    <div class="column">
-                                        <label><strong>Nb occupants:</strong> <span id="occupants">{{ item.functionality_occupants_number or 'N/A' }}</span>
-                                            Qté</label>
-                                        <label><strong>Nb postes travail - Bureau:</strong> <span id="desk">{{ item.functionality_desk_number or 0 }}</span>
-                                            Qté</label>
-                                        <label><strong>Nb postes travail - Labo:</strong> <span id="lab">{{ item.functionality_lab_number or 0 }}</span>
-                                            Qté</label>
-                                        <label><strong>Horaire typique:</strong> <span id="schedule">{{ item.functionality_schedule or 'N/A' }}</span></label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="section">
-                                <h2>Accès</h2>
-                                <div class="row">
-                                    <div class="column">
-                                        {% set access_options = {
-                                        'client_access': 'Accessibilité à la clientèle',
-                                        'stretcher_access': 'Accessibilité aux civières',
-                                        'bed_access': 'Accessibilité aux lits',
-                                        'patients_access': 'Accessibilité aux patients bariatriques',
-                                        'exterior_access': 'Accessibilité de l\'extérieur',
-                                        'hallway_access': 'Accessibilité via corridor',
-                                        'adj_room_access': 'Accessibilité via pièce adjacente',
-                                        'other': 'Autre'
-                                        } %}
-                                        {% for key, label in access_options.items() %}
-                                        <label>
-                                            <input type="checkbox" name="functionality_access" value="{{ key }}"
-                                                   {% if key in item.functionality_access %}checked{% endif %} disabled>
-                                            {{ label }}
-                                        </label>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="section">
-                                <h2>Considérations et classifications</h2>
-                                <div class="row">
-                                    <div class="column">
-                                        {% set consideration_options = {
-                                        'NA': 'N/A',
-                                        'anti_suicide': 'Aménagement antisuicide',
-                                        'waterproof': 'Étanchéité',
-                                        'radiation': 'Radioactivité/Radiation',
-                                        'electromagnetic': 'Électromagnétiques',
-                                        'sterile': 'Milieu stérile',
-                                        'vibrations_sensitivity': 'Sensible vibrations',
-                                        'wet_lab': 'Labo humide',
-                                        'dry_lab': 'Labo sec',
-                                        'biosecurity': 'Biosécurité',
-                                        'pet_shop': 'Animalerie'
-                                        } %}
-                                        {% for key, label in consideration_options.items() %}
-                                        <label>
-                                            <input type="checkbox" name="functionality_consideration" value="{{ key }}"
-                                                   {% if key in item.functionality_consideration %}checked{% endif %}
-                                                   disabled>
-                                            {{ label }}
-                                        </label>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="section">
-                                <h2>Description des activités</h2>
-                                <p id="description">{{ item.functionality_description or 'Aucune description' }}</p>
-                            </div>
-
-                            <div class="section">
-                                <h2>Liens de proximité et/ou fonctionnels</h2>
-                                <p id="proximity">{{ item.functionality_proximity or 'Aucun lien spécifié' }}</p>
-                            </div>
-
-                            <div class="section">
-                                <h2>Commentaires de l'établissement</h2>
-                                <p id="commentary">{{ item.functionality_commentary or 'Aucun commentaire' }}</p>
-                            </div>
-                        </form>
-                        {% endfor %}
-                        {% else %}
-                        <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
-                        {% endif %}
+                    <!-- Status badge à droite du nom sur la même ligne -->
+                    <div class="project-status-badge">
+                        <span class="project-status {{ project.status|lower }}">{{ project.status }}</span>
                     </div>
                 </div>
 
-                <!--Onglets avec tableaux normaux-->
+                <div class="project-number">
+                    <span class="project-number-label">Numéro : </span>
+                    <span>{{ project.project_number }}</span>
+                </div>
+            </div>
+            <div class="project-info-details">
+                <div class="info-item">
+                    <div class="info-label">Description</div>
+                    <div class="info-value">{{ project.description }}</div>
+                </div>
+                <div class="info-columns">
+                    <div class="info-item">
+                        <div class="info-label">Date de début</div>
+                        <div class="info-value">{{ project.start_date.strftime('%d/%m/%Y') if project.start_date else
+                            'Non définie' }}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Date de fin</div>
+                        <div class="info-value">{{ project.end_date.strftime('%d/%m/%Y') if project.end_date else 'Non
+                            définie' }}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Type</div>
+                        <div class="info-value">{{ project.type or 'Non défini' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="project-container">
+            <!-- 📌 Menu en arborescence -->
+            <div class="sidebar">
+                {% if room_hierarchy %}
+                <ul>
+                    {% for functional_unit, sectors in room_hierarchy.items() %}
+                    <li>
+                        <span class="toggle">📂 <strong>Unité Fonctionnelle {{ functional_unit }}</strong></span>
+                        <ul class="nested">
+                            {% for sector, rooms in sectors.items() %}
+                            <li>
+                                <span class="toggle">📁 <strong>Secteur {{ sector }}</strong></span>
+                                <ul class="nested">
+                                    {% for room in rooms %}
+                                    <li class="room-item" data-room-id="{{ room.id }}">🏥 {{ room.name }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    {% endfor %}
+                </ul>
                 {% else %}
-                <div id="tab-{{ category }}" class="tab-content {% if loop.first %}active{% endif %}">
-                    <h2>{{ tab_titles.get(category, category.replace('_', ' ').capitalize()) }}</h2>
-                    <h3 class="selected-room-name">Salle sélectionnée : <span></span></h3>
-                    <table>
-                        <thead>
-                        <tr>
-                            {% for key in columns_to_display[category] if key in items[0] %}
+                <p>Aucune salle disponible.</p>
+                {% endif %}
+            </div>
+
+            <!-- 📌 Informations du projet -->
+            <div class="content">
+                <h1>{{ project.name }}</h1>
+                <p><strong>Description:</strong> {{ project.description }}</p>
+                <p><strong>Statut:</strong> <span class="project-status">{{ project.status }}</span></p>
+                <p>Numéro du projet : {{ project.project_number }}</p>
+
+                <!-- Onglets -->
+                <div class="tabs">
+                    {% for category, title in tab_titles.items() %}
+                    <button class="tab-button" data-tab="tab-{{ category }}">{{ title }}</button>
+                    {% endfor %}
+                </div>
+
+                <!-- Contenu des onglets -->
+                <div class="tab-content-container">
+                    {% for category, items in project_data.items() %}
+                    <!--Onglet fonctionalité-->
+                    {% if category == "functionality" %}
+                    <div id="tab-functionality" class="tab-content {% if loop.first %}active{% endif %}">
+                        <div class="special-tab-container">
+                            <h1>Fonctionnalité <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            {% if items %}
+                            {% for item in items %}
+                            <form class="functionality-form" data-room-id="{{ item.room_id }}" style="display: none;">
+                                <div class="section">
+                                    <h2>Général</h2>
+                                    <div class="row">
+                                        <div class="column">
+                                            <label><strong>Nb occupants:</strong> <input type="number" id="occupants"
+                                                                                         value="{{ item.functionality_occupants_number or 0 }}"
+                                                                                         disabled>
+                                                Qté</label>
+                                            <label><strong>Nb postes travail - Bureau:</strong> <input type="number"
+                                                                                                       id="desk"
+                                                                                                       value="{{ item.functionality_desk_number or 0 }}"
+                                                                                                       disabled>
+                                                Qté</label>
+                                            <label><strong>Nb postes travail - Labo:</strong> <input type="number"
+                                                                                                     id="lab"
+                                                                                                     value="{{ item.functionality_lab_number or 0 }}"
+                                                                                                     disabled>
+                                                Qté</label>
+                                            <label><strong>Horaire typique:</strong> <input type="text" id="schedule"
+                                                                                            value="{{ item.functionality_schedule or '' }}"
+                                                                                            disabled>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="section">
+                                    <h2>Accès</h2>
+                                    <div class="row">
+                                        <div class="column">
+                                            {% set access_options = {
+                                            'client_access': 'Accessibilité à la clientèle',
+                                            'stretcher_access': 'Accessibilité aux civières',
+                                            'bed_access': 'Accessibilité aux lits',
+                                            'patients_access': 'Accessibilité aux patients bariatriques',
+                                            'exterior_access': 'Accessibilité de l\'extérieur',
+                                            'hallway_access': 'Accessibilité via corridor',
+                                            'adj_room_access': 'Accessibilité via pièce adjacente',
+                                            'other': 'Autre'
+                                            } %}
+                                            {% for key, label in access_options.items() %}
+                                            <label>
+                                                <input type="checkbox" name="functionality_access" value="{{ key }}"
+                                                       {% if key in item.functionality_access %}checked{% endif %}
+                                                       disabled>
+                                                {{ label }}
+                                            </label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Considérations et classifications</h2>
+                                    <div class="row">
+                                        <div class="column">
+                                            {% set consideration_options = {
+                                            'NA': 'N/A',
+                                            'anti_suicide': 'Aménagement antisuicide',
+                                            'waterproof': 'Étanchéité',
+                                            'radiation': 'Radioactivité/Radiation',
+                                            'electromagnetic': 'Électromagnétiques',
+                                            'sterile': 'Milieu stérile',
+                                            'vibrations_sensitivity': 'Sensible vibrations',
+                                            'wet_lab': 'Labo humide',
+                                            'dry_lab': 'Labo sec',
+                                            'biosecurity': 'Biosécurité',
+                                            'pet_shop': 'Animalerie'
+                                            } %}
+                                            {% for key, label in consideration_options.items() %}
+                                            <label>
+                                                <input type="checkbox" name="functionality_consideration"
+                                                       value="{{ key }}"
+                                                       {% if key in item.functionality_consideration %}checked{% endif
+                                                       %}
+                                                       disabled>
+                                                {{ label }}
+                                            </label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Description des activités</h2>
+                                    <textarea id="description"
+                                              disabled>{{ item.functionality_description or '' }}</textarea>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Liens de proximité et/ou fonctionnels</h2>
+                                    <textarea id="proximity"
+                                              disabled>{{ item.functionality_proximity or '' }}</textarea>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Commentaires de l'établissement</h2>
+                                    <textarea id="commentary"
+                                              disabled>{{ item.functionality_commentary or '' }}</textarea>
+                                </div>
+                            </form>
+                            {% endfor %}
+                            {% else %}
+                            <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Onglet Exigences Architecturales-->
+                    {% elif category == "arch_requirements" %}
+                    <div id="tab-arch_requirements" class="tab-content">
+                        <div class="special-tab-container">
+                            <h1>Exigences architecturales <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            {% if items %}
+                            {% for item in items %}
+                            <form class="arch-form" data-room-id="{{ item.room_id }}" style="display: none;">
+                                <div class="section">
+                                    <h2>Dimensions critiques</h2>
+                                    <label>Longueur critique (mm) :
+                                        <input type="number" name="arch_requirements_critic_length"
+                                               id="arch_requirements_critic_length"
+                                               value="{{ item.arch_requirements_critic_length or '' }}" disabled>
+                                    </label>
+                                    <label>Largeur critique (mm) :
+                                        <input type="number" name="arch_requirements_critic_width"
+                                               id="arch_requirements_critic_width"
+                                               value="{{ item.arch_requirements_critic_width or '' }}" disabled>
+                                    </label>
+                                    <label>Hauteur critique (mm) :
+                                        <input type="number" name="arch_requirements_critic_height"
+                                               id="arch_requirements_critic_height"
+                                               value="{{ item.arch_requirements_critic_height or '' }}" disabled>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Validation et acoustique</h2>
+                                    <label>Validation requise :
+                                        <input type="number" name="arch_requirements_validation_req"
+                                               id="arch_requirements_validation_req"
+                                               value="{{ item.arch_requirements_validation_req or 0 }}" disabled>
+                                    </label>
+                                    <label>Performance acoustique (NRC ou autre) :
+                                        <input type="number" name="arch_requirements_acoustic"
+                                               id="arch_requirements_acoustic"
+                                               value="{{ item.arch_requirements_acoustic or 0 }}" disabled>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Fenéstration intérieure</h2>
+                                    {% set int_fen_options = {
+                                    'not_required': 'Non requise',
+                                    'with_hallway': 'Vue sur corridor',
+                                    'clear_glass': 'Verre clair',
+                                    'frosted_glass': 'Verre givré',
+                                    'semi_frosted_glass': 'Verre semi-givré',
+                                    'one_way_glass': 'Verre unidirectionnel',
+                                    'integrated_blind': 'Store intégré'
+                                    } %}
+                                    {% for opt, label in int_fen_options.items() %}
+                                    <label>
+                                        <input type="checkbox" name="arch_requirements_int_fenestration"
+                                               value="{{ opt }}" {% if opt in item.arch_requirements_int_fenestration
+                                               %}checked{% endif %} disabled>
+                                        {{ label }}
+                                    </label>
+                                    {% endfor %}
+                                    <label>Adjacence :
+                                        <textarea name="arch_requirements_int_fen_adj_room"
+                                                  id="arch_requirements_int_fen_adj_room" disabled>{{ item.arch_requirements_int_fen_adj_room or '' }}</textarea>
+                                    </label>
+                                    <label>Autre :
+                                        <textarea name="arch_requirements_int_fen_other"
+                                                  id="arch_requirements_int_fen_other" disabled>{{ item.arch_requirements_int_fen_other or '' }}</textarea>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Fenéstration extérieure</h2>
+                                    {% set ext_fen_options = {
+                                    'not_required': 'Non requise',
+                                    'required': 'Requise',
+                                    'total_obscurity': 'Obscurité totale',
+                                    'frosted_glass': 'Verre givré',
+                                    'tinted_glass': 'Verre teinté',
+                                    'integrated_blind': 'Store intégré'
+                                    } %}
+                                    {% for opt, label in ext_fen_options.items() %}
+                                    <label>
+                                        <input type="checkbox" name="arch_requirements_ext_fenestration"
+                                               value="{{ opt }}" {% if opt in item.arch_requirements_ext_fenestration
+                                               %}checked{% endif %} disabled>
+                                        {{ label }}
+                                    </label>
+                                    {% endfor %}
+                                    <label>Stores solaires :
+                                        <textarea name="arch_requirements_ext_fen_solar_blind"
+                                                  id="arch_requirements_ext_fen_solar_blind" disabled>{{ item.arch_requirements_ext_fen_solar_blind or '' }}</textarea>
+                                    </label>
+                                    <label>Stores opaques :
+                                        <textarea name="arch_requirements_ext_fen_opaque_blind"
+                                                  id="arch_requirements_ext_fen_opaque_blind" disabled>{{ item.arch_requirements_ext_fen_opaque_blind or '' }}</textarea>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Commentaires</h2>
+                                    <textarea name="arch_requirements_commentary" id="arch_requirements_commentary"
+                                              disabled>{{ item.arch_requirements_commentary or '' }}</textarea>
+                                </div>
+                            </form>
+                            {% endfor %}
+                            {% else %}
+                            <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- onglet éléments à risques-->
+                    {% elif category == "risk_elements" %}
+                    <div id="tab-risk_elements" class="tab-content">
+                        <div class="special-tab-container">
+                            <h1>Éléments à risques <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            {% if items %}
+
+                            {% set general_labels = {
+                            'NA': 'N/A',
+                            'concentrated_acids': 'Acides concentrés',
+                            'concentrated_base': 'Bases concentrées',
+                            'water_air_reactive': 'Réactif à l’eau ou à l’air',
+                            'radioactive': 'Radioactif'
+                            } %}
+                            {% set bio_labels = {
+                            'NA': 'N/A',
+                            'biological_products': 'Produits biologiques',
+                            'pathogens_humans': 'Agents pathogènes (humains)',
+                            'pathogens_animals': 'Agents pathogènes (animaux)'
+                            } %}
+                            {% set gas_labels = {
+                            'NA': 'N/A',
+                            'gas_cylinders': 'Bouteilles de gaz',
+                            'important_qty': 'Grande quantité',
+                            'toxic_gas': 'Gaz toxique'
+                            } %}
+                            {% set liquids_labels = {
+                            'NA': 'N/A',
+                            'flammable': 'Inflammable',
+                            'important_qty': 'Grande quantité',
+                            'cryogenic': 'Cryogénique'
+                            } %}
+                            {% set other_labels = {
+                            'NA': 'N/A',
+                            'lasers': 'Lasers',
+                            'animals': 'Animaux'
+                            } %}
+
+                            {% for item in items %}
+                            <form class="risk-form" data-room-id="{{ item.room_id }}" style="display: none;">
+                                <div class="section">
+                                    <h2>Risques généraux</h2>
+                                    {% for opt in general_labels %}
+                                    <label>
+                                        <input type="checkbox" name="risk_elements_general" value="{{ opt }}" {% if opt
+                                               in item.risk_elements_general %}checked{% endif %} disabled>
+                                        {{ general_labels[opt] }}
+                                    </label>
+                                    {% endfor %}
+                                    <label>Précisions sur radioactivité :
+                                        <textarea id="risk_elements_general_radioactive" disabled>{{ item.risk_elements_general_radioactive or '' }}</textarea>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Produits biologiques</h2>
+                                    {% for opt in bio_labels %}
+                                    <label>
+                                        <input type="checkbox" name="risk_elements_biological" value="{{ opt }}" {% if
+                                               opt in item.risk_elements_biological %}checked{% endif %} disabled>
+                                        {{ bio_labels[opt] }}
+                                    </label>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="section">
+                                    <h2>Gaz</h2>
+                                    {% for opt in gas_labels %}
+                                    <label>
+                                        <input type="checkbox" name="risk_elements_gas" value="{{ opt }}" {% if opt in
+                                               item.risk_elements_gas %}checked{% endif %} disabled>
+                                        {{ gas_labels[opt] }}
+                                    </label>
+                                    {% endfor %}
+                                    <label>Quantité :
+                                        <textarea id="risk_elements_gas_qty" disabled>{{ item.risk_elements_gas_qty or '' }}</textarea>
+                                    </label>
+                                    <label>Gaz toxiques :
+                                        <textarea id="risk_elements_gas_toxic_gas" disabled>{{ item.risk_elements_gas_toxic_gas or '' }}</textarea>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Liquides</h2>
+                                    {% for opt in liquids_labels %}
+                                    <label>
+                                        <input type="checkbox" name="risk_elements_liquids" value="{{ opt }}" {% if opt
+                                               in item.risk_elements_liquids %}checked{% endif %} disabled>
+                                        {{ liquids_labels[opt] }}
+                                    </label>
+                                    {% endfor %}
+                                    <label>Quantité :
+                                        <textarea id="risk_elements_liquids_qty" disabled>{{ item.risk_elements_liquids_qty or '' }}</textarea>
+                                    </label>
+                                    <label>Précisions cryogéniques :
+                                        <textarea id="risk_elements_liquids_cryogenic" disabled>{{ item.risk_elements_liquids_cryogenic or '' }}</textarea>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Autres éléments</h2>
+                                    {% for opt in other_labels %}
+                                    <label>
+                                        <input type="checkbox" name="risk_elements_other" value="{{ opt }}" {% if opt in
+                                               item.risk_elements_other %}checked{% endif %} disabled>
+                                        {{ other_labels[opt] }}
+                                    </label>
+                                    {% endfor %}
+                                    <label>Produits chimiques :
+                                        <textarea id="risk_elements_chemical_products" disabled>{{ item.risk_elements_chemical_products or '' }}</textarea>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Commentaires</h2>
+                                    <textarea id="risk_elements_commentary" disabled>{{ item.risk_elements_commentary or '' }}</textarea>
+                                </div>
+                            </form>
+                            {% endfor %}
+                            {% else %}
+                            <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Onglet Ventilation CVAC-->
+                    {% elif category == "ventilation_cvac" %}
+                    <div id="tab-ventilation_cvac" class="tab-content">
+                        <div class="special-tab-container">
+                            <h1>Ventilation CVAC <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            {% if items %}
+                            {% for item in items %}
+                            <form class="ventilation-form" data-room-id="{{ item.room_id }}" style="display: none;">
+                                <div class="section">
+                                    <h2>Type de zone de soins</h2>
+                                    <label>
+                                        <input type="text" id="ventilation_care_area_type"
+                                               value="{{ item.ventilation_care_area_type or '' }}" disabled>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Ventilation</h2>
+                                    <label>Type de ventilation :
+                                        <input type="text" id="ventilation" value="{{ item.ventilation or '' }}"
+                                               disabled>
+                                    </label>
+                                    <label>Éléments mécaniques spéciaux :
+                                        <textarea id="ventilation_special_mechanics" disabled>{{ item.ventilation_special_mechanics or '' }}</textarea>
+                                    </label>
+                                    <label>Évacuation spécifique :
+                                        <textarea id="ventilation_specific_exhaust" disabled>{{ item.ventilation_specific_exhaust or '' }}</textarea>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Pressurisation</h2>
+                                    <label>Pression relative à la pièce :
+                                        <input type="text" id="ventilation_relative_room_pressure"
+                                               value="{{ item.ventilation_relative_room_pressure or '' }}" disabled>
+                                    </label>
+                                    <label>Type de pressurisation :
+                                        <input type="text" id="ventilation_pressurization"
+                                               value="{{ item.ventilation_pressurization or '' }}" disabled>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Paramètres environnementaux</h2>
+                                    <textarea id="ventilation_environmental_parameters" disabled>{{ item.ventilation_environmental_parameters or '' }}</textarea>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Commentaires</h2>
+                                    <textarea id="ventilation_commentary" disabled>{{ item.ventilation_commentary or '' }}</textarea>
+                                </div>
+                            </form>
+                            {% endfor %}
+                            {% else %}
+                            <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Onglet Électricité-->
+                    {% elif category == "electricity" %}
+                    <div id="tab-electricity" class="tab-content">
+                        <div class="special-tab-container">
+                            <h1>Électricité <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            {% if items %}
+                            {% for item in items %}
+                            <form class="electricity-form" data-room-id="{{ item.room_id }}" style="display: none;">
+                                <div class="section">
+                                    <h2>Type de zone de soins</h2>
+                                    <label>
+                                        <input type="text" name="electricity_care_area_type"
+                                               id="electricity_care_area_type"
+                                               value="{{ item.electricity_care_area_type or '' }}" disabled>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Détection et équipements</h2>
+                                    <label>Détection incendie :
+                                        <input type="text" name="electricity_smoke_fire_detection"
+                                               id="electricity_smoke_fire_detection"
+                                               value="{{ item.electricity_smoke_fire_detection or '' }}" disabled>
+                                    </label>
+                                    <label>Équipement spécial :
+                                        <textarea name="electricity_special_equipment"
+                                                  id="electricity_special_equipment" disabled>{{ item.electricity_special_equipment or '' }}</textarea>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Éclairage</h2>
+                                    <label>Type d’éclairage :
+                                        <input type="text" name="electricity_lighting_type"
+                                               id="electricity_lighting_type"
+                                               value="{{ item.electricity_lighting_type or '' }}" disabled>
+                                    </label>
+                                    <label>Niveau d’éclairement :
+                                        <input type="text" name="electricity_lighting_level"
+                                               id="electricity_lighting_level"
+                                               value="{{ item.electricity_lighting_level or '' }}" disabled>
+                                    </label>
+                                    <label>Contrôle de l’éclairage :
+                                        <input type="text" name="electricity_lighting_control"
+                                               id="electricity_lighting_control"
+                                               value="{{ item.electricity_lighting_control or '' }}" disabled>
+                                    </label>
+                                    <label>Température de couleur :
+                                        <input type="text" name="color_temperature" id="color_temperature"
+                                               value="{{ item.color_temperature or '' }}" disabled>
+                                    </label>
+                                    <label>Détails sur l’éclairage :
+                                        <textarea name="electricity_lighting" id="electricity_lighting" disabled>{{ item.electricity_lighting or '' }}</textarea>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Commentaires</h2>
+                                    <textarea name="electricity_commentary" id="electricity_commentary" disabled>{{ item.electricity_commentary or '' }}</textarea>
+                                </div>
+                            </form>
+                            {% endfor %}
+                            {% else %}
+                            <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!--Onglets avec tableaux normaux-->
+                    {% else %}
+                    <div id="tab-{{ category }}" class="tab-content {% if loop.first %}active{% endif %}">
+                        <h2>{{ tab_titles.get(category, category.replace('_', ' ').capitalize()) }}</h2>
+                        <h3 class="selected-room-name">Salle sélectionnée : <span></span></h3>
+                        <table>
+                            <thead>
+                            <tr>
+                                {% for key in columns_to_display[category] if key in items[0] %}
                                 <th class="sortable" data-column="{{ key }}" data-order="none">
                                     {{ column_titles.get(key, key) }}
                                     <span class="sort-icon">↕️</span>
-                                 </th>
+                                </th>
+                                {% endfor %}
+
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in items %}
+                            <tr data-id="{{ item[category ~ '_id'] }}"
+                                data-category="{{ category }}"
+                                data-room-id="{{ item['room_id'] if 'room_id' in item else '' }}"
+                                data-room-name="{{ item['room_name'] if 'room_name' in item else '' }}">
+
+                                <!-- 🔹 Colonnes cachées pour l'ID et le nom de la salle -->
+                                <td style="display: none;">{{ item['room_id'] if 'room_id' in item else '' }}</td>
+                                <td style="display: none;">{{ item['room_name'] if 'room_name' in item else '' }}</td>
+
+                                {% for key in columns_to_display[category] if key in item %}
+                                <td contenteditable="false" data-key="{{ key }}">{{ item[key] }}</td>
+                                {% endfor %}
+                                <td>
+                                    <span class="edit-icon" title="Modifier">&#9998;</span>
+                                    <span class="delete-icon" title="Supprimer">&#128465;</span>
+                                </td>
+                            </tr>
                             {% endfor %}
-
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for item in items %}
-                        <tr data-id="{{ item[category ~ '_id'] }}"
-                            data-category="{{ category }}"
-                            data-room-id="{{ item['room_id'] if 'room_id' in item else '' }}"
-                            data-room-name="{{ item['room_name'] if 'room_name' in item else '' }}">
-
-                            <!-- 🔹 Colonnes cachées pour l'ID et le nom de la salle -->
-                            <td style="display: none;">{{ item['room_id'] if 'room_id' in item else '' }}</td>
-                            <td style="display: none;">{{ item['room_name'] if 'room_name' in item else '' }}</td>
-
-                            {% for key in columns_to_display[category] if key in item %}
-                            <td contenteditable="false" data-key="{{ key }}">{{ item[key] }}</td>
-                            {% endfor %}
-                            <td>
-                                <span class="edit-icon" title="Modifier">&#9998;</span>
-                                <span class="delete-icon" title="Supprimer">&#128465;</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
                 </div>
-                {% endif %}
-                {% endfor %}
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+    {% endblock %}
 
-{% block extra_js %}
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // 🔹 Gestion des dossiers ouverts/fermés
-        document.querySelectorAll(".folder-toggle").forEach(folder => {
-            folder.addEventListener("click", function () {
-                const nestedList = this.nextElementSibling;
-                nestedList.style.display = nestedList.style.display === "block" ? "none" : "block";
-                this.classList.toggle("open");
+    {% block extra_js %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 🔹 Gestion des dossiers ouverts/fermés
+            document.querySelectorAll(".folder-toggle").forEach(folder => {
+                folder.addEventListener("click", function () {
+                    const nestedList = this.nextElementSibling;
+                    nestedList.style.display = nestedList.style.display === "block" ? "none" : "block";
+                    this.classList.toggle("open");
+                });
+            });
+
+            // 🔹 Sélectionner une salle et afficher son contenu
+            document.querySelectorAll(".room-item").forEach(room => {
+                room.addEventListener("click", function () {
+                    const roomId = this.getAttribute("data-room-id");
+                    alert("Salle sélectionnée : " + this.innerText + " (ID: " + roomId + ")");
+                });
             });
         });
+    </script>
 
-        // 🔹 Sélectionner une salle et afficher son contenu
-        document.querySelectorAll(".room-item").forEach(room => {
-            room.addEventListener("click", function () {
-                const roomId = this.getAttribute("data-room-id");
-                alert("Salle sélectionnée : " + this.innerText + " (ID: " + roomId + ")");
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const tabButtons = document.querySelectorAll(".tab-button");
+            const tabContents = document.querySelectorAll(".tab-content");
+
+            // Gérer le changement d'onglet
+            tabButtons.forEach(button => {
+                button.addEventListener("click", function () {
+                    tabButtons.forEach(btn => btn.classList.remove("active"));
+                    tabContents.forEach(content => content.classList.remove("active"));
+
+                    this.classList.add("active");
+                    document.getElementById(this.dataset.tab).classList.add("active");
+                });
             });
-        });
-    });
-</script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const tabButtons = document.querySelectorAll(".tab-button");
-        const tabContents = document.querySelectorAll(".tab-content");
+            // Tri des colonnes avec flèches
+            document.querySelectorAll(".sortable").forEach(header => {
+                header.addEventListener("click", function () {
+                    const column = this.getAttribute("data-column");
+                    const table = this.closest("table");
+                    const tbody = table.querySelector("tbody");
+                    const rows = Array.from(tbody.querySelectorAll("tr"));
+                    const currentOrder = this.dataset.order;
 
-        // Gérer le changement d'onglet
-        tabButtons.forEach(button => {
-            button.addEventListener("click", function () {
-                tabButtons.forEach(btn => btn.classList.remove("active"));
-                tabContents.forEach(content => content.classList.remove("active"));
-
-                this.classList.add("active");
-                document.getElementById(this.dataset.tab).classList.add("active");
-            });
-        });
-
-        // Tri des colonnes avec flèches
-        document.querySelectorAll(".sortable").forEach(header => {
-            header.addEventListener("click", function () {
-                const column = this.getAttribute("data-column");
-                const table = this.closest("table");
-                const tbody = table.querySelector("tbody");
-                const rows = Array.from(tbody.querySelectorAll("tr"));
-                const currentOrder = this.dataset.order;
-
-                let newOrder;
-                if (currentOrder === "asc") {
-                    newOrder = "desc";
-                } else {
-                    newOrder = "asc";
-                }
-                this.dataset.order = newOrder;
-
-                // Déterminer si les valeurs sont numériques ou textuelles
-                const isNumeric = !isNaN(parseFloat(rows[0].querySelector(`[data-key='${column}']`)?.textContent));
-
-                rows.sort((rowA, rowB) => {
-                    let a = rowA.querySelector(`[data-key='${column}']`)?.textContent.trim();
-                    let b = rowB.querySelector(`[data-key='${column}']`)?.textContent.trim();
-
-                    if (isNumeric) {
-                        a = parseFloat(a);
-                        b = parseFloat(b);
+                    let newOrder;
+                    if (currentOrder === "asc") {
+                        newOrder = "desc";
                     } else {
-                        a = a.toLowerCase();
-                        b = b.toLowerCase();
+                        newOrder = "asc";
+                    }
+                    this.dataset.order = newOrder;
+
+                    // Déterminer si les valeurs sont numériques ou textuelles
+                    const isNumeric = !isNaN(parseFloat(rows[0].querySelector(`[data-key='${column}']`)?.textContent));
+
+                    rows.sort((rowA, rowB) => {
+                        let a = rowA.querySelector(`[data-key='${column}']`)?.textContent.trim();
+                        let b = rowB.querySelector(`[data-key='${column}']`)?.textContent.trim();
+
+                        if (isNumeric) {
+                            a = parseFloat(a);
+                            b = parseFloat(b);
+                        } else {
+                            a = a.toLowerCase();
+                            b = b.toLowerCase();
+                        }
+
+                        return newOrder === "asc" ? (a > b ? 1 : -1) : (a < b ? 1 : -1);
+                    });
+
+                    tbody.innerHTML = "";
+                    rows.forEach(row => tbody.appendChild(row));
+
+                    // Mettre à jour l'affichage des icônes de tri
+                    document.querySelectorAll(".sort-icon").forEach(icon => icon.textContent = "↕️");
+                    this.querySelector(".sort-icon").textContent = newOrder === "asc" ? "⬆️" : "⬇️";
+                });
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const tables = document.querySelectorAll("table");
+
+            tables.forEach(table => {
+                table.addEventListener("click", function (event) {
+                    const target = event.target;
+                    const row = target.closest("tr");
+                    const rowId = row.getAttribute("data-id");
+                    const category = row.getAttribute("data-category");
+
+                    if (target.classList.contains("edit-icon")) {
+                        // 🔹 Activer l'édition
+                        const cells = row.querySelectorAll("td[contenteditable]");
+                        cells.forEach(cell => cell.setAttribute("contenteditable", "true"));
+                        cells[0].focus(); // Focus sur le premier champ éditable
                     }
 
-                    return newOrder === "asc" ? (a > b ? 1 : -1) : (a < b ? 1 : -1);
+                    if (target.classList.contains("delete-icon")) {
+                        if (confirm("Voulez-vous vraiment supprimer cet élément ?")) {
+                            fetch(`/workspace/projects/{{ project.id }}/delete_item`, {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({id: rowId, category})
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        alert("Suppression réussie !");
+                                        row.remove();
+                                    } else {
+                                        alert("Erreur : " + data.message);
+                                    }
+                                })
+                                .catch(error => console.error("❌ Erreur fetch :", error));
+                        }
+                    }
                 });
 
-                tbody.innerHTML = "";
-                rows.forEach(row => tbody.appendChild(row));
+                // 🔹 Détecter la touche Enter pour sauvegarder
+                table.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault(); // Empêche le saut de ligne
 
-                // Mettre à jour l'affichage des icônes de tri
-                document.querySelectorAll(".sort-icon").forEach(icon => icon.textContent = "↕️");
-                this.querySelector(".sort-icon").textContent = newOrder === "asc" ? "⬆️" : "⬇️";
-            });
-        });
-    });
-</script>
+                        const cell = event.target;
+                        if (cell.getAttribute("contenteditable") === "true") {
+                            const row = cell.closest("tr");
+                            const rowId = row.getAttribute("data-id");
+                            const category = row.getAttribute("data-category");
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const tables = document.querySelectorAll("table");
+                            // 🔹 Récupérer la seule donnée modifiée
+                            const updatedData = {};
+                            updatedData[cell.getAttribute("data-key")] = cell.innerText.trim();
 
-        tables.forEach(table => {
-            table.addEventListener("click", function (event) {
-                const target = event.target;
-                const row = target.closest("tr");
-                const rowId = row.getAttribute("data-id");
-                const category = row.getAttribute("data-category");
+                            console.log("🔹 Données modifiées :", updatedData);
 
-                if (target.classList.contains("edit-icon")) {
-                    // 🔹 Activer l'édition
-                    const cells = row.querySelectorAll("td[contenteditable]");
-                    cells.forEach(cell => cell.setAttribute("contenteditable", "true"));
-                    cells[0].focus(); // Focus sur le premier champ éditable
-                }
-
-                if (target.classList.contains("delete-icon")) {
-                    if (confirm("Voulez-vous vraiment supprimer cet élément ?")) {
-                        fetch(`/workspace/projects/{{ project.project_number }}/delete_item`, {
-                            method: "POST",
-                            headers: {"Content-Type": "application/json"},
-                            body: JSON.stringify({id: rowId, category})
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    alert("Suppression réussie !");
-                                    row.remove();
-                                } else {
-                                    alert("Erreur : " + data.message);
-                                }
+                            // 🔹 Envoyer la modification au serveur
+                            fetch(`/workspace/projects/{{ project.id }}/edit_item`, {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({id: rowId, category, updatedData})
                             })
-                            .catch(error => console.error("❌ Erreur fetch :", error));
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        alert("Modification enregistrée !");
+                                        cell.setAttribute("contenteditable", "false"); // 🔹 Désactiver l'édition
+                                    } else {
+                                        alert("Erreur : " + data.message);
+                                    }
+                                })
+                                .catch(error => console.error("❌ Erreur fetch :", error));
+                        }
                     }
-                }
-            });
-
-            // 🔹 Détecter la touche Enter pour sauvegarder
-            table.addEventListener("keydown", function (event) {
-                if (event.key === "Enter") {
-                    event.preventDefault(); // Empêche le saut de ligne
-
-                    const cell = event.target;
-                    if (cell.getAttribute("contenteditable") === "true") {
-                        const row = cell.closest("tr");
-                        const rowId = row.getAttribute("data-id");
-                        const category = row.getAttribute("data-category");
-
-                        // 🔹 Récupérer la seule donnée modifiée
-                        const updatedData = {};
-                        updatedData[cell.getAttribute("data-key")] = cell.innerText.trim();
-
-                        console.log("🔹 Données modifiées :", updatedData);
-
-                        // 🔹 Envoyer la modification au serveur
-                        fetch(`/workspace/projects/{{ project.project_number }}/edit_item`, {
-                            method: "POST",
-                            headers: {"Content-Type": "application/json"},
-                            body: JSON.stringify({id: rowId, category, updatedData})
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    alert("Modification enregistrée !");
-                                    cell.setAttribute("contenteditable", "false"); // 🔹 Désactiver l'édition
-                                } else {
-                                    alert("Erreur : " + data.message);
-                                }
-                            })
-                            .catch(error => console.error("❌ Erreur fetch :", error));
-                    }
-                }
+                });
             });
         });
-    });
 
-</script>
+    </script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const toggles = document.querySelectorAll(".toggle");
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggles = document.querySelectorAll(".toggle");
 
-        toggles.forEach(toggle => {
-            toggle.addEventListener("click", function () {
-                const nestedList = this.nextElementSibling;
-                if (nestedList) {
-                    nestedList.classList.toggle("active");
-                }
+            toggles.forEach(toggle => {
+                toggle.addEventListener("click", function () {
+                    const nestedList = this.nextElementSibling;
+                    if (nestedList) {
+                        nestedList.classList.toggle("active");
+                    }
+                });
             });
         });
-    });
-</script>
+    </script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const roomItems = document.querySelectorAll(".room-item");
-        const tabContents = document.querySelectorAll(".tab-content");
-        const selectedRoomNames = document.querySelectorAll(".selected-room-name span");
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const roomItems = document.querySelectorAll(".room-item");
+            const tabContents = document.querySelectorAll(".tab-content");
+            const selectedRoomNames = document.querySelectorAll(".selected-room-name span");
 
-        roomItems.forEach(room => {
-            room.addEventListener("click", function () {
-                const roomId = this.getAttribute("data-room-id");
-                const roomName = this.innerText.trim();
+            roomItems.forEach(room => {
+                room.addEventListener("click", function () {
+                    const roomId = this.getAttribute("data-room-id");
+                    const roomName = this.innerText.trim();
 
-                // Retirer l'ancienne sélection et ajouter la classe active
-                document.querySelectorAll(".room-item").forEach(item => item.classList.remove("active-room"));
-                this.classList.add("active-room");
+                    // Retirer l'ancienne sélection et ajouter la classe active
+                    document.querySelectorAll(".room-item").forEach(item => item.classList.remove("active-room"));
+                    this.classList.add("active-room");
 
-                // Stocker la salle sélectionnée pour la récupérer plus tard
-                sessionStorage.setItem("selectedRoom", roomId);
-                sessionStorage.setItem("selectedRoomName", roomName);
+                    // Stocker la salle sélectionnée pour la récupérer plus tard
+                    sessionStorage.setItem("selectedRoom", roomId);
+                    sessionStorage.setItem("selectedRoomName", roomName);
+
+                    // Mettre à jour l'affichage du nom de la salle
+                    selectedRoomNames.forEach(span => {
+                        span.textContent = roomName;
+                    });
+
+                    // Filtrer les données du tableau
+                    filterRoomData(roomId);
+                });
+            });
+
+            function filterRoomData(roomId) {
+                tabContents.forEach(tab => {
+                    const rows = tab.querySelectorAll("tbody tr");
+                    rows.forEach(row => {
+                        const rowRoomId = row.getAttribute("data-room-id");
+                        row.style.display = (rowRoomId === roomId) ? "" : "none";
+                    });
+                });
+            }
+
+            // Vérifier si une salle a déjà été sélectionnée et filtrer au chargement
+            const savedRoomId = sessionStorage.getItem("selectedRoom");
+            const savedRoomName = sessionStorage.getItem("selectedRoomName");
+
+            if (savedRoomId) {
+                // Appliquer la classe active à la salle sélectionnée
+                const selectedRoomItem = document.querySelector(`.room-item[data-room-id="${savedRoomId}"]`);
+                if (selectedRoomItem) {
+                    selectedRoomItem.classList.add("active-room");
+                }
 
                 // Mettre à jour l'affichage du nom de la salle
                 selectedRoomNames.forEach(span => {
-                    span.textContent = roomName;
+                    span.textContent = savedRoomName;
                 });
 
-                // Filtrer les données du tableau
-                filterRoomData(roomId);
-            });
+                filterRoomData(savedRoomId);
+            }
         });
+    </script>
 
-        function filterRoomData(roomId) {
-            tabContents.forEach(tab => {
-                const rows = tab.querySelectorAll("tbody tr");
-                rows.forEach(row => {
-                    const rowRoomId = row.getAttribute("data-room-id");
-                    row.style.display = (rowRoomId === roomId) ? "" : "none";
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const roomItems = document.querySelectorAll(".room-item");
+            const tabContents = document.querySelectorAll(".tab-content");
+            const selectedRoomNames = document.querySelectorAll(".selected-room-name span");
+
+            // 🔁 Fonction pour filtrer les lignes de tableau selon la salle
+            function filterRoomData(roomId) {
+                tabContents.forEach(tab => {
+                    const rows = tab.querySelectorAll("tbody tr");
+                    rows.forEach(row => {
+                        const rowRoomId = row.getAttribute("data-room-id");
+                        row.style.display = (rowRoomId === roomId) ? "" : "none";
+                    });
                 });
-            });
-        }
-
-        // Vérifier si une salle a déjà été sélectionnée et filtrer au chargement
-        const savedRoomId = sessionStorage.getItem("selectedRoom");
-        const savedRoomName = sessionStorage.getItem("selectedRoomName");
-
-        if (savedRoomId) {
-            // Appliquer la classe active à la salle sélectionnée
-            const selectedRoomItem = document.querySelector(`.room-item[data-room-id="${savedRoomId}"]`);
-            if (selectedRoomItem) {
-                selectedRoomItem.classList.add("active-room");
             }
 
-            // Mettre à jour l'affichage du nom de la salle
-            selectedRoomNames.forEach(span => {
-                span.textContent = savedRoomName;
-            });
+            //  Fonction pour afficher le bon formulaire "fonctionnalité"
+            function showFunctionalityForRoom(roomId) {
+                const allForms = document.querySelectorAll(".functionality-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
 
-            filterRoomData(savedRoomId);
-        }
-    });
-</script>
+            // Fonction pour afficher le bon formulaire "exigences architecturales"
+            function showArchRequirementsForRoom(roomId) {
+                const allForms = document.querySelectorAll(".arch-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const roomItems = document.querySelectorAll(".room-item");
-        const tabContents = document.querySelectorAll(".tab-content");
-        const selectedRoomNames = document.querySelectorAll(".selected-room-name span");
+            // Fonction pour afficher le bon formulaire "exigences structurales"
+            function showStructRequirementsForRoom(roomId) {
+                const allForms = document.querySelectorAll(".struct-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
 
-        // 🔁 Fonction pour filtrer les lignes de tableau selon la salle
-        function filterRoomData(roomId) {
-            tabContents.forEach(tab => {
-                const rows = tab.querySelectorAll("tbody tr");
-                rows.forEach(row => {
-                    const rowRoomId = row.getAttribute("data-room-id");
-                    row.style.display = (rowRoomId === roomId) ? "" : "none";
+            // Fonction pour afficher le bon formulaire "éléments à risques"
+            function showRiskElementsForRoom(roomId) {
+                const allForms = document.querySelectorAll(".risk-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
+
+            // Fonction pour afficher le bon formulaire "Ventilation CVAC"
+            function showVentilationForRoom(roomId) {
+                const allForms = document.querySelectorAll(".ventilation-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
+
+            // Fonction pour afficher le bon formulaire "Électricité"
+            function showElectricityForRoom(roomId) {
+                const allForms = document.querySelectorAll(".electricity-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
+
+
+            // 🔹 Quand on clique sur une salle dans le menu
+            roomItems.forEach(room => {
+                room.addEventListener("click", function () {
+                    const roomId = this.getAttribute("data-room-id");
+                    const roomName = this.innerText.trim();
+
+                    // Mettre à jour la sélection visuelle
+                    document.querySelectorAll(".room-item").forEach(item => item.classList.remove("active-room"));
+                    this.classList.add("active-room");
+
+                    // Stocker en session
+                    sessionStorage.setItem("selectedRoom", roomId);
+                    sessionStorage.setItem("selectedRoomName", roomName);
+
+                    // Affichage du nom de salle
+                    selectedRoomNames.forEach(span => {
+                        span.textContent = roomName;
+                    });
+
+                    // Filtrer les tableaux + afficher bon formulaire
+                    filterRoomData(roomId);
+                    showFunctionalityForRoom(roomId);
+                    showArchRequirementsForRoom(roomId);
+                    showStructRequirementsForRoom(roomId);
+                    showRiskElementsForRoom(roomId);
+                    showVentilationForRoom(roomId);
+                    showElectricityForRoom(roomId);
                 });
             });
-        }
 
-        // 🔁 Fonction pour afficher le bon formulaire "fonctionnalité"
-        function showFunctionalityForRoom(roomId) {
-            const allForms = document.querySelectorAll(".functionality-form");
-            allForms.forEach(form => {
-                form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
-            });
-        }
+            // 🔁 À l'ouverture de la page, recharger les filtres/formulaire si une salle est sélectionnée
+            const savedRoomId = sessionStorage.getItem("selectedRoom");
+            const savedRoomName = sessionStorage.getItem("selectedRoomName");
 
-        // 🔹 Quand on clique sur une salle dans le menu
-        roomItems.forEach(room => {
-            room.addEventListener("click", function () {
-                const roomId = this.getAttribute("data-room-id");
-                const roomName = this.innerText.trim();
+            if (savedRoomId) {
+                const selectedRoomItem = document.querySelector(`.room-item[data-room-id="${savedRoomId}"]`);
+                if (selectedRoomItem) {
+                    selectedRoomItem.classList.add("active-room");
+                }
 
-                // Mettre à jour la sélection visuelle
-                document.querySelectorAll(".room-item").forEach(item => item.classList.remove("active-room"));
-                this.classList.add("active-room");
-
-                // Stocker en session
-                sessionStorage.setItem("selectedRoom", roomId);
-                sessionStorage.setItem("selectedRoomName", roomName);
-
-                // Affichage du nom de salle
                 selectedRoomNames.forEach(span => {
-                    span.textContent = roomName;
+                    span.textContent = savedRoomName;
                 });
 
-                // Filtrer les tableaux + afficher bon formulaire
-                filterRoomData(roomId);
-                showFunctionalityForRoom(roomId);
+                filterRoomData(savedRoomId);
+                showFunctionalityForRoom(savedRoomId);
+                showArchRequirementsForRoom(savedRoomId);
+                showStructRequirementsForRoom(savedRoomId);
+                showRiskElementsForRoom(savedRoomId);
+                showVentilationForRoom(savedRoomId);
+                showElectricityForRoom(savedRoomId);
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const editIcon = document.querySelector("#tab-functionality .edit-icon");
+            editIcon.addEventListener("click", function () {
+                const form = document.querySelector("#tab-functionality .functionality-form[style*='block']");
+                if (!form) return;
+
+                form.querySelectorAll("input, textarea").forEach(el => el.removeAttribute("disabled"));
+
+                if (!form.querySelector(".save-button")) {
+                    const btn = document.createElement("button");
+                    btn.className = "save-button";
+                    btn.textContent = "Enregistrer";
+                    btn.style.marginTop = "10px";
+                    form.appendChild(btn);
+
+                    btn.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        const roomId = form.dataset.roomId;
+                        const data = {
+                            room_id: roomId,
+                            functionality_occupants_number: form.querySelector("#occupants").value,
+                            functionality_desk_number: form.querySelector("#desk").value,
+                            functionality_lab_number: form.querySelector("#lab").value,
+                            functionality_schedule: form.querySelector("#schedule").value,
+                            functionality_description: form.querySelector("#description").value,
+                            functionality_proximity: form.querySelector("#proximity").value,
+                            functionality_commentary: form.querySelector("#commentary").value,
+                            functionality_access: [],
+                            functionality_consideration: []
+                        };
+
+                        form.querySelectorAll("input[name='functionality_access']:checked").forEach(cb => {
+                            data.functionality_access.push(cb.value);
+                        });
+
+                        form.querySelectorAll("input[name='functionality_consideration']:checked").forEach(cb => {
+                            data.functionality_consideration.push(cb.value);
+                        });
+
+                        fetch(`/workspace/projects/{{ project.id }}/edit_functionality`, {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify(data)
+                        })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res.success) {
+                                    alert("Modifications enregistrées !");
+                                    form.querySelectorAll("input, textarea").forEach(el => el.setAttribute("disabled", "true"));
+                                } else {
+                                    alert("Erreur : " + res.message);
+                                }
+                            })
+                            .catch(err => console.error("Erreur :", err));
+                    });
+                }
             });
         });
+    </script>
 
-        // 🔁 À l'ouverture de la page, recharger les filtres/formulaire si une salle est sélectionnée
-        const savedRoomId = sessionStorage.getItem("selectedRoom");
-        const savedRoomName = sessionStorage.getItem("selectedRoomName");
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const editIcon = document.querySelector("#tab-arch_requirements .edit-icon");
+            editIcon.addEventListener("click", function () {
+                const form = document.querySelector("#tab-arch_requirements .arch-form[style*='block']");
+                if (!form) return;
 
-        if (savedRoomId) {
-            const selectedRoomItem = document.querySelector(`.room-item[data-room-id="${savedRoomId}"]`);
-            if (selectedRoomItem) {
-                selectedRoomItem.classList.add("active-room");
+                form.querySelectorAll("input, textarea").forEach(el => el.removeAttribute("disabled"));
+
+                if (!form.querySelector(".save-button")) {
+                    const btn = document.createElement("button");
+                    btn.className = "save-button";
+                    btn.textContent = "Enregistrer";
+                    btn.style.marginTop = "10px";
+                    form.appendChild(btn);
+
+                    btn.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        const data = {
+                            room_id: form.dataset.roomId,
+                            arch_requirements_critic_length: form.querySelector("#arch_requirements_critic_length").value,
+                            arch_requirements_critic_width: form.querySelector("#arch_requirements_critic_width").value,
+                            arch_requirements_critic_height: form.querySelector("#arch_requirements_critic_height").value,
+                            arch_requirements_validation_req: form.querySelector("#arch_requirements_validation_req").value,
+                            arch_requirements_acoustic: form.querySelector("#arch_requirements_acoustic").value,
+                            arch_requirements_int_fenestration: [],
+                            arch_requirements_int_fen_adj_room: form.querySelector("#arch_requirements_int_fen_adj_room").value,
+                            arch_requirements_int_fen_other: form.querySelector("#arch_requirements_int_fen_other").value,
+                            arch_requirements_ext_fenestration: [],
+                            arch_requirements_ext_fen_solar_blind: form.querySelector("#arch_requirements_ext_fen_solar_blind").value,
+                            arch_requirements_ext_fen_opaque_blind: form.querySelector("#arch_requirements_ext_fen_opaque_blind").value,
+                            arch_requirements_commentary: form.querySelector("#arch_requirements_commentary").value
+                        };
+
+                        // Collecter les checkboxes cochées
+                        form.querySelectorAll("input[name='arch_requirements_int_fenestration']:checked").forEach(cb => {
+                            data.arch_requirements_int_fenestration.push(cb.value);
+                        });
+                        form.querySelectorAll("input[name='arch_requirements_ext_fenestration']:checked").forEach(cb => {
+                            data.arch_requirements_ext_fenestration.push(cb.value);
+                        });
+
+                        fetch(`/workspace/projects/{{ project.id }}/edit_arch_requirements`, {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify(data)
+                        })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res.success) {
+                                    alert("Modifications enregistrées !");
+                                    form.querySelectorAll("input, textarea").forEach(el => el.setAttribute("disabled", "true"));
+                                } else {
+                                    alert("Erreur : " + res.message);
+                                }
+                            })
+                            .catch(err => console.error("Erreur :", err));
+                    });
+                }
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const editIcon = document.querySelector("#tab-struct_requirements .edit-icon");
+            editIcon.addEventListener("click", function () {
+                const form = document.querySelector("#tab-struct_requirements .struct-form[style*='block']");
+                if (!form) return;
+
+                form.querySelectorAll("input, textarea").forEach(el => el.removeAttribute("disabled"));
+
+                if (!form.querySelector(".save-button")) {
+                    const btn = document.createElement("button");
+                    btn.className = "save-button";
+                    btn.textContent = "Enregistrer";
+                    btn.style.marginTop = "10px";
+                    form.appendChild(btn);
+
+                    btn.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        const data = {
+                            room_id: form.dataset.roomId,
+                            struct_requirements_floor_overload_required: form.querySelector("#struct_overload_req").value,
+                            struct_requirements_overload: form.querySelector("#struct_overload").value,
+                            struct_requirements_equipment_weight: form.querySelector("#struct_equip_weight").value,
+                            struct_requirements_floor_flatness: form.querySelector("#struct_flatness").value,
+                            struct_requirements_ditch_gutter: form.querySelector("#struct_ditch").value,
+                            struct_requirements_steel_sensitivity: form.querySelector("#struct_steel").value,
+                            struct_requirements_equipment_other: form.querySelector("#struct_equipment_other").value,
+                            struct_requirements_vibrations_sensitivity: form.querySelector("#struct_vibration").value,
+                            struct_requirements_max_vibrations: form.querySelector("#struct_vibration_max").value,
+                            struct_requirements_commentary: form.querySelector("#struct_commentary").value
+                        };
+
+                        fetch(`/workspace/projects/{{ project.id }}/edit_struct_requirements`, {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify(data)
+                        })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res.success) {
+                                    alert("Modifications enregistrées !");
+                                    form.querySelectorAll("input, textarea").forEach(el => el.setAttribute("disabled", "true"));
+                                } else {
+                                    alert("Erreur : " + res.message);
+                                }
+                            })
+                            .catch(err => console.error("Erreur :", err));
+                    });
+                }
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const editIcon = document.querySelector("#tab-risk_elements .edit-icon");
+            editIcon.addEventListener("click", function () {
+                const form = document.querySelector("#tab-risk_elements .risk-form[style*='block']");
+                if (!form) return;
+
+                form.querySelectorAll("input, textarea").forEach(el => el.removeAttribute("disabled"));
+
+                if (!form.querySelector(".save-button")) {
+                    const btn = document.createElement("button");
+                    btn.className = "save-button";
+                    btn.textContent = "Enregistrer";
+                    btn.style.marginTop = "10px";
+                    form.appendChild(btn);
+
+                    btn.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        const roomId = form.dataset.roomId;
+                        const data = {
+                            room_id: roomId,
+                            risk_elements_general: [],
+                            risk_elements_biological: [],
+                            risk_elements_gas: [],
+                            risk_elements_liquids: [],
+                            risk_elements_other: [],
+                            risk_elements_general_radioactive: form.querySelector("#risk_elements_general_radioactive").value,
+                            risk_elements_gas_qty: form.querySelector("#risk_elements_gas_qty").value,
+                            risk_elements_gas_toxic_gas: form.querySelector("#risk_elements_gas_toxic_gas").value,
+                            risk_elements_liquids_qty: form.querySelector("#risk_elements_liquids_qty").value,
+                            risk_elements_liquids_cryogenic: form.querySelector("#risk_elements_liquids_cryogenic").value,
+                            risk_elements_chemical_products: form.querySelector("#risk_elements_chemical_products").value,
+                            risk_elements_commentary: form.querySelector("#risk_elements_commentary").value
+                        };
+
+                        form.querySelectorAll("input[name='risk_elements_general']:checked").forEach(cb => data.risk_elements_general.push(cb.value));
+                        form.querySelectorAll("input[name='risk_elements_biological']:checked").forEach(cb => data.risk_elements_biological.push(cb.value));
+                        form.querySelectorAll("input[name='risk_elements_gas']:checked").forEach(cb => data.risk_elements_gas.push(cb.value));
+                        form.querySelectorAll("input[name='risk_elements_liquids']:checked").forEach(cb => data.risk_elements_liquids.push(cb.value));
+                        form.querySelectorAll("input[name='risk_elements_other']:checked").forEach(cb => data.risk_elements_other.push(cb.value));
+
+                        fetch(`/workspace/projects/{{ project.id }}/edit_risk_elements`, {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify(data)
+                        })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res.success) {
+                                    alert("Modifications enregistrées !");
+                                    form.querySelectorAll("input, textarea").forEach(el => el.setAttribute("disabled", "true"));
+                                } else {
+                                    alert("Erreur : " + res.message);
+                                }
+                            })
+                            .catch(err => console.error("Erreur :", err));
+                    });
+                }
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const editIcon = document.querySelector("#tab-ventilation_cvac .edit-icon");
+            editIcon.addEventListener("click", function () {
+                const form = document.querySelector("#tab-ventilation_cvac .ventilation-form[style*='block']");
+                if (!form) return;
+
+                form.querySelectorAll("input, textarea").forEach(el => el.removeAttribute("disabled"));
+
+                if (!form.querySelector(".save-button")) {
+                    const btn = document.createElement("button");
+                    btn.className = "save-button";
+                    btn.textContent = "Enregistrer";
+                    btn.style.marginTop = "10px";
+                    form.appendChild(btn);
+
+                    btn.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        const roomId = form.dataset.roomId;
+                        const data = {
+                            room_id: roomId,
+                            ventilation_care_area_type: form.querySelector("#ventilation_care_area_type").value,
+                            ventilation: form.querySelector("#ventilation").value,
+                            ventilation_special_mechanics: form.querySelector("#ventilation_special_mechanics").value,
+                            ventilation_specific_exhaust: form.querySelector("#ventilation_specific_exhaust").value,
+                            ventilation_commentary: form.querySelector("#ventilation_commentary").value,
+                            ventilation_relative_room_pressure: form.querySelector("#ventilation_relative_room_pressure").value,
+                            ventilation_pressurization: form.querySelector("#ventilation_pressurization").value,
+                            ventilation_environmental_parameters: form.querySelector("#ventilation_environmental_parameters").value
+                        };
+
+                        fetch(`/workspace/projects/{{ project.id }}/edit_ventilation_cvac`, {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify(data)
+                        })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res.success) {
+                                    alert("Modifications enregistrées !");
+                                    form.querySelectorAll("input, textarea").forEach(el => el.setAttribute("disabled", "true"));
+                                } else {
+                                    alert("Erreur : " + res.message);
+                                }
+                            })
+                            .catch(err => console.error("Erreur :", err));
+                    });
+                }
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const editIcon = document.querySelector("#tab-electricity .edit-icon");
+            editIcon.addEventListener("click", function () {
+                const form = document.querySelector("#tab-electricity .electricity-form[style*='block']");
+                if (!form) return;
+
+                // Activer tous les champs du formulaire
+                form.querySelectorAll("input, textarea").forEach(el => el.removeAttribute("disabled"));
+
+                // Éviter d’ajouter plusieurs boutons
+                if (!form.querySelector(".save-button")) {
+                    const btn = document.createElement("button");
+                    btn.className = "save-button";
+                    btn.textContent = "Enregistrer";
+                    btn.style.marginTop = "10px";
+                    form.appendChild(btn);
+
+                    btn.addEventListener("click", function (e) {
+                        e.preventDefault();
+
+                        const roomId = form.dataset.roomId;
+                        const data = {
+                            room_id: roomId,
+                            electricity_care_area_type: form.querySelector("#electricity_care_area_type").value,
+                            electricity_smoke_fire_detection: form.querySelector("#electricity_smoke_fire_detection").value,
+                            electricity_special_equipment: form.querySelector("#electricity_special_equipment").value,
+                            electricity_lighting_type: form.querySelector("#electricity_lighting_type").value,
+                            electricity_lighting_level: form.querySelector("#electricity_lighting_level").value,
+                            electricity_lighting_control: form.querySelector("#electricity_lighting_control").value,
+                            color_temperature: form.querySelector("#color_temperature").value,
+                            electricity_lighting: form.querySelector("#electricity_lighting").value,
+                            electricity_commentary: form.querySelector("#electricity_commentary").value
+                        };
+
+                        fetch(`/workspace/projects/{{ project.id }}/edit_electricity`, {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify(data)
+                        })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res.success) {
+                                    alert("Modifications enregistrées !");
+                                    form.querySelectorAll("input, textarea").forEach(el => el.setAttribute("disabled", "true"));
+                                } else {
+                                    alert("Erreur : " + res.message);
+                                }
+                            })
+                            .catch(err => console.error("Erreur :", err));
+                    });
+                }
+            });
+        });
+    </script>
+
+
+    {% endblock %}
+
+    {% block extra_css %}
+    {{ super() }}
+    <style>
+        /* Workspace Navbar Styles */
+        .workspace-navbar {
+            background-color: #f0f4f8;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 70px;
+            z-index: 900;
+        }
+
+        .workspace-navbar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            height: 50px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .workspace-nav-items {
+            display: flex;
+            gap: 10px;
+        }
+
+        .workspace-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            border-radius: 5px;
+            color: #4a5568;
+            transition: all 0.2s ease;
+        }
+
+        .workspace-nav-item svg {
+            margin-right: 8px;
+        }
+
+        .workspace-nav-item:hover {
+            background-color: #e2e8f0;
+        }
+
+        .workspace-nav-item.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .workspace-nav-item.active svg {
+            stroke: white;
+        }
+
+        .workspace-context {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Workspace Actions */
+        .workspace-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn svg {
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e0;
+        }
+
+        /* Workspace Content Styles */
+        .workspace-content {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+            min-height: calc(100vh - 220px); /* Account for header, navbar, and footer */
+        }
+
+        /* Main container adjustment for workspace */
+        main .container {
+            max-width: 100%;
+            width: 100%;
+            padding: 0;
+        }
+
+        /* Project specific styles */
+        .edit-icon, .delete-icon {
+            cursor: pointer;
+            padding: 5px;
+            font-size: 16px;
+            margin-left: 8px;
+        }
+
+        .edit-icon:hover {
+            color: #3498db;
+        }
+
+        .delete-icon:hover {
+            color: red;
+        }
+
+        td[contenteditable="true"] {
+            background-color: #ffffcc;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 8px 12px;
+            border: none;
+            background: #ddd;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-button.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .tab-content-container {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #f5f5f5;
+        }
+
+        .sortable {
+            cursor: pointer;
+            position: relative;
+            padding-right: 20px;
+        }
+
+        .sort-icon {
+            font-size: 14px;
+            margin-left: 5px;
+            color: #666;
+        }
+
+        .project-container {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .sidebar {
+            width: 250px;
+            padding: 20px;
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-right: 20px;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .nested {
+            display: none;
+            margin-left: 20px;
+        }
+
+        .toggle {
+            cursor: pointer;
+            font-weight: bold;
+            display: block;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .active-room {
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .special-tab-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Styles for sidebar tree */
+        .sidebar ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .sidebar > ul > li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar li {
+            margin: 4px 0;
+        }
+
+        .sidebar .room-item {
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+        }
+
+        .sidebar .room-item:hover {
+            background-color: #e2e8f0;
+        }
+
+        /* Project status styles */
+        .project-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background-color: #d1fae5;
+            color: #047857;
+        }
+
+        /* Section styles for functionality tab */
+        .section {
+            background-color: #f8fafc;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .section h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            color: #334155;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .column {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .project-container {
+                flex-direction: column;
             }
 
-            selectedRoomNames.forEach(span => {
-                span.textContent = savedRoomName;
-            });
+            .sidebar {
+                width: 100%;
+                max-height: 300px;
+                margin-bottom: 20px;
+            }
 
-            filterRoomData(savedRoomId);
-            showFunctionalityForRoom(savedRoomId);
+            .content {
+                width: 100%;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .workspace-navbar-container {
+                flex-direction: column;
+                height: auto;
+                padding: 10px;
+            }
+
+            .workspace-nav-items {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+
+            .workspace-context {
+                width: 100%;
+                justify-content: center;
+                padding-top: 10px;
+                border-top: 1px solid #e2e8f0;
+            }
         }
-    });
-</script>
-{% endblock %}
-
-{% block extra_css %}
-{{ super() }}
-<style>
-    /* Workspace Navbar Styles */
-.workspace-navbar {
-    background-color: #f0f4f8;
-    border-bottom: 1px solid #e2e8f0;
-    position: sticky;
-    top: 70px;
-    z-index: 900;
-}
-
-.workspace-navbar-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    height: 50px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.workspace-nav-items {
-    display: flex;
-    gap: 10px;
-}
-
-.workspace-nav-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 15px;
-    border-radius: 5px;
-    color: #4a5568;
-    transition: all 0.2s ease;
-}
-
-.workspace-nav-item svg {
-    margin-right: 8px;
-}
-
-.workspace-nav-item:hover {
-    background-color: #e2e8f0;
-}
-
-.workspace-nav-item.active {
-    background-color: #3498db;
-    color: white;
-}
-
-.workspace-nav-item.active svg {
-    stroke: white;
-}
-
-.workspace-context {
-    display: flex;
-    align-items: center;
-}
-
-/* Workspace Actions */
-.workspace-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 16px;
-    border-radius: 5px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-}
-
-.btn svg {
-    margin-right: 8px;
-}
-
-.btn-primary {
-    background-color: #3498db;
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: #2980b9;
-}
-
-.btn-secondary {
-    background-color: #e2e8f0;
-    color: #4a5568;
-}
-
-.btn-secondary:hover {
-    background-color: #cbd5e0;
-}
-
-/* Workspace Content Styles */
-.workspace-content {
-    max-width: 1400px;
-    margin: 20px auto;
-    padding: 0 20px;
-    min-height: calc(100vh - 220px); /* Account for header, navbar, and footer */
-}
-
-/* Main container adjustment for workspace */
-main .container {
-    max-width: 100%;
-    width: 100%;
-    padding: 0;
-}
-
-/* Project specific styles */
-.edit-icon, .delete-icon {
-    cursor: pointer;
-    padding: 5px;
-    font-size: 16px;
-    margin-left: 8px;
-}
-
-.edit-icon:hover {
-    color: #3498db;
-}
-
-.delete-icon:hover {
-    color: red;
-}
-
-td[contenteditable="true"] {
-    background-color: #ffffcc;
-}
-
-.tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-bottom: 20px;
-}
-
-.tab-button {
-    padding: 8px 12px;
-    border: none;
-    background: #ddd;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.tab-button.active {
-    background: #3498db;
-    color: white;
-}
-
-.tab-content-container {
-    background: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-th, td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: left;
-}
-
-th {
-    background: #f5f5f5;
-}
-
-.sortable {
-    cursor: pointer;
-    position: relative;
-    padding-right: 20px;
-}
-
-.sort-icon {
-    font-size: 14px;
-    margin-left: 5px;
-    color: #666;
-}
-
-.project-container {
-    display: flex;
-    align-items: flex-start;
-}
-
-.sidebar {
-    width: 250px; /* Ajuste selon la largeur souhaitée */
-    padding: 10px;
-    background: #f5f5f5;
-    border-right: 1px solid #ddd;
-    height: 100vh;
-    overflow-y: auto;
-}
-
-.content {
-    flex: 1;
-    padding: 20px;
-}
-
-.nested {
-    display: none;
-    margin-left: 20px;
-}
-
-.toggle {
-    cursor: pointer;
-    font-weight: bold;
-    display: block;
-}
-
-.active {
-    display: block;
-}
-
-.active-room {
-    font-weight: bold;
-    color: #3498db;
-}
-
-.special-tab-container label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-/* Styles for sidebar tree */
-.sidebar ul {
-    list-style-type: none;
-    padding-left: 0;
-}
-
-.sidebar > ul > li {
-    margin-bottom: 8px;
-}
-
-.sidebar li {
-    margin: 4px 0;
-}
-
-.sidebar .room-item {
-    cursor: pointer;
-    padding: 4px 8px;
-    transition: background-color 0.2s;
-    border-radius: 4px;
-}
-
-.sidebar .room-item:hover {
-    background-color: #e2e8f0;
-}
-
-/* Project status styles */
-.project-status {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    background-color: #d1fae5;
-    color: #047857;
-}
-
-/* Section styles for functionality tab */
-.section {
-    background-color: #f8fafc;
-    border-radius: 6px;
-    padding: 15px;
-    margin-bottom: 15px;
-    border: 1px solid #e2e8f0;
-}
-
-.section h2 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    font-size: 1.2rem;
-    color: #334155;
-}
-
-.row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.column {
-    flex: 1;
-    min-width: 250px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .project-container {
-        flex-direction: column;
-    }
-
-    .sidebar {
-        width: 100%;
-        max-height: 300px;
-        margin-bottom: 20px;
-    }
-
-    .content {
-        width: 100%;
-    }
-
-    .tabs {
-        overflow-x: auto;
-    }
-
-    .workspace-navbar-container {
-        flex-direction: column;
-        height: auto;
-        padding: 10px;
-    }
-
-    .workspace-nav-items {
-        width: 100%;
-        overflow-x: auto;
-        padding-bottom: 10px;
-    }
-
-    .workspace-context {
-        width: 100%;
-        justify-content: center;
-        padding-top: 10px;
-        border-top: 1px solid #e2e8f0;
-    }
-}
-
-.project-info-header {
-    background-color: #f8fafc;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.project-info-main {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 5px;
-}
-
-.project-title-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.project-title-with-logo {
-    display: flex;
-    align-items: center;
-}
-
-.project-type-logo {
-    display: flex;
-    align-items: center;
-    color: #3498db;
-    margin-right: 12px;
-}
-
-.project-title-container h1 {
-    margin: 0;
-    font-size: 1.8rem;
-    color: #2d3748;
-}
-
-.project-number {
-    display: flex;
-    align-items: center;
-    font-size: 1rem;
-    color: #4a5568;
-}
-
-.project-number-label {
-    font-weight: 600;
-    margin-right: 5px;
-}
-
-.project-status-badge {
-    margin-left: 15px;
-}
-
-.project-info-details {
-    border-top: 1px solid #e2e8f0;
-    padding-top: 5px;
-}
-
-.info-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 15px;
-    margin-top: 5px;
-}
-
-.info-item {
-    margin-bottom: 5px;
-}
-
-.info-label {
-    font-size: 0.85rem;
-    color: #718096;
-    font-weight: 600;
-    margin-bottom: 2px;
-}
-
-.info-value {
-    font-size: 0.9rem;
-    color: #4a5568;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .project-title-container {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .project-status-badge {
-        margin-left: 0;
-        margin-top: 5px;
-    }
-
-    .info-columns {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
-{% endblock %}
+
+        .project-info-header {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-info-main {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 5px;
+        }
+
+        .project-title-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .project-title-with-logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .project-type-logo {
+            display: flex;
+            align-items: center;
+            color: #3498db;
+            margin-right: 12px;
+        }
+
+        .project-title-container h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #2d3748;
+        }
+
+        .project-number {
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            color: #4a5568;
+        }
+
+        .project-number-label {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .project-status-badge {
+            margin-left: 15px;
+        }
+
+        .project-info-details {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 5px;
+        }
+
+        .info-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .info-item {
+            margin-bottom: 5px;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #718096;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .project-title-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .project-status-badge {
+                margin-left: 0;
+                margin-top: 5px;
+            }
+
+            .info-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    {% endblock %}

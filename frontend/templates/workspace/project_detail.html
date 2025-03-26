@@ -214,6 +214,8 @@
         <div class="project-container">
             <!-- 📌 Menu en arborescence -->
             <div class="sidebar">
+                <h3 class="sidebar-title">Salles du projet</h3>
+
                 {% if room_hierarchy %}
                 <ul>
                     {% for functional_unit, sectors in room_hierarchy.items() %}
@@ -235,8 +237,19 @@
                     {% endfor %}
                 </ul>
                 {% else %}
-                <p>Aucune salle disponible.</p>
+                <p>Aucune pièce disponible.</p>
                 {% endif %}
+
+                <!-- Add button at the end of the list -->
+                <div class="add-room-container">
+                    <button id="add-room-btn" class="add-room-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Ajouter une pièce
+                    </button>
+                </div>
             </div>
 
             <!-- 📌 Informations du projet -->
@@ -1488,6 +1501,144 @@
                 }
             });
         });
+
+                // JavaScript for room creation modal
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get modal elements
+            const modal = document.getElementById('create-room-modal');
+            const addRoomBtn = document.getElementById('add-room-btn');
+            const closeButton = document.querySelector('#create-room-modal .close-modal-btn');
+            const cancelButton = document.querySelector('#create-room-modal .cancel-btn');
+            const form = document.getElementById('create-room-form');
+
+            // Open modal when the add room button is clicked
+            if (addRoomBtn) {
+                addRoomBtn.addEventListener('click', function() {
+                    modal.classList.add('active');
+                });
+            }
+
+            // Close modal when close button is clicked
+            if (closeButton) {
+                closeButton.addEventListener('click', function() {
+                    modal.classList.remove('active');
+                });
+            }
+
+            // Close modal when cancel button is clicked
+            if (cancelButton) {
+                cancelButton.addEventListener('click', function() {
+                    modal.classList.remove('active');
+                });
+            }
+
+            // Close modal when clicking outside the modal content
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+
+            // Handle form submission
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    // Get the project ID from the URL
+                    const urlParts = window.location.pathname.split('/');
+                    const projectId = urlParts[urlParts.length - 1]; // Assuming the URL format is /workspace/projects/[project_id]
+
+                    // Get submit button elements
+                    const submitButton = form.querySelector('.create-btn');
+                    const buttonText = submitButton.querySelector('.btn-text');
+                    const buttonSpinner = submitButton.querySelector('.btn-spinner');
+
+                    // Show loading state
+                    submitButton.disabled = true;
+                    buttonText.style.display = 'none';
+                    buttonSpinner.style.display = 'inline-block';
+
+                    // Remove any existing error messages
+                    const existingError = form.querySelector('.form-error');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+
+                    // Get form data and convert to JSON
+                    const formData = new FormData(form);
+                    const roomData = {
+                        program_number: formData.get('program_number'),
+                        name: formData.get('name'),
+                        description: formData.get('description'),
+                        sector: formData.get('sector'),
+                        functional_unit: formData.get('functional_unit'),
+                        level: formData.get('level'),
+                        planned_area: parseFloat(formData.get('planned_area'))
+                    };
+
+                    // Send request to create room using the API
+                    fetch(`/workspace/projects/${projectId}/add_room`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(roomData),
+                        credentials: 'same-origin' // Include cookies
+                    })
+                    .then(response => {
+                        // Always parse JSON first to get any error message
+                        return response.json().then(data => {
+                            if (!response.ok) {
+                                throw new Error(data.message || `HTTP error ${response.status}`);
+                            }
+                            return data;
+                        });
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Close modal and show success toast
+                            modal.classList.remove('active');
+
+                            // Show success toast
+                            if (window.toast) {
+                                window.toast.success(`Salle créée avec succès!`);
+                            }
+
+                            // Reset form
+                            form.reset();
+
+                            // Reload the page to show new room
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            throw new Error(data.message || 'Une erreur est survenue');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error creating room:', error);
+
+                        // Reset button state
+                        submitButton.disabled = false;
+                        buttonText.style.display = 'inline';
+                        buttonSpinner.style.display = 'none';
+
+                        // Create error message
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'form-error';
+                        errorDiv.textContent = error.message || 'Une erreur est survenue lors de la création de la salle. Veuillez réessayer.';
+
+                        // Add the error at the top of the form
+                        form.prepend(errorDiv);
+
+                        // Show error toast
+                        if (window.toast) {
+                            window.toast.error(error.message || 'Une erreur est survenue lors de la création de la salle');
+                        }
+                    });
+                });
+            }
+        });
     </script>
 
 
@@ -1762,6 +1913,98 @@
             background-color: #e2e8f0;
         }
 
+        /* Styles for sidebar title */
+        .sidebar-title {
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 1.1rem;
+            color: #2d3748;
+        }
+
+        /* Styles for add room container and button */
+        .add-room-container {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #e2e8f0;
+        }
+
+        .add-room-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: none;
+            border: none;
+            color: #a0aec0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            text-align: left;
+        }
+
+        .add-room-link:hover {
+            color: #3498db;
+            background-color: #f7fafc;
+            border-radius: 4px;
+        }
+
+        .add-room-link svg {
+            stroke: #a0aec0;
+            transition: all 0.2s ease;
+        }
+
+        .add-room-link:hover svg {
+            stroke: #3498db;
+        }
+
+        /* Modal Styles (Additional) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .form-error {
+            background-color: #FEF2F2;
+            border: 1px solid #F87171;
+            color: #B91C1C;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        /* Spinner animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spin {
+            animation: spin 1.5s linear infinite;
+        }
+
+        /* Form help text */
+        .form-help {
+            color: #718096;
+            font-size: 0.8rem;
+            margin-top: 3px;
+        }
+
         /* Project status styles */
         .project-status {
             display: inline-block;
@@ -1939,4 +2182,5 @@
             }
         }
     </style>
+    {% include "workspace/room_creation_modal.html" %}
     {% endblock %}

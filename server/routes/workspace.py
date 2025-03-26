@@ -910,3 +910,127 @@ def edit_electricity(project_id):
         cursor.close()
         connection.close()
 
+
+@workspace_bp.route('/projects//add_room', methods=['POST'])
+def add_room(project_id):
+    """API endpoint to add a new room to a project"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    # Get the data from the request
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({'success': False, 'message': 'Aucune donnée reçue'}), 400
+
+    # Validate required fields
+    required_fields = ['program_number', 'name', 'planned_area']
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return jsonify({'success': False, 'message': f'Le champ {field} est requis'}), 400
+
+    # Create clean UUID for database name
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
+
+    # Check if database exists
+    if not database_exists(project_db_name):
+        return jsonify({'success': False, 'message': f'Base de données {project_db_name} introuvable'}), 404
+
+    # Connect to the project database
+    connection = get_db_connection(project_db_name)
+    if not connection:
+        return jsonify({'success': False, 'message': f'Impossible de se connecter à {project_db_name}'}), 500
+
+    cursor = connection.cursor()
+
+    try:
+        # Check if program_number already exists
+        cursor.execute("SELECT COUNT(*) FROM rooms WHERE program_number = %s", (data['program_number'],))
+        count = cursor.fetchone()[0]
+
+        if count > 0:
+            return jsonify({
+                'success': False,
+                'message': 'Une salle avec ce numéro de programme existe déjà. Veuillez utiliser un numéro unique.'
+            }), 400
+
+        # Insert the new room
+        query = """
+            INSERT INTO rooms (
+                program_number, name, description, sector, 
+                functional_unit, level, planned_area
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+
+        values = (
+            data['program_number'],
+            data['name'],
+            data.get('description', ''),
+            data.get('sector', ''),
+            data.get('functional_unit', ''),
+            data.get('level', ''),
+            data['planned_area']
+        )
+
+        cursor.execute(query, values)
+
+        # Get the new room ID
+        cursor.execute("SELECT BIN_TO_UUID(id) FROM rooms WHERE program_number = %s", (data['program_number'],))
+        room_id = cursor.fetchone()[0]
+
+        # Initialize additional tables with default values
+        # This will ensure all tabs display something for this room
+
+        # Insert default functionality record
+        cursor.execute("""
+            INSERT INTO functionality (room_id, functionality_occupants_number) 
+            VALUES (UUID_TO_BIN(%s), 1)
+        """, (room_id,))
+
+        # Insert default arch_requirements record
+        cursor.execute("""
+            INSERT INTO arch_requirements (room_id, arch_requirements_critic_length, 
+                       arch_requirements_critic_width, arch_requirements_critic_height) 
+            VALUES (UUID_TO_BIN(%s), 3, 3, 2)
+        """, (room_id,))
+
+        # Insert default risk_elements record
+        cursor.execute("""
+            INSERT INTO risk_elements (room_id, risk_elements_general) 
+            VALUES (UUID_TO_BIN(%s), 'NA')
+        """, (room_id,))
+
+        # Insert default ventilation_cvac record
+        cursor.execute("""
+            INSERT INTO ventilation_cvac (room_id, ventilation_care_area_type) 
+            VALUES (UUID_TO_BIN(%s), 'Standard')
+        """, (room_id,))
+
+        # Insert default electricity record
+        cursor.execute("""
+            INSERT INTO electricity (room_id, electricity_care_area_type) 
+            VALUES (UUID_TO_BIN(%s), 'Standard')
+        """, (room_id,))
+
+        connection.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Salle créée avec succès',
+            'room': {
+                'id': room_id,
+                'program_number': data['program_number'],
+                'name': data['name']
+            }
+        })
+
+    except Exception as e:
+        connection.rollback()
+        print(f"Error creating room: {e}")
+        return jsonify({'success': False, 'message': f'Erreur lors de la création de la salle: {str(e)}'}), 500
+
+    finally:
+        cursor.close()
+        connection.close()
+

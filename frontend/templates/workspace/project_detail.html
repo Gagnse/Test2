@@ -894,13 +894,9 @@
 
     {% block extra_js %}
     <script>
-        window.columnsToDisplay = {
-        {
-            columns_to_display | tojson
-        }
-        }
-        ;
+        window.columnsToDisplay = {{ columns_to_display | tojson }};
     </script>
+
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -925,7 +921,6 @@
                 room.addEventListener("click", function () {
                     const roomId = this.getAttribute("data-room-id");
                     const roomName = this.innerText.trim();
-                    alert("Salle sélectionnée : " + this.innerText + " (ID: " + roomId + ")");
                     // Mise à jour de la sélection
                     selectedRoomId = roomId;
                     selectedRoomName = roomName;
@@ -1810,47 +1805,9 @@
                                 return data;
                             });
                         })
-                        .then(data => {
-                            if (data.success) {
-                                // Close modal and show success toast
-                                modal.classList.remove('active');
 
-                                // Show success toast
-                                if (window.toast) {
-                                    window.toast.success(`Salle créée avec succès!`);
-                                }
-
-                                // Reset form
-                                form.reset();
-
-                                // Reload the page to show new room
-                                setTimeout(() => {
-                                    window.location.reload();
-                                }, 1000);
-                            } else {
-                                throw new Error(data.message || 'Une erreur est survenue');
-                            }
-                        })
                         .catch(error => {
                             console.error('Error creating room:', error);
-
-                            // Reset button state
-                            submitButton.disabled = false;
-                            buttonText.style.display = 'inline';
-                            buttonSpinner.style.display = 'none';
-
-                            // Create error message
-                            const errorDiv = document.createElement('div');
-                            errorDiv.className = 'form-error';
-                            errorDiv.textContent = error.message || 'Une erreur est survenue lors de la création de la salle. Veuillez réessayer.';
-
-                            // Add the error at the top of the form
-                            form.prepend(errorDiv);
-
-                            // Show error toast
-                            if (window.toast) {
-                                window.toast.error(error.message || 'Une erreur est survenue lors de la création de la salle');
-                            }
                         });
                 });
             }

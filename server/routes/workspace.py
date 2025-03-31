@@ -1141,9 +1141,10 @@ def add_room(project_id):
 
         connection.commit()
 
+        # Return success without setting a toast - let the client handle the toast notification
         return jsonify({
             'success': True,
-            'message': 'Salle créée avec succès',
+            'message': 'Serveur:Salle créée avec succès',
             'room': {
                 'id': room_id,
                 'program_number': program_number,
@@ -1162,12 +1163,12 @@ def add_room(project_id):
         if "Duplicate entry" in str(e) and "program_number" in str(e):
             return jsonify({
                 'success': False,
-                'message': f'Une salle avec ce numéro de programme existe déjà. Veuillez utiliser un numéro unique.'
+                'message': f'Serveur:Une pièce avec ce numéro de programme existe déjà. Veuillez utiliser un numéro unique.'
             }), 400
 
         return jsonify({
             'success': False,
-            'message': f'Erreur lors de la création de la salle: {str(e)}'
+            'message': f'Serveur:Erreur lors de la création de la pièce: {str(e)}'
         }), 500
 
     finally:

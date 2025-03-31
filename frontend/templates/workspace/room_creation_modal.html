@@ -383,14 +383,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Create error message
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'form-error';
-                errorDiv.textContent = error.message || 'Une erreur est survenue lors de la création de la salle. Veuillez réessayer.';
+                errorDiv.textContent = error.message || 'Une erreur est survenue lors de la création de la pièce. Veuillez réessayer.';
 
                 // Add the error at the top of the form
                 form.prepend(errorDiv);
 
                 // Show error toast
                 if (window.toast) {
-                    window.toast.error(error.message || 'Une erreur est survenue lors de la création de la salle');
+                    window.toast.error(error.message || 'Une erreur est survenue lors de la création de la pièce');
                 }
             });
         });

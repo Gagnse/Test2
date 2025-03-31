@@ -1,9 +1,12 @@
-// Toast notification system
 class ToastManager {
     constructor() {
         this.toastContainer = null;
         this.timeouts = [];
+        this.toasts = new Set(); // Track active toast messages
         this.init();
+
+        // Add flag to localStorage to track if we're refreshing to avoid duplicate toasts
+        this.checkPageRefresh();
     }
 
     init() {
@@ -113,10 +116,53 @@ class ToastManager {
         }
     }
 
+    // Check if page is refreshing to avoid duplicate toasts
+    checkPageRefresh() {
+        // If we're refreshing, don't show duplicate toasts
+        if (sessionStorage.getItem('pageIsRefreshing') === 'true') {
+            sessionStorage.removeItem('pageIsRefreshing');
+            // Clear any pending toasts
+            this.clear();
+        }
+
+        // Set listener for beforeunload to detect page refreshes
+        window.addEventListener('beforeunload', () => {
+            sessionStorage.setItem('pageIsRefreshing', 'true');
+        });
+    }
+
+    // Check if a similar toast already exists (prevent duplicates)
+    hasToast(message, type) {
+        const key = `${type}:${message}`;
+        return this.toasts.has(key);
+    }
+
+    // Add a toast to the tracking set
+    trackToast(message, type) {
+        const key = `${type}:${message}`;
+        this.toasts.add(key);
+        return key;
+    }
+
+    // Remove a toast from the tracking set
+    untrackToast(key) {
+        this.toasts.delete(key);
+    }
+
     // Show a toast notification
     show(message, type = 'info', duration = 3000) {
+        // Prevent duplicate toasts
+        if (this.hasToast(message, type)) {
+            console.log(`Toast already exists: ${type} - ${message}`);
+            return null;
+        }
+
+        // Track this toast
+        const toastKey = this.trackToast(message, type);
+
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
+        toast.dataset.key = toastKey;
 
         const messageSpan = document.createElement('span');
         messageSpan.className = 'toast-message';
@@ -145,6 +191,12 @@ class ToastManager {
     remove(toast) {
         if (!toast || !this.toastContainer.contains(toast)) return;
 
+        // Get toast key and untrack it
+        const toastKey = toast.dataset.key;
+        if (toastKey) {
+            this.untrackToast(toastKey);
+        }
+
         toast.classList.add('removing');
         setTimeout(() => {
             if (toast.parentNode) {
@@ -155,6 +207,10 @@ class ToastManager {
 
     // Clear all toasts
     clear() {
+        // Untrack all toasts
+        this.toasts.clear();
+
+        // Remove all toast elements
         while (this.toastContainer.firstChild) {
             this.toastContainer.removeChild(this.toastContainer.firstChild);
         }

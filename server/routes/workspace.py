@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, send_file
 
 from server.services.auth import AuthService
+from server.utils.database_utils import set_current_user
 from server.utils.toast_helper import redirect_with_toast, set_toast
 from server.database.models import Project, Organizations
 from server.database.db_config import get_db_connection, database_exists
@@ -451,6 +452,10 @@ def add_item(project_id):
 
     # Connexion à la base de données
     connection = get_db_connection(project_db_name)
+    # Set current user for tracking changes
+    user_id = AuthService.get_current_user_id()
+    set_current_user(connection, user_id)
+
     cursor = connection.cursor()
 
     # Générer UUID pour id du nouveau tuple
@@ -541,6 +546,7 @@ def edit_item(project_id):
 
     try:
         # Set current user for tracking changes
+        user_id = AuthService.get_current_user_id()
         set_current_user(connection, user_id)
 
         cursor = connection.cursor()
@@ -614,6 +620,10 @@ def edit_functionality(project_id):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
 
     connection = get_db_connection(project_db_name)
+    # Set current user for tracking changes
+    user_id = AuthService.get_current_user_id()
+    set_current_user(connection, user_id)
+
     cursor = connection.cursor()
 
     try:
@@ -680,6 +690,11 @@ def edit_arch_requirements(project_id):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
 
     connection = get_db_connection(project_db_name)
+
+    # Set current user for tracking changes
+    user_id = AuthService.get_current_user_id()
+    set_current_user(connection, user_id)
+
     cursor = connection.cursor()
 
     try:
@@ -751,6 +766,11 @@ def edit_struct_requirements(project_id):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
 
     connection = get_db_connection(project_db_name)
+
+    # Set current user for tracking changes
+    user_id = AuthService.get_current_user_id()
+    set_current_user(connection, user_id)
+
     cursor = connection.cursor()
 
     try:
@@ -813,6 +833,11 @@ def edit_risk_elements(project_id):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
 
     connection = get_db_connection(project_db_name)
+
+    # Set current user for tracking changes
+    user_id = AuthService.get_current_user_id()
+    set_current_user(connection, user_id)
+
     cursor = connection.cursor()
 
     try:
@@ -883,6 +908,11 @@ def edit_ventilation_cvac(project_id):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
 
     connection = get_db_connection(project_db_name)
+
+    # Set current user for tracking changes
+    user_id = AuthService.get_current_user_id()
+    set_current_user(connection, user_id)
+
     cursor = connection.cursor()
 
     try:
@@ -944,6 +974,11 @@ def edit_electricity(project_id):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
 
     connection = get_db_connection(project_db_name)
+
+    # Set current user for tracking changes
+    user_id = AuthService.get_current_user_id()
+    set_current_user(connection, user_id)
+
     cursor = connection.cursor()
 
     try:
@@ -1020,20 +1055,33 @@ def add_room(project_id):
     if not connection:
         return jsonify({'success': False, 'message': f'Impossible de se connecter à {project_db_name}'}), 500
 
+    # Set current user for tracking changes
+    user_id = AuthService.get_current_user_id()
+    set_current_user(connection, user_id)
+
     cursor = connection.cursor()
 
     try:
+        # Clean and trim the program_number to avoid whitespace issues
+        program_number = data['program_number'].strip()
+
+        if not program_number:
+            return jsonify({
+                'success': False,
+                'message': 'Le numéro de programme ne peut pas être vide.'
+            }), 400
+
         # Check if program_number already exists
-        cursor.execute("SELECT COUNT(*) FROM rooms WHERE program_number = %s", (data['program_number'],))
+        cursor.execute("SELECT COUNT(*) FROM rooms WHERE program_number = %s", (program_number,))
         count = cursor.fetchone()[0]
 
         if count > 0:
             return jsonify({
                 'success': False,
-                'message': 'Une salle avec ce numéro de programme existe déjà. Veuillez utiliser un numéro unique.'
+                'message': f'Une salle avec le numéro de programme "{program_number}" existe déjà. Veuillez utiliser un numéro unique.'
             }), 400
 
-        # Insert the new room
+        # Insert the new room - using the cleaned program_number
         query = """
             INSERT INTO rooms (
                 program_number, name, description, sector, 
@@ -1042,19 +1090,19 @@ def add_room(project_id):
         """
 
         values = (
-            data['program_number'],
-            data['name'],
-            data.get('description', ''),
-            data.get('sector', ''),
-            data.get('functional_unit', ''),
-            data.get('level', ''),
+            program_number,
+            data['name'].strip(),
+            data.get('description', '').strip(),
+            data.get('sector', '').strip(),
+            data.get('functional_unit', '').strip(),
+            data.get('level', '').strip(),
             data['planned_area']
         )
 
         cursor.execute(query, values)
 
         # Get the new room ID
-        cursor.execute("SELECT BIN_TO_UUID(id) FROM rooms WHERE program_number = %s", (data['program_number'],))
+        cursor.execute("SELECT BIN_TO_UUID(id) FROM rooms WHERE program_number = %s", (program_number,))
         room_id = cursor.fetchone()[0]
 
         # Initialize additional tables with default values
@@ -1098,15 +1146,29 @@ def add_room(project_id):
             'message': 'Salle créée avec succès',
             'room': {
                 'id': room_id,
-                'program_number': data['program_number'],
+                'program_number': program_number,
                 'name': data['name']
             }
         })
 
     except Exception as e:
         connection.rollback()
+        import traceback
+        error_details = traceback.format_exc()
         print(f"Error creating room: {e}")
-        return jsonify({'success': False, 'message': f'Erreur lors de la création de la salle: {str(e)}'}), 500
+        print(f"Traceback: {error_details}")
+
+        # Provide a more helpful error message
+        if "Duplicate entry" in str(e) and "program_number" in str(e):
+            return jsonify({
+                'success': False,
+                'message': f'Une salle avec ce numéro de programme existe déjà. Veuillez utiliser un numéro unique.'
+            }), 400
+
+        return jsonify({
+            'success': False,
+            'message': f'Erreur lors de la création de la salle: {str(e)}'
+        }), 500
 
     finally:
         cursor.close()

@@ -398,13 +398,25 @@ def create_project_database(project_id, project_number=None):
 
         connection.commit()
 
+        # Close the current connection and reconnect to the project database
+        cursor.close()
+        connection.close()
         connection = get_db_connection(db_name)
+
         if connection:
             # Execute the triggers SQL file
-            triggers_file_path = os.path.join(os.path.dirname(__file__), 'historical_change_triggers.sql')
-            success = execute_sql_file(connection, triggers_file_path)
-            if not success:
+            triggers_file_path = os.path.join(os.path.dirname(__file__), '..', 'database',
+                                              'historical_change_triggers.sql')
+            success_triggers = execute_sql_file(connection, triggers_file_path)
+            if not success_triggers:
                 print(f"Warning: Failed to create historical change triggers for {db_name}")
+
+            # Execute the procedures SQL file
+            procedures_file_path = os.path.join(os.path.dirname(__file__), '..', 'database',
+                                                'historical_procedures.sql')
+            success_procedures = execute_sql_file(connection, procedures_file_path)
+            if not success_procedures:
+                print(f"Warning: Failed to create historical utility procedures for {db_name}")
 
         print(f"Project database '{db_name}' created successfully")
         return True

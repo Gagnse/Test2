@@ -1,4 +1,4 @@
-USE SPACELOGIC_hospital;
+USE SPACELOGIC_7e19d0760b1a11f0ac899652d5389648;
 
 INSERT INTO rooms (program_number, name, description, sector, functional_unit, level, planned_area) VALUES
     -- 🔹 Bloc Salles de Chirurgie

@@ -1,6 +1,7 @@
 # server/utils/database_utils.py
 from server.database.db_config import get_db_connection, close_connection
 import uuid
+import os
 
 
 def create_project_database(project_id, project_number=None):
@@ -77,6 +78,7 @@ def create_project_database(project_id, project_number=None):
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS historical_changes (
                 id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+                user_id BINARY(16) NULL,
                 entity_type VARCHAR(50) NOT NULL,
                 entity_id BINARY(16) NOT NULL,
                 change_type VARCHAR(50) NOT NULL,
@@ -395,8 +397,19 @@ def create_project_database(project_id, project_number=None):
         """)
 
         connection.commit()
+
+        connection = get_db_connection(db_name)
+        if connection:
+            # Execute the triggers SQL file
+            triggers_file_path = os.path.join(os.path.dirname(__file__), 'historical_change_triggers.sql')
+            success = execute_sql_file(connection, triggers_file_path)
+            if not success:
+                print(f"Warning: Failed to create historical change triggers for {db_name}")
+
         print(f"Project database '{db_name}' created successfully")
         return True
+
+
 
     except Exception as e:
         if connection:
@@ -405,3 +418,81 @@ def create_project_database(project_id, project_number=None):
         return False
     finally:
         close_connection(connection, cursor)
+
+
+def execute_sql_file(connection, file_path):
+    """
+    Executes SQL statements from a file
+
+    Args:
+        connection: An active database connection
+        file_path: Path to the SQL file
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    cursor = None
+
+    try:
+        cursor = connection.cursor()
+
+        # Read the SQL file
+        with open(file_path, 'r') as f:
+            sql_script = f.read()
+
+        # Split script on DELIMITER to handle these statements correctly
+        sql_parts = sql_script.split('DELIMITER')
+
+        # Execute the first part (before any DELIMITER statement)
+        if sql_parts[0].strip():
+            for statement in sql_parts[0].split(';'):
+                if statement.strip():
+                    cursor.execute(statement)
+
+        # For the rest, handle the delimiter changes
+        for part in sql_parts[1:]:
+            if not part.strip():
+                continue
+
+            # Get the delimiter
+            delimiter_line, *rest = part.lstrip().split('\n', 1)
+            delimiter = delimiter_line.strip()
+
+            # Join the rest and split by the delimiter
+            sql_commands = ''.join(rest).split(delimiter)
+
+            # Execute each command
+            for cmd in sql_commands:
+                if cmd.strip():
+                    cursor.execute(cmd)
+
+        connection.commit()
+        return True
+
+    except Exception as e:
+        if connection:
+            connection.rollback()
+        print(f"Error executing SQL file: {e}")
+        return False
+
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def set_current_user(connection, user_id):
+    """Set the current user for historical change tracking
+
+    Args:
+        connection: An active database connection
+        user_id: UUID string of the current user
+    """
+    cursor = None
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SET @current_user_id = UUID_TO_BIN(%s)", (user_id,))
+    except Exception as e:
+        print(f"Error setting current user: {e}")
+    finally:
+        if cursor:
+            cursor.close()

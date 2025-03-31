@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier le projet - Spacelogic{% endblock %}
+
+{% block content %}
+<div class="modal active" style="display: flex; justify-content: center; align-items: center;">
+    <div class="modal-content" style="width: 600px;">
+        <style>
+            .form-group {
+                margin-bottom: 1.5rem;
+            }
+
+            .form-group label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                font-size: 1rem;
+            }
+
+            .form-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+            }
+
+            .modal-content h2 {
+                margin-bottom: 20px;
+                font-size: 1.5rem;
+            }
+
+            .btn-primary {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+
+            .btn-secondary {
+                background-color: #e0e0e0;
+                color: #333;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+        </style>
+
+        <h2>Modifier le projet</h2>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="project_number">Numéro du projet</label>
+                <input type="text" name="project_number" id="project_number" value="{{ project.project_number }}"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="name">Nom du projet</label>
+                <input type="text" name="name" id="name" value="{{ project.name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea name="description" id="description" rows="3">{{ project.description }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Date de début</label>
+                <p class="form-static">{{ project.start_date }}</p>
+            </div>
+
+
+            <div class="form-group">
+                <label for="end_date">Date de fin</label>
+                <input type="date" name="end_date" id="end_date" value="{{ project.end_date }}">
+            </div>
+
+            <div class="form-group">
+                <label for="status">Statut</label>
+                <input type="text" name="status" id="status" value="{{ project.status }}">
+            </div>
+
+            <div class="form-group">
+                <label for="type">Type</label>
+                <select name="type" id="type" class="form-control">
+                    <option value="Résidentiel" {% if project.type==
+                    'Résidentiel' %}selected{% endif %}>Résidentiel</option>
+                    <option value="Commercial" {% if project.type==
+                    'Commercial' %}selected{% endif %}>Commercial</option>
+                    <option value="Institutionnel" {% if project.type==
+                    'Institutionnel' %}selected{% endif %}>Institutionnel</option>
+                    <option value="Industriel" {% if project.type==
+                    'Industriel' %}selected{% endif %}>Industriel</option>
+                    <option value="Divers" {% if project.type==
+                    'Divers' %}selected{% endif %}>Divers</option>
+                </select>
+            </div>
+
+
+            <div class="form-actions">
+                <a href="{{ url_for('workspace.project_detail', project_id=project_id) }}" class="btn btn-secondary">Annuler</a>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

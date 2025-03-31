@@ -161,6 +161,17 @@
     <!-- 📌 Informations du projet -->
     <div class="content">
         <div class="project-info-header">
+            <a href="{{ url_for('workspace.generate_pdf', project_id=project.id) }}"
+               class="btn btn-primary" target="_blank">
+                📄 Générer rapport PDF
+            </a>
+            <a href="{{ url_for('workspace.project_parameters', project_id=project.id) }}"
+               class="btn btn-primary"
+               style="margin-left: 10px;">
+                ⚙️ Modifier le projet
+            </a>
+
+
             <div class="project-info-main">
                 <div class="project-title-container">
                     <!-- Logo du projet à côté du nom -->
@@ -214,20 +225,22 @@
         <div class="project-container">
             <!-- 📌 Menu en arborescence -->
             <div class="sidebar">
-                <h3 class="sidebar-title">Salles du projet</h3>
+                <h3 class="sidebar-title">Liste des pièces</h3>
 
                 {% if room_hierarchy %}
                 <ul>
                     {% for functional_unit, sectors in room_hierarchy.items() %}
                     <li>
-                        <span class="toggle">📂 <strong>Unité Fonctionnelle {{ functional_unit }}</strong></span>
+                        <span class="toggle folder-toggle">📂 <strong>{{ functional_unit }}</strong></span>
                         <ul class="nested">
                             {% for sector, rooms in sectors.items() %}
                             <li>
-                                <span class="toggle">📁 <strong>Secteur {{ sector }}</strong></span>
+                                <span class="toggle folder-toggle">📁 <strong>{{ sector }}</strong></span>
                                 <ul class="nested">
                                     {% for room in rooms %}
-                                    <li class="room-item" data-room-id="{{ room.id }}">🏥 {{ room.name }}</li>
+                                    <li class="room-item" data-room-id="{{ room.id }}" title="{{ room.name }}">{{
+                                        room.name }}
+                                    </li>
                                     {% endfor %}
                                 </ul>
                             </li>
@@ -243,7 +256,8 @@
                 <!-- Add button at the end of the list -->
                 <div class="add-room-container">
                     <button id="add-room-btn" class="add-room-link">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg>
@@ -319,7 +333,8 @@
                                             {% for key, label in access_options.items() %}
                                             <label>
                                                 <input type="checkbox" name="functionality_access" value="{{ key }}"
-                                                       {% if key in item.functionality_access %}checked{% endif %}
+                                                       {% if key in (item.functionality_access or []) %}checked{% endif
+                                                       %}
                                                        disabled>
                                                 {{ label }}
                                             </label>
@@ -349,8 +364,8 @@
                                             <label>
                                                 <input type="checkbox" name="functionality_consideration"
                                                        value="{{ key }}"
-                                                       {% if key in item.functionality_consideration %}checked{% endif
-                                                       %}
+                                                       {% if key in (item.functionality_consideration or []) %}checked{%
+                                                       endif %}
                                                        disabled>
                                                 {{ label }}
                                             </label>
@@ -439,8 +454,9 @@
                                     {% for opt, label in int_fen_options.items() %}
                                     <label>
                                         <input type="checkbox" name="arch_requirements_int_fenestration"
-                                               value="{{ opt }}" {% if opt in item.arch_requirements_int_fenestration
-                                               %}checked{% endif %} disabled>
+                                               value="{{ opt }}" {% if opt in (item.arch_requirements_int_fenestration
+                                               or []) %}checked{% endif %}
+                                               disabled>
                                         {{ label }}
                                     </label>
                                     {% endfor %}
@@ -467,8 +483,9 @@
                                     {% for opt, label in ext_fen_options.items() %}
                                     <label>
                                         <input type="checkbox" name="arch_requirements_ext_fenestration"
-                                               value="{{ opt }}" {% if opt in item.arch_requirements_ext_fenestration
-                                               %}checked{% endif %} disabled>
+                                               value="{{ opt }}" {% if opt in (item.arch_requirements_ext_fenestration
+                                               or []) %}checked{% endif %}
+                                               disabled>
                                         {{ label }}
                                     </label>
                                     {% endfor %}
@@ -494,6 +511,76 @@
                             {% endif %}
                         </div>
                     </div>
+
+                    <!-- Onglet Exigences Structurales -->
+                    {% elif category == "struct_requirements" %}
+                    <div id="tab-struct_requirements" class="tab-content">
+                        <div class="special-tab-container">
+                            <h1>Exigences structurales <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            {% if items %}
+                            {% for item in items %}
+                            <form class="struct-form" data-room-id="{{ item.room_id }}" style="display: none;">
+                                <div class="section">
+                                    <h2>Données techniques</h2>
+                                    <label>Surcharge au sol requise :
+                                        <input type="number" id="struct_overload_req"
+                                               value="{{ item.struct_requirements_floor_overload_required or '' }}"
+                                               disabled>
+                                    </label>
+                                    <label>Surcharge (kPa) :
+                                        <input type="number" id="struct_overload"
+                                               value="{{ item.struct_requirements_overload or '' }}" disabled>
+                                    </label>
+                                    <label>Poids équipement (kg) :
+                                        <input type="number" id="struct_equip_weight"
+                                               value="{{ item.struct_requirements_equipment_weight or '' }}" disabled>
+                                    </label>
+                                    <label>Planéité du plancher :
+                                        <input type="number" id="struct_flatness"
+                                               value="{{ item.struct_requirements_floor_flatness or '' }}" disabled>
+                                    </label>
+                                    <label>Caniveau en dalle :
+                                        <input type="number" id="struct_ditch"
+                                               value="{{ item.struct_requirements_ditch_gutter or '' }}" disabled>
+                                    </label>
+                                    <label>Sensibilité à l'acier :
+                                        <input type="number" id="struct_steel"
+                                               value="{{ item.struct_requirements_steel_sensitivity or '' }}" disabled>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Équipements</h2>
+                                    <label>Autres équipements lourds :
+                                        <textarea id="struct_equipment_other" disabled>{{ item.struct_requirements_equipment_other or '' }}</textarea>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Vibrations</h2>
+                                    <label>Sensibilité aux vibrations :
+                                        <input type="number" id="struct_vibration"
+                                               value="{{ item.struct_requirements_vibrations_sensitivity or '' }}"
+                                               disabled>
+                                    </label>
+                                    <label>Amplitude max vibrations (Hz) :
+                                        <input type="number" id="struct_vibration_max"
+                                               value="{{ item.struct_requirements_max_vibrations or '' }}" disabled>
+                                    </label>
+                                </div>
+
+                                <div class="section">
+                                    <h2>Commentaires</h2>
+                                    <textarea id="struct_commentary" disabled>{{ item.struct_requirements_commentary or '' }}</textarea>
+                                </div>
+                            </form>
+                            {% endfor %}
+                            {% else %}
+                            <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
 
                     <!-- onglet éléments à risques-->
                     {% elif category == "risk_elements" %}
@@ -540,7 +627,8 @@
                                     {% for opt in general_labels %}
                                     <label>
                                         <input type="checkbox" name="risk_elements_general" value="{{ opt }}" {% if opt
-                                               in item.risk_elements_general %}checked{% endif %} disabled>
+                                               in (item.risk_elements_general or []) %}checked{% endif %}
+                                               disabled>
                                         {{ general_labels[opt] }}
                                     </label>
                                     {% endfor %}
@@ -554,7 +642,8 @@
                                     {% for opt in bio_labels %}
                                     <label>
                                         <input type="checkbox" name="risk_elements_biological" value="{{ opt }}" {% if
-                                               opt in item.risk_elements_biological %}checked{% endif %} disabled>
+                                               opt in (item.risk_elements_biological or []) %}checked{% endif %}
+                                               disabled>
                                         {{ bio_labels[opt] }}
                                     </label>
                                     {% endfor %}
@@ -565,7 +654,8 @@
                                     {% for opt in gas_labels %}
                                     <label>
                                         <input type="checkbox" name="risk_elements_gas" value="{{ opt }}" {% if opt in
-                                               item.risk_elements_gas %}checked{% endif %} disabled>
+                                               (item.risk_elements_gas or []) %}checked{% endif %}
+                                               disabled>
                                         {{ gas_labels[opt] }}
                                     </label>
                                     {% endfor %}
@@ -582,7 +672,8 @@
                                     {% for opt in liquids_labels %}
                                     <label>
                                         <input type="checkbox" name="risk_elements_liquids" value="{{ opt }}" {% if opt
-                                               in item.risk_elements_liquids %}checked{% endif %} disabled>
+                                               in (item.risk_elements_liquids or []) %}checked{% endif %}
+                                               disabled>
                                         {{ liquids_labels[opt] }}
                                     </label>
                                     {% endfor %}
@@ -599,7 +690,8 @@
                                     {% for opt in other_labels %}
                                     <label>
                                         <input type="checkbox" name="risk_elements_other" value="{{ opt }}" {% if opt in
-                                               item.risk_elements_other %}checked{% endif %} disabled>
+                                               (item.risk_elements_other or []) %}checked{% endif %}
+                                               disabled>
                                         {{ other_labels[opt] }}
                                     </label>
                                     {% endfor %}
@@ -750,7 +842,11 @@
                     <!--Onglets avec tableaux normaux-->
                     {% else %}
                     <div id="tab-{{ category }}" class="tab-content {% if loop.first %}active{% endif %}">
-                        <h2>{{ tab_titles.get(category, category.replace('_', ' ').capitalize()) }}</h2>
+                        <div class="tab-header">
+                            <h2>{{ tab_titles.get(category, category.replace('_', ' ').capitalize()) }}</h2>
+                            <button class="add-item-button" data-category="{{ category }}" style="display: none;">➕
+                            </button>
+                        </div>
                         <h3 class="selected-room-name">Salle sélectionnée : <span></span></h3>
                         <table>
                             <thead>
@@ -798,7 +894,23 @@
 
     {% block extra_js %}
     <script>
+        window.columnsToDisplay = {
+        {
+            columns_to_display | tojson
+        }
+        }
+        ;
+    </script>
+
+    <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // 🔸 Variables globales pour la salle sélectionnée
+            let selectedRoomId = "";
+            let selectedRoomName = "";
+            // 🔹 Cacher tous les boutons "+" au chargement
+            document.querySelectorAll(".add-item-button").forEach(btn => {
+                btn.style.display = "none";
+            });
             // 🔹 Gestion des dossiers ouverts/fermés
             document.querySelectorAll(".folder-toggle").forEach(folder => {
                 folder.addEventListener("click", function () {
@@ -812,10 +924,110 @@
             document.querySelectorAll(".room-item").forEach(room => {
                 room.addEventListener("click", function () {
                     const roomId = this.getAttribute("data-room-id");
+                    const roomName = this.innerText.trim();
                     alert("Salle sélectionnée : " + this.innerText + " (ID: " + roomId + ")");
+                    // Mise à jour de la sélection
+                    selectedRoomId = roomId;
+                    selectedRoomName = roomName;
+                    // 🔹 Afficher le nom dans la zone "Salle sélectionnée :"
+                    document.querySelectorAll(".selected-room-name span").forEach(span => {
+                        span.textContent = roomName;
+                    });
+                    // 🔹 Classe CSS pour indiquer la sélection
+                    document.querySelectorAll(".room-item").forEach(r => r.classList.remove("selected"));
+                    this.classList.add("selected");
+                    // 🔹 Afficher les boutons d'ajout maintenant qu'une salle est sélectionnée
+                    document.querySelectorAll(".add-item-button").forEach(btn => {
+                        btn.style.display = "inline-block";
+                    });
                 });
             });
+            // 🔹 Gestion du bouton ➕ pour ajouter une ligne dans un tableau
+            document.querySelectorAll(".add-item-button").forEach(button => {
+                button.addEventListener("click", function () {
+                    const category = this.dataset.category;
+                    const table = document.querySelector(`#tab-${category} table tbody`);
+
+                    // ✅ On récupère les colonnes depuis la variable injectée
+                    const columns = window.columnsToDisplay[category];
+
+                    if (!columns) {
+                        alert("Colonnes inconnues pour cette catégorie");
+                        return;
+                    }
+
+                    const roomId = sessionStorage.getItem("selectedRoom") || "";
+                    if (!roomId) {
+                        alert("Veuillez sélectionner une salle avant d’ajouter un élément.");
+                        return;
+                    }
+
+                    const row = document.createElement("tr");
+                    row.classList.add("input-row");
+
+                    row.innerHTML = columns.map(key => {
+                        const labelMap = {
+                            "category": "Catégorie",
+                            "number": "Numéro",
+                            "name": "Nom",
+                            "quantity": "Quantité"
+                        };
+                        return `<td><input type="text" name="${key}" placeholder="${labelMap[key] || key}" /></td>`;
+                    }).join("");
+
+                    row.innerHTML += `
+            <td>
+                <button class="confirm-add" title="Ajouter">✔️</button>
+            </td>
+        `;
+
+                    table.prepend(row);
+
+                    row.querySelector(".confirm-add").addEventListener("click", function () {
+                        const inputs = row.querySelectorAll("input");
+                        const newData = {};
+                        inputs.forEach(input => newData[input.name] = input.value);
+
+                        fetch(`/workspace/projects/{{ project.id }}/add_item`, {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify({
+                                category,
+                                room_id: roomId,
+                                new_data: newData
+                            })
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert("Ajout réussi !");
+                                    const newRow = document.createElement("tr");
+                                    newRow.setAttribute("data-id", data.id);
+                                    newRow.setAttribute("data-category", category);
+                                    newRow.setAttribute("data-room-id", roomId);
+
+                                    columns.forEach(key => {
+                                        newRow.innerHTML += `<td data-key="${key}">${newData[key]}</td>`;
+                                    });
+
+                                    newRow.innerHTML += `
+                            <td>
+                                <span class="edit-icon" title="Modifier">&#9998;</span>
+                                <span class="delete-icon" title="Supprimer">&#128465;</span>
+                            </td>
+                        `;
+
+                                    row.replaceWith(newRow);
+                                } else {
+                                    alert("Erreur : " + data.message);
+                                }
+                            });
+                    });
+                });
+            });
+
         });
+
     </script>
 
     <script>
@@ -946,7 +1158,10 @@
                                 .then(data => {
                                     if (data.success) {
                                         alert("Modification enregistrée !");
-                                        cell.setAttribute("contenteditable", "false"); // 🔹 Désactiver l'édition
+                                        const editableCells = row.querySelectorAll("td[contenteditable='true']");
+                                        editableCells.forEach(cell => {
+                                            cell.setAttribute("contenteditable", "false"); // 🔹 Désactiver l'édition
+                                        });
                                     } else {
                                         alert("Erreur : " + data.message);
                                     }
@@ -1300,17 +1515,18 @@
                         e.preventDefault();
                         const data = {
                             room_id: form.dataset.roomId,
-                            struct_requirements_floor_overload_required: form.querySelector("#struct_overload_req").value,
-                            struct_requirements_overload: form.querySelector("#struct_overload").value,
-                            struct_requirements_equipment_weight: form.querySelector("#struct_equip_weight").value,
-                            struct_requirements_floor_flatness: form.querySelector("#struct_flatness").value,
-                            struct_requirements_ditch_gutter: form.querySelector("#struct_ditch").value,
-                            struct_requirements_steel_sensitivity: form.querySelector("#struct_steel").value,
+                            struct_requirements_floor_overload_required: form.querySelector("#struct_overload_req").value || null,
+                            struct_requirements_overload: form.querySelector("#struct_overload").value || null,
+                            struct_requirements_equipment_weight: form.querySelector("#struct_equip_weight").value || null,
+                            struct_requirements_floor_flatness: form.querySelector("#struct_flatness").value || null,
+                            struct_requirements_ditch_gutter: form.querySelector("#struct_ditch").value || null,
+                            struct_requirements_steel_sensitivity: form.querySelector("#struct_steel").value || null,
                             struct_requirements_equipment_other: form.querySelector("#struct_equipment_other").value,
-                            struct_requirements_vibrations_sensitivity: form.querySelector("#struct_vibration").value,
-                            struct_requirements_max_vibrations: form.querySelector("#struct_vibration_max").value,
+                            struct_requirements_vibrations_sensitivity: form.querySelector("#struct_vibration").value || null,
+                            struct_requirements_max_vibrations: form.querySelector("#struct_vibration_max").value || null,
                             struct_requirements_commentary: form.querySelector("#struct_commentary").value
                         };
+
 
                         fetch(`/workspace/projects/{{ project.id }}/edit_struct_requirements`, {
                             method: "POST",
@@ -1502,8 +1718,8 @@
             });
         });
 
-                // JavaScript for room creation modal
-        document.addEventListener('DOMContentLoaded', function() {
+        // JavaScript for room creation modal
+        document.addEventListener('DOMContentLoaded', function () {
             // Get modal elements
             const modal = document.getElementById('create-room-modal');
             const addRoomBtn = document.getElementById('add-room-btn');
@@ -1513,27 +1729,27 @@
 
             // Open modal when the add room button is clicked
             if (addRoomBtn) {
-                addRoomBtn.addEventListener('click', function() {
+                addRoomBtn.addEventListener('click', function () {
                     modal.classList.add('active');
                 });
             }
 
             // Close modal when close button is clicked
             if (closeButton) {
-                closeButton.addEventListener('click', function() {
+                closeButton.addEventListener('click', function () {
                     modal.classList.remove('active');
                 });
             }
 
             // Close modal when cancel button is clicked
             if (cancelButton) {
-                cancelButton.addEventListener('click', function() {
+                cancelButton.addEventListener('click', function () {
                     modal.classList.remove('active');
                 });
             }
 
             // Close modal when clicking outside the modal content
-            window.addEventListener('click', function(event) {
+            window.addEventListener('click', function (event) {
                 if (event.target === modal) {
                     modal.classList.remove('active');
                 }
@@ -1541,7 +1757,7 @@
 
             // Handle form submission
             if (form) {
-                form.addEventListener('submit', function(event) {
+                form.addEventListener('submit', function (event) {
                     event.preventDefault();
 
                     // Get the project ID from the URL
@@ -1585,57 +1801,208 @@
                         body: JSON.stringify(roomData),
                         credentials: 'same-origin' // Include cookies
                     })
-                    .then(response => {
-                        // Always parse JSON first to get any error message
-                        return response.json().then(data => {
-                            if (!response.ok) {
-                                throw new Error(data.message || `HTTP error ${response.status}`);
-                            }
-                            return data;
-                        });
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            // Close modal and show success toast
-                            modal.classList.remove('active');
+                        .then(response => {
+                            // Always parse JSON first to get any error message
+                            return response.json().then(data => {
+                                if (!response.ok) {
+                                    throw new Error(data.message || `HTTP error ${response.status}`);
+                                }
+                                return data;
+                            });
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                // Close modal and show success toast
+                                modal.classList.remove('active');
 
-                            // Show success toast
+                                // Show success toast
+                                if (window.toast) {
+                                    window.toast.success(`Salle créée avec succès!`);
+                                }
+
+                                // Reset form
+                                form.reset();
+
+                                // Reload the page to show new room
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1000);
+                            } else {
+                                throw new Error(data.message || 'Une erreur est survenue');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error creating room:', error);
+
+                            // Reset button state
+                            submitButton.disabled = false;
+                            buttonText.style.display = 'inline';
+                            buttonSpinner.style.display = 'none';
+
+                            // Create error message
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'form-error';
+                            errorDiv.textContent = error.message || 'Une erreur est survenue lors de la création de la salle. Veuillez réessayer.';
+
+                            // Add the error at the top of the form
+                            form.prepend(errorDiv);
+
+                            // Show error toast
                             if (window.toast) {
-                                window.toast.success(`Salle créée avec succès!`);
+                                window.toast.error(error.message || 'Une erreur est survenue lors de la création de la salle');
                             }
+                        });
+                });
+            }
+        });
 
-                            // Reset form
-                            form.reset();
+        document.addEventListener("DOMContentLoaded", function () {
+            // Toggle functionality for folders
+            document.querySelectorAll(".folder-toggle").forEach(toggle => {
+                toggle.addEventListener("click", function () {
+                    const nestedList = this.nextElementSibling;
+                    if (nestedList) {
+                        nestedList.classList.toggle("active");
+                        this.classList.toggle("open");
+                    }
+                });
+            });
 
-                            // Reload the page to show new room
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
-                        } else {
-                            throw new Error(data.message || 'Une erreur est survenue');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error creating room:', error);
-
-                        // Reset button state
-                        submitButton.disabled = false;
-                        buttonText.style.display = 'inline';
-                        buttonSpinner.style.display = 'none';
-
-                        // Create error message
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'form-error';
-                        errorDiv.textContent = error.message || 'Une erreur est survenue lors de la création de la salle. Veuillez réessayer.';
-
-                        // Add the error at the top of the form
-                        form.prepend(errorDiv);
-
-                        // Show error toast
-                        if (window.toast) {
-                            window.toast.error(error.message || 'Une erreur est survenue lors de la création de la salle');
+            // Also enable clicking on the standard toggle class (for backward compatibility)
+            document.querySelectorAll(".toggle").forEach(toggle => {
+                if (!toggle.classList.contains("folder-toggle")) {
+                    toggle.addEventListener("click", function () {
+                        const nestedList = this.nextElementSibling;
+                        if (nestedList) {
+                            nestedList.classList.toggle("active");
+                            this.classList.toggle("open");
                         }
                     });
+                }
+            });
+
+            // Room selection functionality
+            const roomItems = document.querySelectorAll(".room-item");
+            const tabContents = document.querySelectorAll(".tab-content");
+            const selectedRoomNames = document.querySelectorAll(".selected-room-name span");
+
+            roomItems.forEach(room => {
+                room.addEventListener("click", function () {
+                    const roomId = this.getAttribute("data-room-id");
+                    const roomName = this.innerText.trim();
+
+                    // Retirer l'ancienne sélection et ajouter la classe active
+                    document.querySelectorAll(".room-item").forEach(item => item.classList.remove("active-room"));
+                    this.classList.add("active-room");
+
+                    // Stocker la salle sélectionnée pour la récupérer plus tard
+                    sessionStorage.setItem("selectedRoom", roomId);
+                    sessionStorage.setItem("selectedRoomName", roomName);
+
+                    // Mettre à jour l'affichage du nom de la salle
+                    selectedRoomNames.forEach(span => {
+                        span.textContent = roomName;
+                    });
+
+                    // Filtrer les données du tableau
+                    filterRoomData(roomId);
+                    showFunctionalityForRoom(roomId);
+                    showArchRequirementsForRoom(roomId);
+                    showRiskElementsForRoom(roomId);
+                    showVentilationForRoom(roomId);
+                    showElectricityForRoom(roomId);
+                });
+            });
+
+            // Functions to filter and display correct room data
+            function filterRoomData(roomId) {
+                tabContents.forEach(tab => {
+                    const rows = tab.querySelectorAll("tbody tr");
+                    rows.forEach(row => {
+                        const rowRoomId = row.getAttribute("data-room-id");
+                        row.style.display = (rowRoomId === roomId) ? "" : "none";
+                    });
+                });
+            }
+
+            function showFunctionalityForRoom(roomId) {
+                const allForms = document.querySelectorAll(".functionality-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
+
+            function showArchRequirementsForRoom(roomId) {
+                const allForms = document.querySelectorAll(".arch-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
+
+            function showRiskElementsForRoom(roomId) {
+                const allForms = document.querySelectorAll(".risk-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
+
+            function showVentilationForRoom(roomId) {
+                const allForms = document.querySelectorAll(".ventilation-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
+
+            function showElectricityForRoom(roomId) {
+                const allForms = document.querySelectorAll(".electricity-form");
+                allForms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+            }
+
+            // Restore previously selected room if available
+            const savedRoomId = sessionStorage.getItem("selectedRoom");
+            const savedRoomName = sessionStorage.getItem("selectedRoomName");
+
+            if (savedRoomId) {
+                const selectedRoomItem = document.querySelector(`.room-item[data-room-id="${savedRoomId}"]`);
+                if (selectedRoomItem) {
+                    selectedRoomItem.classList.add("active-room");
+
+                    // Also make sure parent folders are open
+                    let parent = selectedRoomItem.parentElement;
+                    while (parent) {
+                        if (parent.classList.contains("nested")) {
+                            parent.classList.add("active");
+                            const toggle = parent.previousElementSibling;
+                            if (toggle && toggle.classList.contains("toggle")) {
+                                toggle.classList.add("open");
+                            }
+                        }
+                        parent = parent.parentElement;
+                    }
+                }
+
+                selectedRoomNames.forEach(span => {
+                    span.textContent = savedRoomName;
+                });
+
+                filterRoomData(savedRoomId);
+                showFunctionalityForRoom(savedRoomId);
+                showArchRequirementsForRoom(savedRoomId);
+                showRiskElementsForRoom(savedRoomId);
+                showVentilationForRoom(savedRoomId);
+                showElectricityForRoom(savedRoomId);
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const btn = document.getElementById("generate-report-btn");
+            if (btn) {
+                btn.addEventListener("click", function () {
+                    window.location.href = `/workspace/projects/{{ project.id }}/generate_report`;
                 });
             }
         });
@@ -1813,6 +2180,39 @@
             display: block;
         }
 
+        .tab-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .tab-header h2 {
+            margin: 0;
+        }
+
+        .input-row input {
+            width: 100%;
+            padding: 6px 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .input-row button.confirm-add {
+            padding: 6px 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .input-row button.confirm-add:hover {
+            background-color: #45a049;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -1846,8 +2246,10 @@
             align-items: flex-start;
         }
 
+        /* Styles for sidebar tree */
         .sidebar {
-            width: 250px;
+            width: 250px; /* Fixed width */
+            min-width: 250px; /* Prevent shrinking */
             padding: 20px;
             background: #f8fafc;
             border-right: 1px solid #e2e8f0;
@@ -1856,39 +2258,9 @@
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             margin-right: 20px;
+            flex-shrink: 0; /* Prevent shrinking in flex layouts */
         }
 
-        .content {
-            flex: 1;
-            padding: 20px;
-        }
-
-        .nested {
-            display: none;
-            margin-left: 20px;
-        }
-
-        .toggle {
-            cursor: pointer;
-            font-weight: bold;
-            display: block;
-        }
-
-        .active {
-            display: block;
-        }
-
-        .active-room {
-            font-weight: bold;
-            color: #3498db;
-        }
-
-        .special-tab-container label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        /* Styles for sidebar tree */
         .sidebar ul {
             list-style-type: none;
             padding-left: 0;
@@ -1907,10 +2279,57 @@
             padding: 4px 8px;
             transition: background-color 0.2s;
             border-radius: 4px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .sidebar .room-item:hover {
             background-color: #e2e8f0;
+        }
+
+        /* Toggle handling */
+        .toggle {
+            cursor: pointer;
+            user-select: none;
+            display: block;
+            padding: 4px 0;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .toggle:hover {
+            color: #3498db;
+        }
+
+        .toggle.open {
+            color: #3498db;
+        }
+
+        /* Nested content handling */
+        .nested {
+            display: none;
+            padding-left: 15px !important;
+            margin-left: 5px !important;
+        }
+
+        .nested.active {
+            display: block;
+        }
+
+        /* Room item when selected */
+        .room-item {
+            /* Default state - no blue highlighting */
+            color: inherit;
+            background-color: transparent;
+            font-weight: normal;
+        }
+
+        .room-item.active-room {
+            font-weight: bold;
+            color: #3498db;
+            background-color: #ebf5ff;
         }
 
         /* Styles for sidebar title */
@@ -1925,9 +2344,7 @@
 
         /* Styles for add room container and button */
         .add-room-container {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px dashed #e2e8f0;
+            margin-top: 15px;
         }
 
         .add-room-link {
@@ -1961,6 +2378,26 @@
             stroke: #3498db;
         }
 
+        /* Add tooltip for long room names */
+        .sidebar .room-item:hover {
+            position: relative;
+        }
+
+        .sidebar .room-item:hover::after {
+            content: attr(title);
+            position: absolute;
+            left: 100%;
+            top: 0;
+            background: #2d3748;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            z-index: 10;
+            white-space: nowrap;
+            /* Only show for very long names that are truncated */
+            display: none;
+        }
+
         /* Modal Styles (Additional) */
         .modal {
             display: none;
@@ -1990,8 +2427,12 @@
 
         /* Spinner animation */
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .spin {

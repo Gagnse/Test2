@@ -2,7 +2,7 @@
 <div id="create-room-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Ajouter une nouvelle salle</h2>
+            <h2>Ajouter une nouvelle pièce</h2>
             <button class="close-modal-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -16,7 +16,7 @@
                 <div class="form-group">
                     <label for="room-program-number">Numéro de programme</label>
                     <input type="text" id="room-program-number" name="program_number" required placeholder="ex: R101">
-                    <div class="form-help">Un identifiant unique pour cette salle (ce numéro doit être unique)</div>
+                    <div class="form-help">Ce numéro doit être unique</div>
                 </div>
                 <div class="form-group">
                     <label for="room-name">Nom de la salle</label>
@@ -24,7 +24,7 @@
                 </div>
                 <div class="form-group">
                     <label for="room-description">Description</label>
-                    <textarea id="room-description" name="description" rows="3" placeholder="Décrivez cette salle..."></textarea>
+                    <textarea id="room-description" name="description" rows="2" placeholder="Décrivez cette salle..."></textarea>
                 </div>
                 <div class="form-group">
                     <label for="room-sector">Secteur</label>
@@ -59,8 +59,186 @@
     </div>
 </div>
 
+<style>
+/* Modal styling to ensure consistency */
+#create-room-modal.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1100; /* Higher z-index to ensure it's above everything */
+    overflow-y: auto;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 30px;
+}
+
+#create-room-modal .modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 500px;
+    margin: 20px auto;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Ensure it's positioned above the overlay */
+    z-index: 1101; /* Higher than the modal background */
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#create-room-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    flex-shrink: 0;
+}
+
+#create-room-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #2d3748;
+}
+
+#create-room-modal .close-modal-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #a0aec0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+#create-room-modal .close-modal-btn:hover {
+    background-color: #f7fafc;
+    color: #4a5568;
+}
+
+#create-room-modal .modal-body {
+    padding: 15px;
+    overflow-y: auto;
+}
+
+#create-room-modal .form-group {
+    margin-bottom: 2px;
+}
+
+#create-room-modal .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+#create-room-modal .form-group input,
+#create-room-modal .form-group select,
+#create-room-modal .form-group textarea {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 0.95rem;
+    color: #2d3748;
+}
+
+#create-room-modal .form-group input:focus,
+#create-room-modal .form-group textarea:focus,
+#create-room-modal .form-group select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    outline: none;
+}
+
+#create-room-modal .form-help {
+    color: #718096;
+    font-size: 0.8rem;
+    margin-top: 3px;
+}
+
+#create-room-modal .form-error {
+    background-color: #FEF2F2;
+    border: 1px solid #F87171;
+    color: #B91C1C;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+#create-room-modal .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+#create-room-modal .btn {
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#create-room-modal .btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+#create-room-modal .btn-primary:hover {
+    background-color: #2980b9;
+}
+
+#create-room-modal .btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+#create-room-modal .btn-secondary:hover {
+    background-color: #cbd5e0;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#create-room-modal .spin {
+    animation: spin 1.5s linear infinite;
+}
+
+/* Style to ensure navbar is behind modal */
+body.modal-open {
+    overflow: hidden;
+}
+
+body.modal-open .workspace-navbar {
+    z-index: 1099; /* Lower than modal but higher than other content */
+}
+</style>
+
 <script>
-  // JavaScript for room creation modal
 document.addEventListener('DOMContentLoaded', function() {
     // Get modal elements
     const modal = document.getElementById('create-room-modal');
@@ -69,31 +247,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelButton = document.querySelector('#create-room-modal .cancel-btn');
     const form = document.getElementById('create-room-form');
 
+    // Function to open modal
+    function openModal() {
+        modal.style.display = 'flex';
+        document.body.classList.add('modal-open');
+    }
+
+    // Function to close modal
+    function closeModal() {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+    }
+
     // Open modal when the add room button is clicked
     if (addRoomBtn) {
         addRoomBtn.addEventListener('click', function() {
-            modal.classList.add('active');
+            openModal();
         });
     }
 
     // Close modal when close button is clicked
     if (closeButton) {
         closeButton.addEventListener('click', function() {
-            modal.classList.remove('active');
+            closeModal();
         });
     }
 
     // Close modal when cancel button is clicked
     if (cancelButton) {
         cancelButton.addEventListener('click', function() {
-            modal.classList.remove('active');
+            closeModal();
         });
     }
 
     // Close modal when clicking outside the modal content
     window.addEventListener('click', function(event) {
         if (event.target === modal) {
-            modal.classList.remove('active');
+            closeModal();
         }
     });
 
@@ -102,9 +292,12 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(event) {
             event.preventDefault();
 
-            // Get the project ID from the URL
+            // Get the project ID from the URL - fixed to correctly extract project ID
             const urlParts = window.location.pathname.split('/');
-            const projectId = urlParts[urlParts.length - 1]; // Assuming the URL format is /workspace/projects/[project_id]
+            const projectIdIndex = urlParts.indexOf('projects') + 1;
+            const projectId = urlParts[projectIdIndex]; // This should get the correct project ID
+
+            console.log('Project ID extracted from URL:', projectId);
 
             // Get submit button elements
             const submitButton = form.querySelector('.create-btn');
@@ -127,14 +320,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const roomData = {
                 program_number: formData.get('program_number'),
                 name: formData.get('name'),
-                description: formData.get('description'),
-                sector: formData.get('sector'),
-                functional_unit: formData.get('functional_unit'),
-                level: formData.get('level'),
+                description: formData.get('description') || '',
+                sector: formData.get('sector') || '',
+                functional_unit: formData.get('functional_unit') || '',
+                level: formData.get('level') || '',
                 planned_area: parseFloat(formData.get('planned_area'))
             };
 
-            // Send request to create room using the API
+            console.log('Sending room data:', roomData);
+
+            // Send request to create room using the API - fixed URL
             fetch(`/workspace/projects/${projectId}/add_room`, {
                 method: 'POST',
                 headers: {
@@ -144,22 +339,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 credentials: 'same-origin' // Include cookies
             })
             .then(response => {
-                // Always parse JSON first to get any error message
-                return response.json().then(data => {
-                    if (!response.ok) {
-                        throw new Error(data.message || `HTTP error ${response.status}`);
-                    }
-                    return data;
-                });
+                // Check if response is OK before trying to parse as JSON
+                if (!response.ok) {
+                    console.error('Response status:', response.status);
+                    return response.text().then(text => {
+                        console.error('Response text:', text);
+                        throw new Error(`Error ${response.status}: ${text}`);
+                    });
+                }
+                return response.json();
             })
             .then(data => {
                 if (data.success) {
                     // Close modal and show success toast
-                    modal.classList.remove('active');
+                    closeModal();
 
                     // Show success toast
                     if (window.toast) {
                         window.toast.success(`Salle créée avec succès!`);
+                    } else {
+                        alert('Salle créée avec succès!');
                     }
 
                     // Reset form

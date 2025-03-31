@@ -268,10 +268,25 @@
 
             <!-- 📌 Informations du projet -->
             <div class="content">
-                <h1>{{ project.name }}</h1>
-                <p><strong>Description:</strong> {{ project.description }}</p>
-                <p><strong>Statut:</strong> <span class="project-status">{{ project.status }}</span></p>
-                <p>Numéro du projet : {{ project.project_number }}</p>
+                <div class="room-info-panel" style="display: none;">
+                    <div class="room-info-header">
+                        <h2><span class="selected-room-title"></span></h2>
+                    </div>
+                    <div class="room-info-details">
+                        <div class="info-item">
+                            <div class="info-label">Secteur</div>
+                            <div class="info-value selected-room-sector">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Unité fonctionnelle</div>
+                            <div class="info-value selected-room-unit">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Superficie (m²)</div>
+                            <div class="info-value selected-room-area">-</div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Onglets -->
                 <div class="tabs">
@@ -1330,6 +1345,8 @@
                         span.textContent = roomName;
                     });
 
+                    updateRoomInfoPanel(roomId, roomName);
+
                     // Filtrer les tableaux + afficher bon formulaire
                     filterRoomData(roomId);
                     showFunctionalityForRoom(roomId);
@@ -1952,6 +1969,33 @@
                 showElectricityForRoom(savedRoomId);
             }
         });
+
+        // Update the room info panel when a room is selected
+function updateRoomInfoPanel(roomId, roomName) {
+    const roomInfoPanel = document.querySelector('.room-info-panel');
+
+    if (!roomId || !roomName) {
+        roomInfoPanel.style.display = 'none';
+        return;
+    }
+
+    // Find the room data from the sidebar structure
+    const roomItem = document.querySelector(`.room-item[data-room-id="${roomId}"]`);
+    if (!roomItem) return;
+
+    // Show the panel
+    roomInfoPanel.style.display = 'block';
+
+    // Update room title
+    document.querySelector('.selected-room-title').textContent = roomName;
+
+    // Try to get additional room data (you'll need to add data attributes to your room items)
+    document.querySelector('.selected-room-number').textContent = roomItem.getAttribute('data-program-number') || '-';
+    document.querySelector('.selected-room-sector').textContent = roomItem.getAttribute('data-sector') || '-';
+    document.querySelector('.selected-room-unit').textContent = roomItem.getAttribute('data-unit') || '-';
+    document.querySelector('.selected-room-area').textContent = roomItem.getAttribute('data-area') || '-';
+}
+
     </script>
 
     <script>
@@ -2579,6 +2623,61 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Room Info Panel Styles */
+            .room-info-panel {
+                background-color: #f8fafc;
+                border-radius: 8px;
+                padding: 15px 20px;
+                margin-bottom: 20px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            .room-info-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+            .room-info-header h2 {
+                margin: 0;
+                font-size: 1.3rem;
+                color: #2d3748;
+            }
+
+            .room-info-badge {
+                background-color: #ebf8ff;
+                color: #3498db;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 0.9rem;
+            }
+
+            .room-number-label {
+                font-weight: 600;
+            }
+
+            .room-info-details {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            @media (max-width: 768px) {
+                .room-info-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .room-info-badge {
+                    margin-top: 8px;
+                }
+
+                .room-info-details {
+                    grid-template-columns: 1fr;
+                }
+            }
     </style>
     {% include "workspace/room_creation_modal.html" %}
     {% endblock %}

@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, send_file
-
 from server.services.auth import AuthService
 from server.utils.database_utils import set_current_user
 from server.utils.toast_helper import redirect_with_toast, set_toast
@@ -324,7 +323,7 @@ def project_detail(project_id):
 
     # Récupérer les salles groupées par unité fonctionnelle et secteur
     cursor.execute("""
-        SELECT id, name, sector, functional_unit 
+        SELECT id, name, program_number, sector, functional_unit 
         FROM rooms
         ORDER BY functional_unit, sector, name;
     """)
@@ -338,8 +337,12 @@ def project_detail(project_id):
     for room in rooms:
         room_id = str(uuid.UUID(bytes=room['id']))  # Convertir en UUID string
         room_name = room['name']
+        program_number = room.get('program_number', '')
         sector = room['sector']
         functional_unit = room['functional_unit']
+
+        # Create a display name that includes both program number and name
+        display_name = f"{program_number} - {room_name}" if program_number else room_name
 
         if functional_unit not in room_hierarchy:
             room_hierarchy[functional_unit] = {}
@@ -347,7 +350,7 @@ def project_detail(project_id):
         if sector not in room_hierarchy[functional_unit]:
             room_hierarchy[functional_unit][sector] = []
 
-        room_hierarchy[functional_unit][sector].append({'id': room_id, 'name': room_name})
+        room_hierarchy[functional_unit][sector].append({'id': room_id, 'name': display_name})
 
     # Trier unités fonctionnelles du plus petit au plus grand
     room_hierarchy = {k: room_hierarchy[k] for k in
@@ -676,7 +679,6 @@ def edit_arch_requirements(project_id):
     project_db_name = f"SPACELOGIC_{clean_uuid}"
 
     data = request.get_json(silent=True)
-    print("📥 Données reçues :", json.dumps(data, indent=2))
 
     if not data:
         return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
@@ -1296,6 +1298,76 @@ def project_parameters(project_id):
     return render_template('workspace/project_parameters.html', project=project, project_id=project_id)
 
 
+@workspace_bp.route('/api/rooms/<room_id>', methods=['GET'])
+def get_room_details(room_id):
+    """API endpoint to get detailed room information"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    # Extract project_id from the referer URL
+    referer = request.headers.get('Referer', '')
+    project_id = None
+
+    # Try to extract project_id from referer URL
+    referer_parts = referer.split('/')
+    if 'projects' in referer_parts:
+        projects_index = referer_parts.index('projects')
+        if len(referer_parts) > projects_index + 1:
+            project_id = referer_parts[projects_index + 1]
+
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID not found'}), 400
+
+    # Create database name using project UUID
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
+
+    # Verify database exists
+    if not database_exists(project_db_name):
+        return jsonify({'success': False, 'message': 'Project database not found'}), 404
+
+    # Connect to project database
+    connection = get_db_connection(project_db_name)
+    cursor = None
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+
+        # Query room details
+        cursor.execute("""
+            SELECT name, program_number, sector, functional_unit, level, planned_area, description
+            FROM rooms 
+            WHERE id = UUID_TO_BIN(%s)
+        """, (room_id,))
+
+        room = cursor.fetchone()
+
+        if not room:
+            return jsonify({'success': False, 'message': 'Room not found'}), 404
+
+        return jsonify({
+            'success': True,
+            'room': {
+                'id': room_id,
+                'name': room['name'],
+                'program_number': room['program_number'],
+                'sector': room['sector'],
+                'functional_unit': room['functional_unit'],
+                'level': room['level'],
+                'planned_area': room['planned_area'],
+                'description': room['description']
+            }
+        })
+
+    except Exception as e:
+        print(f"Error fetching room details: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 

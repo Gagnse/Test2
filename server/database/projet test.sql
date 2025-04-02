@@ -2,69 +2,69 @@ USE SPACELOGIC_7e19d0760b1a11f0ac899652d5389648;
 
 INSERT INTO rooms (program_number, name, description, sector, functional_unit, level, planned_area) VALUES
     -- 🔹 Bloc Salles de Chirurgie
-    ("101", "Salle de chirugie 101", "Salle de chirugie 101", "1", "1", "1", 50),
-    ("102", "Salle de chirugie 102", "Salle de chirugie 102, utilisation alternative", "1", "1", "1", 50),
-    ("103", "Salle de chirurgie 103", "Salle de chirurgie spécialisée", "1", "1", "2", 55),
-    ("104", "Salle de chirurgie 104", "Bloc opératoire avancé", "1", "1", "3", 60),
-    ("105", "Salle de chirurgie 105", "Salle pour chirurgie orthopédique", "1", "1", "4", 70),
-    ("106", "Salle de chirurgie 106", "Chirurgie cardiaque et vasculaire", "1", "1", "5", 80),
-    ("107", "Salle de chirurgie 107", "Salle de chirurgie ophtalmologique", "1", "1", "6", 50),
+    ("101", "Salle de chirugie", "Salle de chirugie 101", "1", "1", "1", 50),
+    ("102", "Salle de chirugie", "Salle de chirugie 102, utilisation alternative", "1", "1", "1", 50),
+    ("103", "Salle de chirurgie", "Salle de chirurgie spécialisée", "1", "1", "2", 55),
+    ("104", "Salle de chirurgie", "Bloc opératoire avancé", "1", "1", "3", 60),
+    ("105", "Salle de chirurgie", "Salle pour chirurgie orthopédique", "1", "1", "4", 70),
+    ("106", "Salle de chirurgie", "Chirurgie cardiaque et vasculaire", "1", "1", "5", 80),
+    ("107", "Salle de chirurgie", "Salle de chirurgie ophtalmologique", "1", "1", "6", 50),
 
     -- 🔹 Bloc Consultations
-    ("201", "Consultation ORL 201", "Salle de consultation en oto-rhino-laryngologie", "2", "2", "1", 30),
-    ("202", "Consultation pédiatrie 202", "Salle de consultation pédiatrique", "2", "2", "2", 35),
-    ("203", "Consultation cardiologie 203", "Salle de consultation cardiologique", "2", "2", "3", 40),
-    ("204", "Consultation dermatologie 204", "Salle pour consultations dermatologiques", "2", "2", "4", 32),
-    ("205", "Consultation neurologie 205", "Salle de consultation neurologique", "2", "2", "5", 38),
+    ("201", "Consultation ORL", "Salle de consultation en oto-rhino-laryngologie", "2", "2", "1", 30),
+    ("202", "Consultation pédiatrie", "Salle de consultation pédiatrique", "2", "2", "2", 35),
+    ("203", "Consultation cardiologie", "Salle de consultation cardiologique", "2", "2", "3", 40),
+    ("204", "Consultation dermatologie", "Salle pour consultations dermatologiques", "2", "2", "4", 32),
+    ("205", "Consultation neurologie", "Salle de consultation neurologique", "2", "2", "5", 38),
 
     -- 🔹 Bloc Urgences
-    ("301", "Salle de soins urgences 301", "Salle de soins pour les urgences", "3", "3", "1", 50),
-    ("302", "Salle de triage urgences 302", "Salle pour évaluation des patients aux urgences", "3", "3", "1", 45),
-    ("303", "Salle de stabilisation 303", "Salle pour stabilisation des cas critiques", "3", "3", "2", 60),
-    ("304", "Unité de soins intensifs 304", "Salle pour patients sous surveillance continue", "3", "3", "2", 80),
-    ("305", "Salle de réanimation 305", "Salle équipée pour réanimations avancées", "3", "3", "3", 70),
+    ("301", "Salle de soins urgences", "Salle de soins pour les urgences", "3", "3", "1", 50),
+    ("302", "Salle de triage urgences", "Salle pour évaluation des patients aux urgences", "3", "3", "1", 45),
+    ("303", "Salle de stabilisation", "Salle pour stabilisation des cas critiques", "3", "3", "2", 60),
+    ("304", "Unité de soins intensifs", "Salle pour patients sous surveillance continue", "3", "3", "2", 80),
+    ("305", "Salle de réanimation", "Salle équipée pour réanimations avancées", "3", "3", "3", 70),
 
     -- 🔹 Bloc Hospitalisation
-    ("401", "Chambre patient 401", "Chambre standard pour hospitalisation", "4", "4", "1", 25),
-    ("402", "Chambre VIP 402", "Chambre VIP pour hospitalisation", "4", "4", "2", 40),
-    ("403", "Chambre double 403", "Chambre pour deux patients", "4", "4", "3", 35),
-    ("404", "Unité de soins palliatifs 404", "Salle dédiée aux soins palliatifs", "4", "4", "4", 60),
-    ("405", "Salle d'isolement 405", "Salle d'isolement pour maladies contagieuses", "4", "4", "5", 50),
+    ("401", "Chambre patient", "Chambre standard pour hospitalisation", "4", "4", "1", 25),
+    ("402", "Chambre VIP", "Chambre VIP pour hospitalisation", "4", "4", "2", 40),
+    ("403", "Chambre double", "Chambre pour deux patients", "4", "4", "3", 35),
+    ("404", "Unité de soins palliatifs", "Salle dédiée aux soins palliatifs", "4", "4", "4", 60),
+    ("405", "Salle d'isolement", "Salle d'isolement pour maladies contagieuses", "4", "4", "5", 50),
 
     -- 🔹 Bloc Salles d'Imagerie Médicale
-    ("501", "Salle de radiologie 501", "Salle équipée pour radiographies", "1", "5", "1", 50),
-    ("502", "Salle IRM 502", "Salle équipée pour imagerie par résonance magnétique", "1", "5", "2", 70),
-    ("503", "Salle scanner 503", "Salle avec scanner haute définition", "1", "5", "3", 65),
-    ("504", "Salle échographie 504", "Salle équipée pour échographies", "1", "5", "4", 40),
-    ("505", "Salle mammographie 505", "Salle spécialisée pour mammographies", "1", "5", "5", 45),
+    ("501", "Salle de radiologie", "Salle équipée pour radiographies", "1", "5", "1", 50),
+    ("502", "Salle IRM", "Salle équipée pour imagerie par résonance magnétique", "1", "5", "2", 70),
+    ("503", "Salle scanner", "Salle avec scanner haute définition", "1", "5", "3", 65),
+    ("504", "Salle échographie", "Salle équipée pour échographies", "1", "5", "4", 40),
+    ("505", "Salle mammographie", "Salle spécialisée pour mammographies", "1", "5", "5", 45),
 
     -- 🔹 Bloc Rééducation et Réadaptation
-    ("601", "Salle de kinésithérapie 601", "Salle pour rééducation physique", "2", "6", "1", 80),
-    ("602", "Salle d'ergothérapie 602", "Salle pour rééducation cognitive et motrice", "2", "6", "2", 70),
-    ("603", "Salle d'exercices 603", "Salle avec équipements pour réadaptation", "2", "6", "3", 90),
-    ("604", "Salle de physiothérapie 604", "Salle pour thérapie physique avancée", "2", "6", "4", 85),
+    ("601", "Salle de kinésithérapie", "Salle pour rééducation physique", "2", "6", "1", 80),
+    ("602", "Salle d'ergothérapie", "Salle pour rééducation cognitive et motrice", "2", "6", "2", 70),
+    ("603", "Salle d'exercices", "Salle avec équipements pour réadaptation", "2", "6", "3", 90),
+    ("604", "Salle de physiothérapie", "Salle pour thérapie physique avancée", "2", "6", "4", 85),
 
     -- 🔹 Bloc Administratif et Support
-    ("701", "Bureau médecin chef 701", "Bureau du médecin chef", "3", "7", "1", 20),
-    ("702", "Bureau directeur 702", "Bureau du directeur de l'hôpital", "3", "7", "2", 25),
-    ("703", "Salle de réunion 703", "Salle pour réunions médicales et administratives", "3", "7", "3", 50),
-    ("704", "Secrétariat médical 704", "Secrétariat pour prise de rendez-vous", "3", "7", "4", 30),
-    ("705", "Salle de formation 705", "Salle pour formations du personnel médical", "3", "7", "5", 60),
+    ("701", "Bureau médecin chef", "Bureau du médecin chef", "3", "7", "1", 20),
+    ("702", "Bureau directeur", "Bureau du directeur de l'hôpital", "3", "7", "2", 25),
+    ("703", "Salle de réunion", "Salle pour réunions médicales et administratives", "3", "7", "3", 50),
+    ("704", "Secrétariat médical", "Secrétariat pour prise de rendez-vous", "3", "7", "4", 30),
+    ("705", "Salle de formation", "Salle pour formations du personnel médical", "3", "7", "5", 60),
 
     -- 🔹 Bloc Pharmacie et Stock
-    ("801", "Pharmacie centrale 801", "Salle de stockage des médicaments", "4", "8", "1", 80),
-    ("802", "Stock matériel médical 802", "Salle de stockage du matériel médical", "4", "8", "2", 100),
-    ("803", "Salle de préparation 803", "Salle pour préparation des médicaments", "4", "8", "3", 50),
+    ("801", "Pharmacie centrale", "Salle de stockage des médicaments", "4", "8", "1", 80),
+    ("802", "Stock matériel médical", "Salle de stockage du matériel médical", "4", "8", "2", 100),
+    ("803", "Salle de préparation", "Salle pour préparation des médicaments", "4", "8", "3", 50),
 
     -- 🔹 Bloc Laboratoire et Analyses
-    ("901", "Laboratoire analyses médicales 901", "Salle d'analyses sanguines et biochimiques", "1", "9", "1", 80),
-    ("902", "Laboratoire microbiologie 902", "Salle d'analyses microbiologiques", "1", "9", "2", 70),
-    ("903", "Laboratoire pathologie 903", "Salle pour analyses histologiques", "1", "9", "3", 60),
+    ("901", "Laboratoire analyses médicales", "Salle d'analyses sanguines et biochimiques", "1", "9", "1", 80),
+    ("902", "Laboratoire microbiologie", "Salle d'analyses microbiologiques", "1", "9", "2", 70),
+    ("903", "Laboratoire pathologie", "Salle pour analyses histologiques", "1", "9", "3", 60),
 
     -- 🔹 Bloc Services Générals
-    ("1001", "Cafétéria 1001", "Cafétéria pour les patients et le personnel", "4", "10", "1", 120),
-    ("1002", "Salle de repos personnel 1002", "Salle de détente pour le personnel", "4", "10", "2", 50),
-    ("1003", "Salle d'attente 1003", "Salle d'attente pour les familles et visiteurs", "4", "10", "3", 80);
+    ("1001", "Cafétéria", "Cafétéria pour les patients et le personnel", "4", "10", "1", 120),
+    ("1002", "Salle de repos personnel", "Salle de détente pour le personnel", "4", "10", "2", 50),
+    ("1003", "Salle d'attente", "Salle d'attente pour les familles et visiteurs", "4", "10", "3", 80);
 
 INSERT INTO interior_fenestration (
     interior_fenestration_id, room_id,

@@ -158,20 +158,9 @@
 
 <!-- Workspace Content Area -->
 <div class="workspace-content">
-    <!-- 📌 Informations du projet -->
+    <!-- Informations du projet -->
     <div class="content">
         <div class="project-info-header">
-            <a href="{{ url_for('workspace.generate_pdf', project_id=project.id) }}"
-               class="btn btn-primary" target="_blank">
-                📄 Générer rapport PDF
-            </a>
-            <a href="{{ url_for('workspace.project_parameters', project_id=project.id) }}"
-               class="btn btn-primary"
-               style="margin-left: 10px;">
-                ⚙️ Modifier le projet
-            </a>
-
-
             <div class="project-info-main">
                 <div class="project-title-container">
                     <!-- Logo du projet à côté du nom -->
@@ -186,9 +175,25 @@
                         </div>
                         <h1>{{ project.name }}</h1>
                     </div>
-                    <!-- Status badge à droite du nom sur la même ligne -->
-                    <div class="project-status-badge">
-                        <span class="project-status {{ project.status|lower }}">{{ project.status }}</span>
+                    <div class="project-actions-dropdown">
+                        <button class="dropdown-toggle">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="12" cy="5" r="1"></circle>
+                                <circle cx="12" cy="19" r="1"></circle>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('workspace.generate_pdf', project_id=project.id) }}" target="_blank">
+                                📄 Rapport PDF
+                            </a>
+                            <a href="{{ url_for('workspace.project_parameters', project_id=project.id) }}">
+                                ⚙️ Informations projet
+                            </a>
+                            <a href="{{ url_for('workspace.project_members', project_id=project.id) }}">
+                                ⚙️ Membres
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -223,7 +228,7 @@
             </div>
         </div>
         <div class="project-container">
-            <!-- 📌 Menu en arborescence -->
+            <!-- Menu en arborescence -->
             <div class="sidebar">
                 <h3 class="sidebar-title">Liste des pièces</h3>
 
@@ -253,7 +258,7 @@
                 <p>Aucune pièce disponible.</p>
                 {% endif %}
 
-                <!-- Add button at the end of the list -->
+                <!-- Bouton ajouter pièce -->
                 <div class="add-room-container">
                     <button id="add-room-btn" class="add-room-link">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -266,20 +271,20 @@
                 </div>
             </div>
 
-            <!-- 📌 Informations du projet -->
+            <!-- Informations du projet -->
             <div class="content">
                 <div class="room-info-panel" style="display: none;">
                     <div class="room-info-header">
-                        <h2><span class="selected-room-title"></span></h2>
+                        <h2><span class="selected-room-title">Aucune pièce de sélectionnée</span></h2>
                     </div>
                     <div class="room-info-details">
+                         <div class="info-item">
+                            <div class="info-label">Unité fonctionnelle</div>
+                            <div class="info-value selected-room-unit">-</div>
+                        </div>
                         <div class="info-item">
                             <div class="info-label">Secteur</div>
                             <div class="info-value selected-room-sector">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Unité fonctionnelle</div>
-                            <div class="info-value selected-room-unit">-</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">Superficie (m²)</div>
@@ -421,7 +426,7 @@
                             <h1>Exigences architecturales <span class="edit-icon" title="Modifier">&#9998;</span></h1>
                             {% if items %}
                             {% for item in items %}
-                            <form class="arch-form" data-room-id="{{ item.room_id }}" style="display: none;">
+                            <form class="arch_requirements-form" data-room-id="{{ item.room_id }}" style="display: none;">
                                 <div class="section">
                                     <h2>Dimensions critiques</h2>
                                     <label>Longueur critique (mm) :
@@ -595,7 +600,6 @@
                             {% endif %}
                         </div>
                     </div>
-
 
                     <!-- onglet éléments à risques-->
                     {% elif category == "risk_elements" %}
@@ -862,7 +866,6 @@
                             <button class="add-item-button" data-category="{{ category }}" style="display: none;">➕
                             </button>
                         </div>
-                        <h3 class="selected-room-name">Salle sélectionnée : <span></span></h3>
                         <table>
                             <thead>
                             <tr>
@@ -883,7 +886,7 @@
                                 data-room-id="{{ item['room_id'] if 'room_id' in item else '' }}"
                                 data-room-name="{{ item['room_name'] if 'room_name' in item else '' }}">
 
-                                <!-- 🔹 Colonnes cachées pour l'ID et le nom de la salle -->
+                                <!-- Colonnes cachées pour l'ID et le nom de la salle -->
                                 <td style="display: none;">{{ item['room_id'] if 'room_id' in item else '' }}</td>
                                 <td style="display: none;">{{ item['room_name'] if 'room_name' in item else '' }}</td>
 
@@ -918,11 +921,11 @@
             // 🔸 Variables globales pour la salle sélectionnée
             let selectedRoomId = "";
             let selectedRoomName = "";
-            // 🔹 Cacher tous les boutons "+" au chargement
+            // Cacher tous les boutons "+" au chargement
             document.querySelectorAll(".add-item-button").forEach(btn => {
                 btn.style.display = "none";
             });
-            // 🔹 Gestion des dossiers ouverts/fermés
+            // Gestion des dossiers ouverts/fermés
             document.querySelectorAll(".folder-toggle").forEach(folder => {
                 folder.addEventListener("click", function () {
                     const nestedList = this.nextElementSibling;
@@ -931,7 +934,7 @@
                 });
             });
 
-            // 🔹 Sélectionner une salle et afficher son contenu
+            // Sélectionner une salle et afficher son contenu
             document.querySelectorAll(".room-item").forEach(room => {
                 room.addEventListener("click", function () {
                     const roomId = this.getAttribute("data-room-id");
@@ -939,20 +942,20 @@
                     // Mise à jour de la sélection
                     selectedRoomId = roomId;
                     selectedRoomName = roomName;
-                    // 🔹 Afficher le nom dans la zone "Salle sélectionnée :"
+                    // Afficher le nom dans la zone "Salle sélectionnée :"
                     document.querySelectorAll(".selected-room-name span").forEach(span => {
                         span.textContent = roomName;
                     });
-                    // 🔹 Classe CSS pour indiquer la sélection
+                    // Classe CSS pour indiquer la sélection
                     document.querySelectorAll(".room-item").forEach(r => r.classList.remove("selected"));
                     this.classList.add("selected");
-                    // 🔹 Afficher les boutons d'ajout maintenant qu'une salle est sélectionnée
+                    // Afficher les boutons d'ajout maintenant qu'une salle est sélectionnée
                     document.querySelectorAll(".add-item-button").forEach(btn => {
                         btn.style.display = "inline-block";
                     });
                 });
             });
-            // 🔹 Gestion du bouton ➕ pour ajouter une ligne dans un tableau
+            // Gestion du bouton ➕ pour ajouter une ligne dans un tableau
             document.querySelectorAll(".add-item-button").forEach(button => {
                 button.addEventListener("click", function () {
                     const category = this.dataset.category;
@@ -1035,9 +1038,7 @@
                     });
                 });
             });
-
         });
-
     </script>
 
     <script>
@@ -1114,7 +1115,7 @@
                     const category = row.getAttribute("data-category");
 
                     if (target.classList.contains("edit-icon")) {
-                        // 🔹 Activer l'édition
+                        // Activer l'édition
                         const cells = row.querySelectorAll("td[contenteditable]");
                         cells.forEach(cell => cell.setAttribute("contenteditable", "true"));
                         cells[0].focus(); // Focus sur le premier champ éditable
@@ -1141,7 +1142,7 @@
                     }
                 });
 
-                // 🔹 Détecter la touche Enter pour sauvegarder
+                // Détecter la touche Enter pour sauvegarder
                 table.addEventListener("keydown", function (event) {
                     if (event.key === "Enter") {
                         event.preventDefault(); // Empêche le saut de ligne
@@ -1152,13 +1153,11 @@
                             const rowId = row.getAttribute("data-id");
                             const category = row.getAttribute("data-category");
 
-                            // 🔹 Récupérer la seule donnée modifiée
+                            // Récupérer la seule donnée modifiée
                             const updatedData = {};
                             updatedData[cell.getAttribute("data-key")] = cell.innerText.trim();
 
-                            console.log("🔹 Données modifiées :", updatedData);
-
-                            // 🔹 Envoyer la modification au serveur
+                            // Envoyer la modification au serveur
                             fetch(`/workspace/projects/{{ project.id }}/edit_item`, {
                                 method: "POST",
                                 headers: {"Content-Type": "application/json"},
@@ -1170,7 +1169,7 @@
                                         alert("Modification enregistrée !");
                                         const editableCells = row.querySelectorAll("td[contenteditable='true']");
                                         editableCells.forEach(cell => {
-                                            cell.setAttribute("contenteditable", "false"); // 🔹 Désactiver l'édition
+                                            cell.setAttribute("contenteditable", "false");
                                         });
                                     } else {
                                         alert("Erreur : " + data.message);
@@ -1287,7 +1286,7 @@
 
             // Fonction pour afficher le bon formulaire "exigences architecturales"
             function showArchRequirementsForRoom(roomId) {
-                const allForms = document.querySelectorAll(".arch-form");
+                const allForms = document.querySelectorAll(".arch_requirements-form");
                 allForms.forEach(form => {
                     form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
                 });
@@ -1326,7 +1325,7 @@
             }
 
 
-            // 🔹 Quand on clique sur une salle dans le menu
+            // Quand on clique sur une salle dans le menu
             roomItems.forEach(room => {
                 room.addEventListener("click", function () {
                     const roomId = this.getAttribute("data-room-id");
@@ -1448,7 +1447,7 @@
         document.addEventListener("DOMContentLoaded", function () {
             const editIcon = document.querySelector("#tab-arch_requirements .edit-icon");
             editIcon.addEventListener("click", function () {
-                const form = document.querySelector("#tab-arch_requirements .arch-form[style*='block']");
+                const form = document.querySelector("#tab-arch_requirements .arch_requirements-form[style*='block']");
                 if (!form) return;
 
                 form.querySelectorAll("input, textarea").forEach(el => el.removeAttribute("disabled"));
@@ -1907,7 +1906,7 @@
             }
 
             function showArchRequirementsForRoom(roomId) {
-                const allForms = document.querySelectorAll(".arch-form");
+                const allForms = document.querySelectorAll(".arch_requirements-form");
                 allForms.forEach(form => {
                     form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
                 });
@@ -1970,31 +1969,96 @@
             }
         });
 
-        // Update the room info panel when a room is selected
-function updateRoomInfoPanel(roomId, roomName) {
-    const roomInfoPanel = document.querySelector('.room-info-panel');
+      // Update the room info panel when a room is selected
+    function updateRoomInfoPanel(roomId, roomName) {
+        const roomInfoPanel = document.querySelector('.room-info-panel');
 
-    if (!roomId || !roomName) {
-        roomInfoPanel.style.display = 'none';
-        return;
+        if (!roomId || !roomName) {
+            roomInfoPanel.style.display = 'none';
+            return;
+        }
+
+        // Show the panel with minimal info first (fast user feedback)
+        roomInfoPanel.style.display = 'block';
+        document.querySelector('.selected-room-title').textContent = roomName;
+
+        // Find the room item in the sidebar (for fallback data)
+        const roomItem = document.querySelector(`.room-item[data-room-id="${roomId}"]`);
+        if (roomItem) {
+            // Try to get sector and unit from DOM structure as a fallback
+            try {
+                const sectorElement = roomItem.closest('ul').previousElementSibling;
+                const unitElement = sectorElement.closest('ul').previousElementSibling;
+
+                const sector = sectorElement ? sectorElement.textContent.replace('📁', '').trim() : '-';
+                const unit = unitElement ? unitElement.textContent.replace('📂', '').trim() : '-';
+
+                document.querySelector('.selected-room-sector').textContent = sector;
+                document.querySelector('.selected-room-unit').textContent = unit;
+            } catch (e) {
+                console.log('Could not extract sector/unit from DOM:', e);
+            }
+        }
+
+        // Fetch complete room details from the server
+        fetch(`/workspace/api/rooms/${roomId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const room = data.room;
+
+                    // Update room details with accurate data from the database
+                    document.querySelector('.selected-room-sector').textContent = room.sector || '-';
+                    document.querySelector('.selected-room-unit').textContent = room.functional_unit || '-';
+
+                    // Format planned area with 2 decimal places if it's a number
+                    let areaDisplay = '-';
+                    if (room.planned_area) {
+                        const areaNum = parseFloat(room.planned_area);
+                        areaDisplay = !isNaN(areaNum) ? areaNum.toFixed(2) + ' m²' : room.planned_area;
+                    }
+                    document.querySelector('.selected-room-area').textContent = areaDisplay;
+
+                    // Add room data attributes to the selected room item for future use
+                    if (roomItem) {
+                        roomItem.setAttribute('data-program-number', room.program_number || '');
+                        roomItem.setAttribute('data-sector', room.sector || '');
+                        roomItem.setAttribute('data-unit', room.functional_unit || '');
+                        roomItem.setAttribute('data-area', room.planned_area || '');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching room details:', error);
+                // Keep using the fallback data from the DOM if the fetch fails
+            });
     }
 
-    // Find the room data from the sidebar structure
-    const roomItem = document.querySelector(`.room-item[data-room-id="${roomId}"]`);
-    if (!roomItem) return;
+    // Initialize the room info panel functionality
+    document.addEventListener("DOMContentLoaded", function() {
+        // Make sure the room info panel exists in the DOM
+        if (!document.querySelector('.room-info-panel')) {
+            console.error('Room info panel not found in the DOM');
+            return;
+        }
 
-    // Show the panel
-    roomInfoPanel.style.display = 'block';
+        // Get previously selected room from session storage
+        const savedRoomId = sessionStorage.getItem("selectedRoom");
+        const savedRoomName = sessionStorage.getItem("selectedRoomName");
 
-    // Update room title
-    document.querySelector('.selected-room-title').textContent = roomName;
+        if (savedRoomId && savedRoomName) {
+            updateRoomInfoPanel(savedRoomId, savedRoomName);
+        }
 
-    // Try to get additional room data (you'll need to add data attributes to your room items)
-    document.querySelector('.selected-room-number').textContent = roomItem.getAttribute('data-program-number') || '-';
-    document.querySelector('.selected-room-sector').textContent = roomItem.getAttribute('data-sector') || '-';
-    document.querySelector('.selected-room-unit').textContent = roomItem.getAttribute('data-unit') || '-';
-    document.querySelector('.selected-room-area').textContent = roomItem.getAttribute('data-area') || '-';
-}
+        // Add event listeners to all room items to update the panel when clicked
+        document.querySelectorAll(".room-item").forEach(room => {
+            room.addEventListener("click", function() {
+                const roomId = this.getAttribute("data-room-id");
+                const roomName = this.innerText.trim();
+                updateRoomInfoPanel(roomId, roomName);
+            });
+        });
+    });
 
     </script>
 
@@ -2005,6 +2069,208 @@ function updateRoomInfoPanel(roomId, roomName) {
                 btn.addEventListener("click", function () {
                     window.location.href = `/workspace/projects/{{ project.id }}/generate_report`;
                 });
+            }
+        });
+    </script>
+
+    <!--    sortir du mode ajout de tuple-->
+    <script>
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                const inputRow = document.querySelector(".input-row");
+                if (inputRow) {
+                    inputRow.remove();
+                    console.log("➖ Ligne d’ajout annulée avec Escape");
+
+                    // Réafficher les boutons +
+                    document.querySelectorAll(".add-item-button").forEach(btn => {
+                        btn.style.display = "inline-block";
+                    });
+                }
+            }
+        });
+    </script>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let editingRow = null;
+            const originalRowValues = new Map();
+
+            // Sauvegarder les valeurs originales d’un tuple lors de l’édition
+            document.addEventListener("focusin", function (event) {
+                const cell = event.target;
+                if (cell.tagName === "TD" && cell.isContentEditable) {
+                    const row = cell.closest("tr");
+                    if (row && row !== editingRow) {
+                        editingRow = row;
+                        originalRowValues.clear();
+                        row.querySelectorAll("td[data-key]").forEach(td => {
+                            originalRowValues.set(td, td.innerText);
+                        });
+                    }
+                }
+            });
+
+            // ESCAPE pour annuler l’édition d’un tuple (onglets simples)
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape" && editingRow) {
+                    originalRowValues.forEach((val, td) => {
+                        td.innerText = val;
+                        td.setAttribute("contenteditable", "false");
+                    });
+                    originalRowValues.clear();
+                    editingRow = null;
+                    console.log("🔁 Édition annulée");
+                }
+            });
+
+            // Activer les champs des onglets spéciaux lors du clic sur le bouton
+            document.querySelectorAll(".edit-icon").forEach(icon => {
+                icon.addEventListener("click", function () {
+                    const form = this.closest(".tab-content").querySelector("form");
+                    if (!form) return;
+
+                    form.querySelectorAll("input, textarea, select").forEach(el => el.removeAttribute("disabled"));
+
+                    if (!form.querySelector(".save-button")) {
+                        const saveBtn = document.createElement("button");
+                        saveBtn.className = "save-button";
+                        saveBtn.textContent = "Enregistrer";
+                        saveBtn.style.marginRight = "10px";
+
+                        const cancelBtn = document.createElement("button");
+                        cancelBtn.className = "cancel-button";
+                        cancelBtn.textContent = "Annuler";
+
+                        const container = document.createElement("div");
+                        container.className = "form-actions";
+                        container.style.marginTop = "20px";
+                        container.appendChild(saveBtn);
+                        container.appendChild(cancelBtn);
+                        form.appendChild(container);
+
+                        // 🧹 Si on clique sur Annuler → recharger la page
+                        cancelBtn.addEventListener("click", function (e) {
+                            e.preventDefault();
+                            location.reload();
+                        });
+
+                        // 🔁 Escape → recharger la page (1 fois seulement)
+                        const escHandler = function (e) {
+                            if (e.key === "Escape") {
+                                e.preventDefault();
+                                location.reload();
+                                document.removeEventListener("keydown", escHandler);
+                            }
+                        };
+                        document.addEventListener("keydown", escHandler);
+                    }
+                });
+            });
+
+            // Sauvegarder l’onglet actif lors du clic
+            document.querySelectorAll(".tab-button").forEach(button => {
+                button.addEventListener("click", function () {
+                    const tab = this.getAttribute("data-tab");
+                    localStorage.setItem("activeTab", tab);
+                });
+            });
+
+            // Fonction pour réactiver un onglet avec ses données
+            function activateTab(tabId) {
+                document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+                document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+
+                const btn = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+                const content = document.querySelector(`#tab-${tabId}`);
+                if (btn && content) {
+                    btn.classList.add("active");
+                    content.classList.add("active");
+
+                    // Si c'est un onglet spécial → afficher le formulaire
+                    const form = content.querySelector("form");
+                    if (form) {
+                        form.style.display = "block";
+
+                        // Réinitialiser les champs
+                        form.querySelectorAll("input, textarea, select").forEach(el => {
+                            el.setAttribute("disabled", "true");
+                        });
+
+                        // Supprimer les boutons si encore visibles
+                        content.querySelectorAll(".save-button, .cancel-button").forEach(btn => btn.remove());
+                    }
+                }
+            }
+
+            // Restaurer l’onglet actif au chargement
+            const savedTab = localStorage.getItem("activeTab");
+            if (savedTab) {
+                activateTab(savedTab);
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+
+            if (dropdownToggle) {
+                dropdownToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const dropdown = this.closest('.project-actions-dropdown');
+                    dropdown.classList.toggle('active');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    const dropdowns = document.querySelectorAll('.project-actions-dropdown');
+                    dropdowns.forEach(dropdown => {
+                        if (!dropdown.contains(e.target)) {
+                            dropdown.classList.remove('active');
+                        }
+                    });
+                });
+            }
+        });
+
+    </script>
+
+    <script>
+        document.addEventListener("click", function (event) {
+            if (event.target.classList.contains("edit-icon")) {
+                const row = event.target.closest("tr");
+                if (!row) return;
+
+                row.querySelectorAll("td[data-key]").forEach(td => {
+                    td.setAttribute("contenteditable", "true");
+                });
+            }
+        });
+    </script>
+
+
+    <script>
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                const activeSpecialTab = document.querySelector(".tab-content.active");
+                if (!activeSpecialTab) return;
+
+                // Cacher le formulaire s'il est affiché
+                const form = activeSpecialTab.querySelector("form");
+                if (form && form.style.display === "block") {
+                    form.style.display = "none";
+
+                    // Réactiver les champs comme désactivés
+                    form.querySelectorAll("input, textarea, select").forEach(el => {
+                        el.setAttribute("disabled", "true");
+                    });
+
+                    // Supprimer les boutons Enregistrer / Annuler
+                    form.querySelectorAll(".save-button, .cancel-button").forEach(btn => btn.remove());
+                }
+
+                // Supprimer activeTab du localStorage pour éviter un conflit lors du prochain chargement
+                localStorage.removeItem("activeTab");
             }
         });
     </script>
@@ -2678,6 +2944,57 @@ function updateRoomInfoPanel(roomId, roomName) {
                     grid-template-columns: 1fr;
                 }
             }
+
+        /* Dropdown Menu Styles */
+            .project-actions-dropdown {
+                position: relative;
+            }
+
+            .dropdown-toggle {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 5px;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .dropdown-toggle:hover {
+                background-color: #e2e8f0;
+            }
+
+            .dropdown-menu {
+                position: absolute;
+                right: 0;
+                top: 100%;
+                background-color: white;
+                border-radius: 6px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                padding: 8px 0;
+                min-width: 200px;
+                z-index: 1000;
+                display: none;
+            }
+
+            .dropdown-menu a {
+                display: block;
+                padding: 8px 16px;
+                color: #4a5568;
+                text-decoration: none;
+                transition: background-color 0.2s;
+            }
+
+            .dropdown-menu a:hover {
+                background-color: #f7fafc;
+                color: #3498db;
+            }
+
+            .project-actions-dropdown.active .dropdown-menu {
+                display: block;
+            }
+
     </style>
     {% include "workspace/room_creation_modal.html" %}
     {% endblock %}

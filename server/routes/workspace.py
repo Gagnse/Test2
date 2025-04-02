@@ -1370,6 +1370,189 @@ def get_room_details(room_id):
             connection.close()
 
 
+@workspace_bp.route('/projects/<project_id>/project_members')
+def project_members(project_id):
+    """Project members management page"""
+    # Get the project details
+    connection = get_db_connection('users_db')
+    cursor = None
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+
+        # Fetch project details
+        query = """
+            SELECT BIN_TO_UUID(id) as id, project_number, name, description, 
+                   start_date, end_date, status, type
+            FROM projects 
+            WHERE id = UUID_TO_BIN(%s)
+        """
+        cursor.execute(query, (project_id,))
+        project = cursor.fetchone()
+
+        if not project:
+            set_toast('Projet non trouvé.', 'error')
+            return redirect(url_for('workspace.projects'))
+
+        # Get project members
+        query = """
+            SELECT BIN_TO_UUID(u.id) as id, u.first_name, u.last_name, u.email,
+                  u.department, u.location, u.role, pu.joined_at
+            FROM users u
+            JOIN project_users pu ON u.id = pu.user_id
+            WHERE pu.project_id = UUID_TO_BIN(%s)
+        """
+        cursor.execute(query, (project_id,))
+        project_members = cursor.fetchall()
+
+        # Get all organization members for the add member modal
+        # First get the organization ID from the project
+        query = "SELECT BIN_TO_UUID(organization_id) as organization_id FROM projects WHERE id = UUID_TO_BIN(%s)"
+        cursor.execute(query, (project_id,))
+        org_result = cursor.fetchone()
+        org_id = org_result['organization_id'] if org_result else None
+
+        org_members = []
+        project_member_ids = [member['id'] for member in project_members]
+
+        if org_id:
+            # Get organization members
+            query = """
+                SELECT BIN_TO_UUID(u.id) as id, u.first_name, u.last_name, u.email
+                FROM users u
+                JOIN organization_user ou ON u.id = ou.users_id
+                WHERE ou.organizations_id = UUID_TO_BIN(%s)
+            """
+            cursor.execute(query, (org_id,))
+            org_members = cursor.fetchall()
+
+        return render_template(
+            'workspace/project_members_modal.html',
+            project=project,
+            project_members=project_members,
+            org_members=org_members,
+            project_member_ids=project_member_ids
+        )
+    except Exception as e:
+        print(f"Error fetching project members: {e}")
+        import traceback
+        traceback.print_exc()
+        set_toast('Erreur lors du chargement des membres du projet.', 'error')
+        return redirect(url_for('workspace.projects'))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@workspace_bp.route('/projects/<project_id>/add_member', methods=['POST'])
+def add_project_member(project_id):
+    """Add a user to a project"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    data = request.get_json()
+    if not data or 'user_id' not in data:
+        return jsonify({'success': False, 'message': 'User ID is required'}), 400
+
+    user_id = data['user_id']
+
+    connection = get_db_connection('users_db')
+    cursor = None
+
+    try:
+        cursor = connection.cursor()
+
+        # Check if the project exists
+        cursor.execute("SELECT COUNT(*) FROM projects WHERE id = UUID_TO_BIN(%s)", (project_id,))
+        if cursor.fetchone()[0] == 0:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+
+        # Check if the user exists
+        cursor.execute("SELECT COUNT(*) FROM users WHERE id = UUID_TO_BIN(%s)", (user_id,))
+        if cursor.fetchone()[0] == 0:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+
+        # Check if the user is already a member of the project
+        cursor.execute(
+            "SELECT COUNT(*) FROM project_users WHERE project_id = UUID_TO_BIN(%s) AND user_id = UUID_TO_BIN(%s)",
+            (project_id, user_id)
+        )
+        if cursor.fetchone()[0] > 0:
+            return jsonify({'success': False, 'message': 'User is already a member of this project'}), 400
+
+        # Add the user to the project
+        cursor.execute(
+            "INSERT INTO project_users (project_id, user_id) VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s))",
+            (project_id, user_id)
+        )
+        connection.commit()
+
+        return jsonify({'success': True, 'message': 'User added to project successfully'})
+
+    except Exception as e:
+        connection.rollback()
+        print(f"Error adding user to project: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@workspace_bp.route('/projects/<project_id>/remove_member', methods=['POST'])
+def remove_project_member(project_id):
+    """Remove a user from a project"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    data = request.get_json()
+    if not data or 'user_id' not in data:
+        return jsonify({'success': False, 'message': 'User ID is required'}), 400
+
+    user_id = data['user_id']
+
+    connection = get_db_connection('users_db')
+    cursor = None
+
+    try:
+        cursor = connection.cursor()
+
+        # Check if the user is a member of the project
+        cursor.execute(
+            "SELECT COUNT(*) FROM project_users WHERE project_id = UUID_TO_BIN(%s) AND user_id = UUID_TO_BIN(%s)",
+            (project_id, user_id)
+        )
+        if cursor.fetchone()[0] == 0:
+            return jsonify({'success': False, 'message': 'User is not a member of this project'}), 404
+
+        # Remove the user from the project
+        cursor.execute(
+            "DELETE FROM project_users WHERE project_id = UUID_TO_BIN(%s) AND user_id = UUID_TO_BIN(%s)",
+            (project_id, user_id)
+        )
+        connection.commit()
+
+        return jsonify({'success': True, 'message': 'User removed from project successfully'})
+
+    except Exception as e:
+        connection.rollback()
+        print(f"Error removing user from project: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
 
 
 

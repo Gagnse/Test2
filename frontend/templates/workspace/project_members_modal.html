@@ -1,0 +1,694 @@
+{% extends "base.html" %}
+
+{% block title %}Membres du projet - Spacelogic{% endblock %}
+
+{% block content %}
+<div class="workspace-navbar">
+    <div class="workspace-navbar-container">
+        <div class="workspace-nav-items">
+            <a href="{{ url_for('workspace.projects') }}" class="workspace-nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Mes projets</span>
+            </a>
+            <a href="{{ url_for('workspace.project_detail', project_id=project.id) }}" class="workspace-nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+                <span>{{ project.name }}</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="workspace-content">
+    <div class="project-info-header">
+        <div class="project-info-main">
+            <div class="project-title-container">
+                <div class="project-title-with-logo">
+                    <div class="project-type-logo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                    </div>
+                    <h1>Gestion des membres - {{ project.name }}</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="members-container">
+        <div class="members-header">
+            <h2>Membres du projet</h2>
+            <button class="btn btn-primary add-member-btn" id="add-project-member-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Ajouter un membre
+            </button>
+        </div>
+
+        {% if project_members %}
+        <div class="members-table-container">
+            <table class="members-table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Email</th>
+                        <th>Rôle</th>
+                        <th>Département</th>
+                        <th>Date d'ajout</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in project_members %}
+                    <tr>
+                        <td>{{ member.last_name }}</td>
+                        <td>{{ member.first_name }}</td>
+                        <td>{{ member.email }}</td>
+                        <td>{{ member.role|default('Membre') }}</td>
+                        <td>{{ member.department|default('N/A') }}</td>
+                        <td>{{ member.joined_at.strftime('%d/%m/%Y') if member.joined_at else 'N/A' }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn delete-btn" data-id="{{ member.id }}" data-name="{{ member.first_name }} {{ member.last_name }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <h2>Aucun membre</h2>
+            <p>Ce projet n'a pas encore de membres assignés.</p>
+            <button class="btn btn-primary" id="empty-add-project-member-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Ajouter un membre
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal for adding members to project -->
+<div id="add-project-member-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Ajouter un membre au projet</h2>
+            <button class="close-modal-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="add-project-member-form">
+                <div class="form-group">
+                    <label for="select-member">Sélectionner un utilisateur</label>
+                    <select id="select-member" name="user_id" class="form-control" required>
+                        <option value="">-- Sélectionner un utilisateur --</option>
+                        {% for user in org_members %}
+                            {% if user.id not in project_member_ids %}
+                            <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary cancel-btn">Annuler</button>
+                    <button type="submit" class="btn btn-primary add-btn">
+                        <span class="btn-text">Ajouter</span>
+                        <span class="btn-spinner" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal for removing members -->
+<div id="remove-member-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirmer la suppression</h2>
+            <button class="close-modal-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <p id="remove-member-message">Êtes-vous sûr de vouloir retirer ce membre du projet ?</p>
+            </div>
+            <p class="modal-info">Cette action ne supprime pas l'utilisateur, mais retire seulement son accès à ce projet.</p>
+
+            <!-- Hidden input to store user ID -->
+            <input type="hidden" id="remove-user-id" value="">
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary cancel-btn">Annuler</button>
+                <button type="button" class="btn btn-danger confirm-remove-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    <span class="btn-text">Retirer</span>
+                    <span class="btn-spinner" style="display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    /* Members Container Styles */
+    .members-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .members-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .members-header h2 {
+        margin: 0;
+        font-size: 1.4rem;
+        color: #2d3748;
+    }
+
+    /* Members Table Styles */
+    .members-table-container {
+        overflow-x: auto;
+    }
+
+    .members-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .members-table th,
+    .members-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .members-table th {
+        background-color: #f8fafc;
+        font-weight: 600;
+        color: #4a5568;
+    }
+
+    .members-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        border: none;
+        background: none;
+        color: #a0aec0;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+        background-color: #f7fafc;
+        color: #4a5568;
+    }
+
+    .delete-btn:hover {
+        color: #e53e3e;
+    }
+
+    /* Empty State Styles */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        background-color: #f8fafc;
+        border-radius: 8px;
+        border: 1px dashed #e2e8f0;
+    }
+
+    .empty-icon {
+        margin-bottom: 20px;
+        color: #a0aec0;
+    }
+
+    .empty-state h2 {
+        margin: 0 0 10px 0;
+        color: #2d3748;
+        font-size: 1.5rem;
+    }
+
+    .empty-state p {
+        margin: 0 0 25px 0;
+        color: #718096;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        overflow-y: auto;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin: 20px;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.4rem;
+        color: #2d3748;
+    }
+
+    .close-modal-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #a0aec0;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #4a5568;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 5px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .btn svg {
+        margin-right: 8px;
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+
+    .btn-secondary {
+        background-color: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+        background-color: #cbd5e0;
+    }
+
+    .btn-danger {
+        background-color: #e53e3e;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background-color: #c53030;
+    }
+
+    /* Alert Styles */
+    .alert {
+        display: flex;
+        align-items: flex-start;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+
+    .alert-warning {
+        background-color: #fffaf0;
+        border: 1px solid #fbd38d;
+        color: #c05621;
+    }
+
+    .alert-icon {
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+
+    .modal-info {
+        color: #718096;
+        margin-bottom: 20px;
+    }
+
+    /* Animation */
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .spin {
+        animation: spin 1.5s linear infinite;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .members-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Modal elements
+        const addModal = document.getElementById('add-project-member-modal');
+        const removeModal = document.getElementById('remove-member-modal');
+
+        // Add member buttons
+        const addMemberBtns = document.querySelectorAll('#add-project-member-btn, #empty-add-project-member-btn');
+
+        // Close buttons
+        const closeButtons = document.querySelectorAll('.close-modal-btn');
+        const cancelButtons = document.querySelectorAll('.cancel-btn');
+
+        // Delete buttons
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+
+        // Forms
+        const addForm = document.getElementById('add-project-member-form');
+
+        // Open add member modal
+        addMemberBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                addModal.classList.add('active');
+            });
+        });
+
+        // Close buttons functionality
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                addModal.classList.remove('active');
+                removeModal.classList.remove('active');
+            });
+        });
+
+        cancelButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                addModal.classList.remove('active');
+                removeModal.classList.remove('active');
+            });
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === addModal) {
+                addModal.classList.remove('active');
+            }
+            if (event.target === removeModal) {
+                removeModal.classList.remove('active');
+            }
+        });
+
+        // Handle Add Member Form Submission
+        if (addForm) {
+            addForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const userId = document.getElementById('select-member').value;
+
+                if (!userId) {
+                    alert('Veuillez sélectionner un utilisateur');
+                    return;
+                }
+
+                // Show loading state
+                const submitBtn = addForm.querySelector('.add-btn');
+                const btnText = submitBtn.querySelector('.btn-text');
+                const btnSpinner = submitBtn.querySelector('.btn-spinner');
+
+                submitBtn.disabled = true;
+                btnText.style.display = 'none';
+                btnSpinner.style.display = 'inline-block';
+
+                // Submit form data to server
+                fetch(`/workspace/projects/{{ project.id }}/add_member`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ user_id: userId }),
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message and reload page
+                        if (window.toast) {
+                            window.toast.success('Membre ajouté avec succès');
+                        } else {
+                            alert('Membre ajouté avec succès');
+                        }
+
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        throw new Error(data.message || 'Une erreur est survenue');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    btnText.style.display = 'inline';
+                    btnSpinner.style.display = 'none';
+
+                    // Show error message
+                    if (window.toast) {
+                        window.toast.error(error.message || 'Une erreur est survenue');
+                    } else {
+                        alert(error.message || 'Une erreur est survenue');
+                    }
+                });
+            });
+        }
+
+        // Handle delete buttons
+        deleteButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                const userName = this.getAttribute('data-name');
+
+                // Set the user ID in the hidden input
+                document.getElementById('remove-user-id').value = userId;
+
+                // Update confirmation message with user name
+                document.getElementById('remove-member-message').textContent =
+                    `Êtes-vous sûr de vouloir retirer ${userName} du projet ?`;
+
+                // Show remove confirmation modal
+                removeModal.classList.add('active');
+            });
+        });
+
+        // Handle remove confirmation
+        const confirmRemoveBtn = document.querySelector('.confirm-remove-btn');
+        if (confirmRemoveBtn) {
+            confirmRemoveBtn.addEventListener('click', function() {
+                const userId = document.getElementById('remove-user-id').value;
+
+                if (!userId) {
+                    alert('ID utilisateur manquant');
+                    return;
+                }
+
+                // Show loading state
+                const btnText = this.querySelector('.btn-text');
+                const btnSpinner = this.querySelector('.btn-spinner');
+
+                this.disabled = true;
+                btnText.style.display = 'none';
+                btnSpinner.style.display = 'inline-block';
+
+                // Send request to remove user from project
+                fetch(`/workspace/projects/{{ project.id }}/remove_member`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ user_id: userId }),
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message and reload page
+                        if (window.toast) {
+                            window.toast.success('Membre retiré avec succès');
+                        } else {
+                            alert('Membre retiré avec succès');
+                        }
+
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        throw new Error(data.message || 'Une erreur est survenue');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+
+                    // Reset button state
+                    this.disabled = false;
+                    btnText.style.display = 'inline';
+                    btnSpinner.style.display = 'none';
+
+                    // Show error message
+                    if (window.toast) {
+                        window.toast.error(error.message || 'Une erreur est survenue');
+                    } else {
+                        alert(error.message || 'Une erreur est survenue');
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

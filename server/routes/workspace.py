@@ -19,37 +19,28 @@ def check_auth():
         set_toast('Veuillez vous connecter pour accéder à cette page.', 'error')
         return redirect(url_for('auth.auth_page'))
 
-
 @workspace_bp.route('/projects')
 def projects():
-    """My projects page"""
+    """My projects page (excluding archived ones)"""
     user_id = AuthService.get_current_user_id()
-    print(f"Current user ID: {user_id}")  # Debugging
 
-    # Debug count
-    project_count = Project.count_user_projects(user_id)
-    print(f"Direct count of projects in database: {project_count}")
-
-    # Get projects for this user using the Project model
     user_projects = Project.find_by_user(user_id)
-    print(f"Projects found: {len(user_projects)}")  # Debugging
 
-    # Convert project objects to dictionaries for the template
-    projects = []
-    for project in user_projects:
-        print(f"Processing project: {project.id} - {project.name}")  # Debugging
-        projects.append({
-            'id': project.id,
-            'name': project.name,
-            'project_number': project.project_number,
-            'description': project.description,
-            'start_date': project.start_date,
-            'status': project.status or 'active',
-            'type': project.type or 'N/A'
-        })
+    # ✅ Exclure les projets avec status = 'archive'
+    active_projects = [
+        {
+            'id': p.id,
+            'name': p.name,
+            'project_number': p.project_number,
+            'description': p.description,
+            'start_date': p.start_date,
+            'status': p.status or 'active',
+            'type': p.type or 'N/A'
+        }
+        for p in user_projects if (p.status or '').lower() != 'archive'
+    ]
 
-    print(f"Final projects list length: {len(projects)}")  # Debugging
-    return render_template('workspace/projects.html', projects=projects)
+    return render_template('workspace/projects.html', projects=active_projects)
 
 
 @workspace_bp.route('/projects/new', methods=['GET', 'POST'])
@@ -1368,6 +1359,30 @@ def get_room_details(room_id):
             cursor.close()
         if connection:
             connection.close()
+
+#route pour les projets archivés
+@workspace_bp.route('/projects/archived')
+def archived_projects():
+    """Liste des projets archivés de l'utilisateur"""
+    user_id = AuthService.get_current_user_id()
+    all_projects = Project.find_by_user(user_id)
+
+    archived = [
+        {
+            'id': p.id,
+            'name': p.name,
+            'project_number': p.project_number,
+            'description': p.description,
+            'start_date': p.start_date,
+            'status': p.status or 'archive',
+            'type': p.type or 'N/A'
+        }
+        for p in all_projects if (p.status or '').lower() == 'archive'
+    ]
+
+    return render_template('workspace/projects.html', projects=archived)
+
+
 
 
 @workspace_bp.route('/projects/<project_id>/project_members')

@@ -78,7 +78,19 @@
                     </svg>
                     <span>{{ project.project_number }}</span>
                 </div>
-                <span class="project-status {{ project.status|lower }}">{{ project.status }}</span>
+                <span class="project-status {{ project.status|lower }}">
+                    {% if project.status == 'active' %}
+                    Actif
+                    {% elif project.status == 'pending' %}
+                    Pause
+                    {% elif project.status == 'archive' %}
+                    Archivé
+                    {% elif project.status == 'completed' %}
+                    Terminé
+                    {% else %}
+                    {{ project.status }}
+                    {% endif %}
+                </span>
             </div>
         </div>
     </a>
@@ -94,13 +106,6 @@
         </div>
         <h2>Aucun projet</h2>
         <p>Vous n'avez pas encore créé ou rejoint de projet.</p>
-        <button class="btn btn-primary create-project-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Créer un nouveau projet
-        </button>
     </div>
     {% endif %}
 </div>
@@ -332,27 +337,32 @@
     font-weight: 500;
 }
 
-.project-status {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
+        .project-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
 
-.project-status.actif, .project-status.active {
-    background-color: #d1f9d1;
-    color: #237923;
-}
+        .project-status.actif, .project-status.active {
+            background-color: #d1f9d1;
+            color: #237923;
+        }
 
-.project-status.en.attente, .project-status.pending {
-    background-color: #fef3c7;
-    color: #92400e;
-}
+        .project-status.pause, .project-status.pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
 
-.project-status.terminé, .project-status.completed {
-    background-color: #e2e8f0;
-    color: #4a5568;
-}
+        .project-status.terminé, .project-status.completed {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .project-status.archivé, .project-status.archive {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
 
 /* Responsive Styles */
 @media (max-width: 768px) {

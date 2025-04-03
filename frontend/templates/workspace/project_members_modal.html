@@ -13,40 +13,26 @@
         <div class="modal-body">
             <div class="members-section">
                 <h3>Membres actuels</h3>
-                <div class="members-list">
-                    {% if project_members %}
-                        <table class="members-table">
-                            <thead>
-                                <tr>
-                                    <th>Nom</th>
-                                    <th>Prénom</th>
-                                    <th>Email</th>
-                                    <th>Rôle</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for member in project_members %}
-                                <tr>
-                                    <td>{{ member.last_name }}</td>
-                                    <td>{{ member.first_name }}</td>
-                                    <td>{{ member.email }}</td>
-                                    <td>{{ member.role|default('Membre') }}</td>
-                                    <td>
-                                        <button class="action-btn remove-member-btn" data-id="{{ member.id }}" data-name="{{ member.first_name }} {{ member.last_name }}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p class="empty-members">Aucun membre n'a encore été ajouté à ce projet.</p>
-                    {% endif %}
+                <div class="members-table-container">
+                    <table class="members-table">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Email</th>
+                                <th>Rôle</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Members will be loaded here via AJAX -->
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 20px;">
+                                    Chargement des membres...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -58,11 +44,7 @@
                         <label for="user-select">Sélectionner un utilisateur</label>
                         <select id="user-select" name="user_id" required>
                             <option value="">-- Sélectionner un utilisateur --</option>
-                            {% if available_users %}
-                                {% for user in available_users %}
-                                    <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
-                                {% endfor %}
-                            {% endif %}
+                            <!-- Available users will be loaded here via AJAX -->
                         </select>
                     </div>
                     <div class="form-group">
@@ -96,59 +78,247 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Get modal elements
     const modal = document.getElementById('project-members-modal');
-    const openModalBtns = document.querySelectorAll('.open-members-modal-btn');
-    const closeButton = document.querySelector('#project-members-modal .close-modal-btn');
-    const cancelButton = document.querySelector('#project-members-modal .cancel-btn');
-    const form = document.getElementById('add-member-form');
+    const openModalBtn = document.querySelector('.manage-members-btn');
+    const closeButton = modal ? modal.querySelector('.close-modal-btn') : null;
+    const cancelButton = modal ? modal.querySelector('.cancel-btn') : null;
+    const form = modal ? modal.querySelector('#add-member-form') : null;
+    const membersTable = modal ? modal.querySelector('.members-table tbody') : null;
+    const userSelect = modal ? modal.querySelector('#user-select') : null;
 
-    // Open modal when the open modal button is clicked
-    if (openModalBtns) {
-        openModalBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                modal.classList.add('active');
+    // Get the project ID from the URL
+    const urlParts = window.location.pathname.split('/');
+    const projectId = urlParts[urlParts.length - 1]; // Assuming URL format is /workspace/projects/[project_id]
+
+    // Function to load members data
+    async function loadMembersData() {
+        if (!membersTable) return;
+
+        // Show loading indicator
+        membersTable.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 20px;">
+                    <div class="loading-spinner" style="display: inline-block;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                    </div>
+                    <p>Chargement des membres...</p>
+                </td>
+            </tr>
+        `;
+
+        try {
+            // Fetch members data from the server
+            const response = await fetch(`/api/projects/${projectId}/members`);
+
+            if (!response.ok) {
+                throw new Error(`Error fetching members: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to load members data');
+            }
+
+            // Clear the table
+            membersTable.innerHTML = '';
+
+            // If no members, show message
+            if (!data.members || data.members.length === 0) {
+                membersTable.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 20px;">
+                            Aucun membre n'a encore été ajouté à ce projet.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Populate the table with members
+            data.members.forEach(member => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${member.last_name}</td>
+                    <td>${member.first_name}</td>
+                    <td>${member.email}</td>
+                    <td>${member.role || 'Membre'}</td>
+                    <td>
+                        <button class="action-btn remove-member-btn" data-id="${member.id}" data-name="${member.first_name} ${member.last_name}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                membersTable.appendChild(row);
             });
+
+            // Setup remove buttons after adding the rows
+            setupRemoveButtons();
+
+        } catch (error) {
+            console.error('Error loading members:', error);
+            membersTable.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #e53e3e;">
+                        Erreur lors du chargement des membres: ${error.message}
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    // Function to load available users for the dropdown
+    async function loadAvailableUsers() {
+        if (!userSelect) return;
+
+        // Clear current options except the first placeholder
+        while (userSelect.options.length > 1) {
+            userSelect.remove(1);
+        }
+
+        // Add loading option
+        const loadingOption = document.createElement('option');
+        loadingOption.textContent = 'Chargement des utilisateurs...';
+        loadingOption.disabled = true;
+        loadingOption.selected = true;
+        userSelect.appendChild(loadingOption);
+
+        try {
+            // Fetch available users from the server
+            const response = await fetch(`/api/projects/${projectId}/available-users`);
+
+            if (!response.ok) {
+                throw new Error(`Error fetching available users: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to load available users');
+            }
+
+            // Remove loading option
+            userSelect.remove(userSelect.options.length - 1);
+
+            // If no available users, show message
+            if (!data.users || data.users.length === 0) {
+                const noUsersOption = document.createElement('option');
+                noUsersOption.textContent = 'Aucun utilisateur disponible';
+                noUsersOption.disabled = true;
+                userSelect.appendChild(noUsersOption);
+                return;
+            }
+
+            // Populate the dropdown with available users
+            data.users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.first_name} ${user.last_name} (${user.email})`;
+                userSelect.appendChild(option);
+            });
+
+            // Reset to first empty option
+            userSelect.selectedIndex = 0;
+
+        } catch (error) {
+            console.error('Error loading available users:', error);
+            // Reset dropdown and show error
+            while (userSelect.options.length > 1) {
+                userSelect.remove(1);
+            }
+
+            const errorOption = document.createElement('option');
+            errorOption.textContent = `Erreur: ${error.message}`;
+            errorOption.disabled = true;
+            userSelect.appendChild(errorOption);
+        }
+    }
+
+    // Function to open modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+
+            // Load data when modal opens
+            loadMembersData();
+            loadAvailableUsers();
+        }
+    }
+
+    // Function to close modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+    }
+
+    // Open modal when the manage members button is clicked
+    if (openModalBtn) {
+        openModalBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Close the dropdown menu if it's open
+            const dropdown = document.querySelector('.project-actions-dropdown');
+            if (dropdown) {
+                dropdown.classList.remove('active');
+            }
+
+            openModal();
         });
     }
 
+    // Also set up other buttons that should open the modal
+    document.querySelectorAll('.open-members-modal-btn').forEach(btn => {
+        btn.addEventListener('click', openModal);
+    });
+
     // Close modal when close button is clicked
     if (closeButton) {
-        closeButton.addEventListener('click', function() {
-            modal.classList.remove('active');
-        });
+        closeButton.addEventListener('click', closeModal);
     }
 
     // Close modal when cancel button is clicked
     if (cancelButton) {
-        cancelButton.addEventListener('click', function() {
-            modal.classList.remove('active');
-        });
+        cancelButton.addEventListener('click', closeModal);
     }
 
     // Close modal when clicking outside the modal content
     window.addEventListener('click', function(event) {
         if (event.target === modal) {
-            modal.classList.remove('active');
+            closeModal();
         }
     });
 
-    // Handle form submission
+    // Handle escape key to close modal
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal && modal.style.display === 'flex') {
+            closeModal();
+        }
+    });
+
+    // Handle form submission (if form exists)
     if (form) {
         form.addEventListener('submit', function(event) {
             event.preventDefault();
 
-            // Get the project ID from the URL
-            const urlParts = window.location.pathname.split('/');
-            const projectId = urlParts[urlParts.length - 1]; // Assuming the URL format is /workspace/projects/[project_id]
-
             // Get submit button elements
             const submitButton = form.querySelector('.add-btn');
-            const buttonText = submitButton.querySelector('.btn-text');
-            const buttonSpinner = submitButton.querySelector('.btn-spinner');
+            const buttonText = submitButton ? submitButton.querySelector('.btn-text') : null;
+            const buttonSpinner = submitButton ? submitButton.querySelector('.btn-spinner') : null;
 
             // Show loading state
-            submitButton.disabled = true;
-            buttonText.style.display = 'none';
-            buttonSpinner.style.display = 'inline-block';
+            if (submitButton) {
+                submitButton.disabled = true;
+                if (buttonText) buttonText.style.display = 'none';
+                if (buttonSpinner) buttonSpinner.style.display = 'inline-block';
+            }
 
             // Remove any existing error messages
             const existingError = form.querySelector('.form-error');
@@ -158,22 +328,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Get form data and convert to JSON
             const formData = new FormData(form);
-            const memberData = {
-                user_id: formData.get('user_id'),
-                role: formData.get('role')
-            };
+            const userId = formData.get('user_id');
+            const role = formData.get('role');
 
-            // Send request to add member to project using the API
+            if (!userId) {
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'form-error';
+                errorDiv.textContent = 'Veuillez sélectionner un utilisateur';
+                form.prepend(errorDiv);
+
+                // Reset button state
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    if (buttonText) buttonText.style.display = 'inline';
+                    if (buttonSpinner) buttonSpinner.style.display = 'none';
+                }
+                return;
+            }
+
+            // Send request to add member to project
             fetch(`/api/projects/${projectId}/members`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(memberData),
+                body: JSON.stringify({
+                    user_id: userId,
+                    role: role
+                }),
                 credentials: 'same-origin' // Include cookies
             })
             .then(response => {
-                // Always parse JSON first to get any error message
                 return response.json().then(data => {
                     if (!response.ok) {
                         throw new Error(data.message || `HTTP error ${response.status}`);
@@ -185,16 +371,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     // Show success toast
                     if (window.toast) {
-                        window.toast.success(`Membre ajouté avec succès!`);
+                        window.toast.success('Membre ajouté avec succès!');
                     }
 
                     // Reset form
                     form.reset();
 
-                    // Reload the page to show new member
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    // Reload members data to show the new member
+                    loadMembersData();
+
+                    // Reset available users (as the newly added member should no longer be available)
+                    loadAvailableUsers();
+
+                    // Reset button state
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        if (buttonText) buttonText.style.display = 'inline';
+                        if (buttonSpinner) buttonSpinner.style.display = 'none';
+                    }
+
                 } else {
                     throw new Error(data.message || 'Une erreur est survenue');
                 }
@@ -203,16 +398,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error adding member:', error);
 
                 // Reset button state
-                submitButton.disabled = false;
-                buttonText.style.display = 'inline';
-                buttonSpinner.style.display = 'none';
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    if (buttonText) buttonText.style.display = 'inline';
+                    if (buttonSpinner) buttonSpinner.style.display = 'none';
+                }
 
                 // Create error message
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'form-error';
                 errorDiv.textContent = error.message || 'Une erreur est survenue lors de l\'ajout du membre. Veuillez réessayer.';
-
-                // Add the error at the top of the form
                 form.prepend(errorDiv);
 
                 // Show error toast
@@ -223,97 +418,125 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Handle remove member button clicks
-    const removeButtons = document.querySelectorAll('.remove-member-btn');
-    removeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const userId = this.getAttribute('data-id');
-            const userName = this.getAttribute('data-name');
-            
-            if (confirm(`Êtes-vous sûr de vouloir retirer ${userName} de ce projet?`)) {
-                // Get the project ID from the URL
-                const urlParts = window.location.pathname.split('/');
-                const projectId = urlParts[urlParts.length - 1];
-                
-                // Show loading state
-                this.disabled = true;
-                this.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M12 6v6l4 2"></path>
-                                  </svg>`;
-                
-                // Send request to remove member from project
-                fetch(`/api/projects/${projectId}/members/${userId}`, {
-                    method: 'DELETE',
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    // Parse JSON response
-                    return response.json().then(data => {
-                        if (!response.ok) {
-                            throw new Error(data.message || `HTTP error ${response.status}`);
-                        }
-                        return data;
-                    });
-                })
-                .then(data => {
-                    if (data.success) {
-                        // Show success toast
-                        if (window.toast) {
-                            window.toast.success(`Membre retiré avec succès!`);
-                        }
-                        
-                        // Reload the page to update the member list
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1000);
-                    } else {
-                        throw new Error(data.message || 'Une erreur est survenue');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error removing member:', error);
-                    
-                    // Reset button state
-                    this.disabled = false;
-                    this.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    // Setup remove member buttons
+    function setupRemoveButtons() {
+        document.querySelectorAll('.remove-member-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                const userName = this.getAttribute('data-name');
+
+                if (confirm(`Êtes-vous sûr de vouloir retirer ${userName || 'ce membre'} de ce projet?`)) {
+                    // Show loading state
+                    this.disabled = true;
+                    const originalContent = this.innerHTML;
+                    this.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M12 6v6l4 2"></path>
                                       </svg>`;
-                    
-                    // Show error toast
-                    if (window.toast) {
-                        window.toast.error(error.message || 'Une erreur est survenue lors du retrait du membre');
-                    }
-                });
-            }
+
+                    // Send request to remove member
+                    fetch(`/api/projects/${projectId}/members/${userId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(response => {
+                        return response.json().then(data => {
+                            if (!response.ok) {
+                                throw new Error(data.message || `HTTP error ${response.status}`);
+                            }
+                            return data;
+                        });
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Show success toast
+                            if (window.toast) {
+                                window.toast.success('Membre retiré avec succès!');
+                            }
+
+                            // Reload members and available users
+                            loadMembersData();
+                            loadAvailableUsers();
+                        } else {
+                            throw new Error(data.message || 'Une erreur est survenue');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error removing member:', error);
+
+                        // Reset button state
+                        this.disabled = false;
+                        this.innerHTML = originalContent;
+
+                        // Show error toast
+                        if (window.toast) {
+                            window.toast.error(error.message || 'Une erreur est survenue lors du retrait du membre');
+                        }
+                    });
+                }
+            });
         });
-    });
+    }
 });
 </script>
 
 <style>
-/* Members table styles */
-.members-table {
+#project-members-modal.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1100; /* Higher z-index to ensure it's above everything */
+    overflow-y: auto;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 30px;
 }
 
-.members-table th,
-.members-table td {
-    padding: 10px;
-    text-align: left;
+#project-members-modal .modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 700px;
+    margin: 20px auto;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Ensure it's positioned above the overlay */
+    z-index: 1101; /* Higher than the modal background */
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#project-members-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
     border-bottom: 1px solid #e2e8f0;
-}
-
-.members-table th {
-    font-weight: 600;
-    color: #4a5568;
     background-color: #f8fafc;
+    flex-shrink: 0;
 }
 
-.action-btn {
+#project-members-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #2d3748;
+}
+
+#project-members-modal .close-modal-btn {
     background: none;
     border: none;
     cursor: pointer;
@@ -322,38 +545,183 @@ document.addEventListener('DOMContentLoaded', function() {
     align-items: center;
     justify-content: center;
     padding: 5px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+#project-members-modal .close-modal-btn:hover {
+    background-color: #f7fafc;
+    color: #4a5568;
+}
+
+#project-members-modal .modal-body {
+    padding: 15px;
+    overflow-y: auto;
+    max-height: calc(90vh - 60px); /* Account for header */
+}
+
+#project-members-modal .members-section,
+#project-members-modal .add-member-section {
+    background-color: #f8fafc;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+}
+
+#project-members-modal h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+    color: #334155;
+}
+
+#project-members-modal .form-group {
+    margin-bottom: 15px;
+}
+
+#project-members-modal .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 0.95rem;
+}
+
+#project-members-modal .form-group select,
+#project-members-modal .form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 0.95rem;
+    color: #2d3748;
+}
+
+#project-members-modal .form-group select:focus,
+#project-members-modal .form-group input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    outline: none;
+}
+
+#project-members-modal .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+#project-members-modal .btn {
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#project-members-modal .btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+#project-members-modal .btn-primary:hover {
+    background-color: #2980b9;
+}
+
+#project-members-modal .btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+#project-members-modal .btn-secondary:hover {
+    background-color: #cbd5e0;
+}
+
+#project-members-modal .members-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
+#project-members-modal .members-table th,
+#project-members-modal .members-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.9rem;
+}
+
+#project-members-modal .members-table th {
+    background-color: #f1f5f9;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+#project-members-modal .members-table tr:hover {
+    background-color: #f8fafc;
+}
+
+#project-members-modal .action-btn {
+    padding: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #a0aec0;
     border-radius: 4px;
     transition: all 0.2s ease;
 }
 
-.action-btn:hover {
+#project-members-modal .action-btn:hover {
     background-color: #f7fafc;
 }
 
-.remove-member-btn:hover {
+#project-members-modal .remove-member-btn:hover {
     color: #e53e3e;
 }
 
-.members-section,
-.add-member-section {
-    margin-bottom: 30px;
-}
-
-.members-section h3,
-.add-member-section h3 {
-    margin-top: 0;
+#project-members-modal .form-error {
+    background-color: #FEF2F2;
+    border: 1px solid #F87171;
+    color: #B91C1C;
+    padding: 10px 15px;
+    border-radius: 5px;
     margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 1.1rem;
-    color: #2d3748;
+    font-size: 0.9rem;
 }
 
-.empty-members {
-    padding: 20px;
-    text-align: center;
-    background-color: #f8fafc;
-    border-radius: 6px;
-    color: #718096;
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#project-members-modal .spin {
+    animation: spin 1.5s linear infinite;
+}
+
+/* Style to ensure navbar is behind modal */
+body.modal-open {
+    overflow: hidden;
+}
+
+body.modal-open .workspace-navbar {
+    z-index: 1099; /* Lower than modal but higher than other content */
+}
+
+/* Make table responsive */
+@media (max-width: 768px) {
+    #project-members-modal .members-table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    #project-members-modal .modal-content {
+        width: 95%;
+        margin: 10px auto;
+    }
 }
 </style>

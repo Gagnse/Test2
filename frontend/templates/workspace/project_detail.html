@@ -2279,6 +2279,43 @@
                 localStorage.removeItem("activeTab");
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get modal elements
+            const membersModal = document.getElementById('project-members-modal');
+            const manageMembersBtn = document.querySelector('.manage-members-btn');
+
+            // Check if both elements exist
+            if (membersModal && manageMembersBtn) {
+                // Add click event listener to the manage members button
+                manageMembersBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // Close the dropdown menu if it's open
+                    const dropdown = document.querySelector('.project-actions-dropdown');
+                    if (dropdown) {
+                        dropdown.classList.remove('active');
+                    }
+
+                    // Open the members modal
+                    membersModal.classList.add('active');
+                    membersModal.style.display = 'block';
+                });
+            } else {
+                console.warn("Members modal or manage members button not found in the DOM");
+            }
+
+            // Set up the class for all buttons that should open the members modal
+            document.querySelectorAll('.open-members-modal-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (membersModal) {
+                        membersModal.classList.add('active');
+                        membersModal.style.display = 'block';
+                    }
+                });
+            });
+        });
+
     </script>
 
 

@@ -783,3 +783,239 @@ def api_get_organization_invitations(org_id):
         'success': True,
         'invitations': invitations_data
     })
+
+
+@api_bp.route('/projects/<project_id>/members', methods=['GET'])
+def api_get_project_members(project_id):
+    """API endpoint to get all members of a project"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    connection = get_db_connection('users_db')
+    cursor = None
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+
+        # Check if the project exists
+        cursor.execute("SELECT COUNT(*) as count FROM projects WHERE id = UUID_TO_BIN(%s)", (project_id,))
+        result = cursor.fetchone()
+        if not result or result['count'] == 0:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+
+        # Get project members
+        query = """
+            SELECT 
+                BIN_TO_UUID(u.id) as id, 
+                u.first_name, 
+                u.last_name, 
+                u.email,
+                u.role,
+                u.department, 
+                u.location, 
+                pu.joined_at
+            FROM users u
+            JOIN project_users pu ON u.id = pu.user_id
+            WHERE pu.project_id = UUID_TO_BIN(%s)
+        """
+        cursor.execute(query, (project_id,))
+        members = cursor.fetchall()
+
+        # Process datetime objects for JSON serialization
+        for member in members:
+            if 'joined_at' in member and member['joined_at']:
+                member['joined_at'] = member['joined_at'].isoformat()
+
+        return jsonify({
+            'success': True,
+            'members': members
+        })
+
+    except Exception as e:
+        print(f"Error fetching project members: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@api_bp.route('/projects/<project_id>/available-users', methods=['GET'])
+def api_get_available_users(project_id):
+    """API endpoint to get users available to add to a project"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    connection = get_db_connection('users_db')
+    cursor = None
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+
+        # First get the organization ID for this project
+        query = "SELECT BIN_TO_UUID(organization_id) as organization_id FROM projects WHERE id = UUID_TO_BIN(%s)"
+        cursor.execute(query, (project_id,))
+        org_result = cursor.fetchone()
+
+        if not org_result:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+
+        org_id = org_result['organization_id']
+
+        # Get users in this organization who are not already in the project
+        query = """
+            SELECT 
+                BIN_TO_UUID(u.id) as id, 
+                u.first_name, 
+                u.last_name, 
+                u.email
+            FROM users u
+            JOIN organization_user ou ON u.id = ou.users_id
+            WHERE ou.organizations_id = UUID_TO_BIN(%s)
+            AND u.id NOT IN (
+                SELECT user_id 
+                FROM project_users 
+                WHERE project_id = UUID_TO_BIN(%s)
+            )
+            AND u.is_active = 1
+        """
+        cursor.execute(query, (org_id, project_id))
+        users = cursor.fetchall()
+
+        return jsonify({
+            'success': True,
+            'users': users
+        })
+
+    except Exception as e:
+        print(f"Error fetching available users: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@api_bp.route('/projects/<project_id>/members', methods=['POST'])
+def api_add_project_member(project_id):
+    """API endpoint to add a user to a project"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    data = request.get_json()
+    if not data or 'user_id' not in data:
+        return jsonify({'success': False, 'message': 'User ID is required'}), 400
+
+    user_id = data['user_id']
+    role = data.get('role')
+
+    connection = get_db_connection('users_db')
+    cursor = None
+
+    try:
+        cursor = connection.cursor()
+
+        # Check if the project exists
+        cursor.execute("SELECT COUNT(*) as count FROM projects WHERE id = UUID_TO_BIN(%s)", (project_id,))
+        result = cursor.fetchone()
+        if not result or result[0] == 0:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+
+        # Check if the user exists
+        cursor.execute("SELECT COUNT(*) as count FROM users WHERE id = UUID_TO_BIN(%s)", (user_id,))
+        result = cursor.fetchone()
+        if not result or result[0] == 0:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+
+        # Check if the user is already a member of the project
+        cursor.execute(
+            "SELECT COUNT(*) as count FROM project_users WHERE project_id = UUID_TO_BIN(%s) AND user_id = UUID_TO_BIN(%s)",
+            (project_id, user_id)
+        )
+        result = cursor.fetchone()
+        if result and result[0] > 0:
+            return jsonify({'success': False, 'message': 'User is already a member of this project'}), 400
+
+        # Add the user to the project
+        cursor.execute(
+            "INSERT INTO project_users (project_id, user_id) VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s))",
+            (project_id, user_id)
+        )
+
+        # Update user role if provided
+        if role:
+            cursor.execute(
+                "UPDATE users SET role = %s WHERE id = UUID_TO_BIN(%s)",
+                (role, user_id)
+            )
+
+        connection.commit()
+
+        return jsonify({'success': True, 'message': 'User added to project successfully'})
+
+    except Exception as e:
+        if connection:
+            connection.rollback()
+        print(f"Error adding user to project: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@api_bp.route('/projects/<project_id>/members/<user_id>', methods=['DELETE'])
+def api_remove_project_member(project_id, user_id):
+    """API endpoint to remove a user from a project"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    connection = get_db_connection('users_db')
+    cursor = None
+
+    try:
+        cursor = connection.cursor()
+
+        # Check if the user is a member of the project
+        cursor.execute(
+            "SELECT COUNT(*) as count FROM project_users WHERE project_id = UUID_TO_BIN(%s) AND user_id = UUID_TO_BIN(%s)",
+            (project_id, user_id)
+        )
+        result = cursor.fetchone()
+        if not result or result[0] == 0:
+            return jsonify({'success': False, 'message': 'User is not a member of this project'}), 404
+
+        # Remove the user from the project
+        cursor.execute(
+            "DELETE FROM project_users WHERE project_id = UUID_TO_BIN(%s) AND user_id = UUID_TO_BIN(%s)",
+            (project_id, user_id)
+        )
+        connection.commit()
+
+        return jsonify({'success': True, 'message': 'User removed from project successfully'})
+
+    except Exception as e:
+        if connection:
+            connection.rollback()
+        print(f"Error removing user from project: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()

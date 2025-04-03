@@ -88,7 +88,12 @@
 
             <div class="form-group">
                 <label for="status">Statut</label>
-                <input type="text" name="status" id="status" value="{{ project.status }}">
+                <select name="status" id="status" class="form-control">
+                    <option value="active" {% if project.status == 'active' %}selected{% endif %}>Actif</option>
+                    <option value="pending" {% if project.status == 'pending' %}selected{% endif %}>Pause</option>
+                    <option value="completed" {% if project.status == 'completed' %}selected{% endif %}>Terminé</option>
+                    <option value="archive" {% if project.status == 'archive' %}selected{% endif %}>Archivé</option>
+                </select>
             </div>
 
             <div class="form-group">

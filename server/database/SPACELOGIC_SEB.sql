@@ -121,9 +121,11 @@ CREATE TABLE project_users (
     project_id BINARY(16) NOT NULL,
     user_id BINARY(16) NOT NULL,
     joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    role_id BINARY(16) NOT NULL,
     PRIMARY KEY (project_id, user_id),
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES organization_roles(id) ON DELETE CASCADE
 );
 
 # ----------------------------PROCEDURES---------------------------

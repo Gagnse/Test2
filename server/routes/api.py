@@ -132,71 +132,147 @@ def api_create_project():
     if not organization_id:
         return jsonify({'success': False, 'message': 'User is not associated with any organization'}), 400
 
+    connection = get_db_connection('users_db')
+    cursor = None
+
     try:
-        # Sanitize project number (remove spaces, special characters) for display purposes
+        cursor = connection.cursor(dictionary=True)
+
+        # Sanitize project number for display purposes
         sanitized_number = ''.join(c for c in data['project_number'] if c.isalnum() or c in '-_')
 
         # Check if project number already exists
-        connection = get_db_connection('users_db')
-        cursor = None
+        cursor.execute("SELECT COUNT(*) as count FROM projects WHERE project_number = %s", (sanitized_number,))
+        result = cursor.fetchone()
 
-        try:
-            cursor = connection.cursor()
-            cursor.execute("SELECT COUNT(*) FROM projects WHERE project_number = %s", (sanitized_number,))
-            result = cursor.fetchone()
+        if result and result['count'] > 0:
+            return jsonify({
+                'success': False,
+                'message': 'Un projet avec ce numéro existe déjà. Veuillez utiliser un numéro unique.'
+            }), 400
 
-            if result and result[0] > 0:
-                return jsonify({
-                    'success': False,
-                    'message': 'Un projet avec ce numéro existe déjà. Veuillez utiliser un numéro unique.'
-                }), 400
-        finally:
-            close_connection(connection, cursor)
-
-        # Create the project object
-        project = Project(
-            project_number=sanitized_number,
-            name=data['name'],
-            description=data.get('description', ''),
-            status=data.get('status', 'Actif'),
-            type=data.get('type', 'Divers'),
-            organization_id=organization_id
+        # Create the project object with organization ID
+        query = """
+            INSERT INTO projects (project_number, name, description, status, type, organization_id)
+            VALUES (%s, %s, %s, %s, %s, UUID_TO_BIN(%s))
+        """
+        values = (
+            sanitized_number,
+            data['name'],
+            data.get('description', ''),
+            data.get('status', 'Actif'),
+            data.get('type', 'Divers'),
+            organization_id
         )
 
-        # Save the project to database
-        if project.save():
-            # Add the user to the project
-            project.add_user(user_id)
+        cursor.execute(query, values)
 
-            # Ensure we have a valid project.id
-            if not project.id:
-                # This shouldn't normally happen, but add a safeguard
-                return jsonify({'success': False, 'message': 'Error getting project ID after save'}), 500
+        # Get the newly created project ID
+        cursor.execute("SELECT BIN_TO_UUID(id) as id FROM projects WHERE project_number = %s", (sanitized_number,))
+        project_result = cursor.fetchone()
 
-            # Format UUID without hyphens for database name (handle potential errors)
-            try:
-                formatted_uuid = project.id.replace('-', '')
-                db_name = f"SPACELOGIC_{formatted_uuid}"
-            except (AttributeError, TypeError) as e:
-                # If there's an issue formatting the UUID, use a fallback
-                print(f"Error formatting project UUID: {e}")
-                db_name = f"SPACELOGIC_project_{sanitized_number}"
+        if not project_result:
+            connection.rollback()
+            return jsonify({'success': False, 'message': 'Error retrieving created project'}), 500
 
-            # Return the result with proper project info
-            return jsonify({
-                'success': True,
-                'message': 'Projet créé avec succès',
-                'project': {
-                    'id': project.id,
-                    'name': project.name,
-                    'project_number': project.project_number,
-                    'organization_id': organization_id,
-                    'database_name': db_name
-                }
-            }), 201
+        project_id = project_result['id']
+
+        # Find an appropriate role ID for the creator
+        # First check if user is super admin of the organization
+        cursor.execute("""
+            SELECT BIN_TO_UUID(super_admin_id) as super_admin_id 
+            FROM organizations 
+            WHERE id = UUID_TO_BIN(%s)
+        """, (organization_id,))
+        org_result = cursor.fetchone()
+
+        role_id = None
+
+        # Find an admin role or default role
+        if org_result and org_result['super_admin_id'] == user_id:
+            # Look for an admin role
+            cursor.execute("""
+                SELECT BIN_TO_UUID(id) as id 
+                FROM organization_roles 
+                WHERE organization_id = UUID_TO_BIN(%s) AND name = 'Administrateur' 
+                LIMIT 1
+            """, (organization_id,))
+            admin_role = cursor.fetchone()
+
+            if admin_role:
+                role_id = admin_role['id']
+
+        # If no admin role was found or user is not admin, look for any role
+        if not role_id:
+            cursor.execute("""
+                SELECT BIN_TO_UUID(id) as id 
+                FROM organization_roles 
+                WHERE organization_id = UUID_TO_BIN(%s) 
+                LIMIT 1
+            """, (organization_id,))
+            any_role = cursor.fetchone()
+
+            if any_role:
+                role_id = any_role['id']
+
+        # If still no role found, create a default role
+        if not role_id:
+            # Create a default role for this organization
+            cursor.execute("""
+                INSERT INTO organization_roles (organization_id, name, description)
+                VALUES (UUID_TO_BIN(%s), 'Administrateur', 'Default admin role')
+            """, (organization_id,))
+
+            cursor.execute("""
+                SELECT BIN_TO_UUID(id) as id 
+                FROM organization_roles 
+                WHERE organization_id = UUID_TO_BIN(%s) 
+                ORDER BY id DESC 
+                LIMIT 1
+            """, (organization_id,))
+            new_role = cursor.fetchone()
+
+            if new_role:
+                role_id = new_role['id']
+            else:
+                # If we still don't have a role, just use NULL (though this should never happen)
+                print("Warning: No role could be found or created for project creator")
+
+        # Add the creator to the project with the appropriate role
+        if role_id:
+            cursor.execute("""
+                INSERT INTO project_users (project_id, user_id, role_id)
+                VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s), UUID_TO_BIN(%s))
+            """, (project_id, user_id, role_id))
         else:
-            return jsonify({'success': False, 'message': 'Erreur lors de la création du projet'}), 500
+            # Fall back to inserting without role_id
+            cursor.execute("""
+                INSERT INTO project_users (project_id, user_id)
+                VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s))
+            """, (project_id, user_id))
+
+        connection.commit()
+
+        # Format database name for response
+        formatted_uuid = project_id.replace('-', '')
+        db_name = f"SPACELOGIC_{formatted_uuid}"
+
+        # Return success with project info
+        return jsonify({
+            'success': True,
+            'message': 'Projet créé avec succès',
+            'project': {
+                'id': project_id,
+                'name': data['name'],
+                'project_number': sanitized_number,
+                'organization_id': organization_id,
+                'database_name': db_name
+            }
+        }), 201
+
     except Exception as e:
+        if connection:
+            connection.rollback()
         import traceback
         error_message = str(e)
         error_traceback = traceback.format_exc()
@@ -215,6 +291,12 @@ def api_create_project():
             'message': f"Erreur lors de la création du projet: {error_message}",
             'error_type': type(e).__name__
         }), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 @api_bp.route('/projects/<project_id>', methods=['GET'])
@@ -803,19 +885,21 @@ def api_get_project_members(project_id):
         if not result or result['count'] == 0:
             return jsonify({'success': False, 'message': 'Project not found'}), 404
 
-        # Get project members
+        # Get project members with their role names
         query = """
             SELECT 
                 BIN_TO_UUID(u.id) as id, 
                 u.first_name, 
                 u.last_name, 
                 u.email,
-                u.role,
+                u.role as user_role,
+                or.name as project_role,
                 u.department, 
                 u.location, 
                 pu.joined_at
             FROM users u
             JOIN project_users pu ON u.id = pu.user_id
+            LEFT JOIN organization_roles or ON pu.role_id = or.id
             WHERE pu.project_id = UUID_TO_BIN(%s)
         """
         cursor.execute(query, (project_id,))
@@ -825,6 +909,15 @@ def api_get_project_members(project_id):
         for member in members:
             if 'joined_at' in member and member['joined_at']:
                 member['joined_at'] = member['joined_at'].isoformat()
+
+            # Use project_role if available, otherwise fallback to user_role or 'Membre'
+            member['role'] = member['project_role'] or member['user_role'] or 'Membre'
+
+            # Remove the temporary fields we used
+            if 'project_role' in member:
+                del member['project_role']
+            if 'user_role' in member:
+                del member['user_role']
 
         return jsonify({
             'success': True,
@@ -846,7 +939,7 @@ def api_get_project_members(project_id):
 
 @api_bp.route('/projects/<project_id>/available-users', methods=['GET'])
 def api_get_available_users(project_id):
-    """API endpoint to get users available to add to a project"""
+    """API endpoint to get users available to add to a project and organization roles"""
     if not AuthService.is_authenticated():
         return jsonify({'success': False, 'message': 'Authentication required'}), 401
 
@@ -886,9 +979,28 @@ def api_get_available_users(project_id):
         cursor.execute(query, (org_id, project_id))
         users = cursor.fetchall()
 
+        # Get all available roles from this organization
+        query = """
+            SELECT BIN_TO_UUID(id) as id, name, description
+            FROM organization_roles
+            WHERE organization_id = UUID_TO_BIN(%s)
+        """
+        cursor.execute(query, (org_id,))
+        roles = cursor.fetchall()
+
+        # If no roles, add default roles
+        if not roles:
+            roles = [
+                {'id': None, 'name': 'Membre', 'description': 'Default member'},
+                {'id': None, 'name': 'Collaborateur', 'description': 'Collaborator'},
+                {'id': None, 'name': 'Client', 'description': 'Client'},
+                {'id': None, 'name': 'Administrateur', 'description': 'Administrator'}
+            ]
+
         return jsonify({
             'success': True,
-            'users': users
+            'users': users,
+            'roles': roles
         })
 
     except Exception as e:
@@ -915,24 +1027,31 @@ def api_add_project_member(project_id):
         return jsonify({'success': False, 'message': 'User ID is required'}), 400
 
     user_id = data['user_id']
-    role = data.get('role')
+    role_name = data.get('role')  # Get the role name from the request
 
     connection = get_db_connection('users_db')
     cursor = None
 
     try:
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
 
         # Check if the project exists
-        cursor.execute("SELECT COUNT(*) as count FROM projects WHERE id = UUID_TO_BIN(%s)", (project_id,))
-        result = cursor.fetchone()
-        if not result or result[0] == 0:
+        cursor.execute(
+            "SELECT COUNT(*) as count, BIN_TO_UUID(organization_id) as organization_id FROM projects WHERE id = UUID_TO_BIN(%s)",
+            (project_id,))
+        project_result = cursor.fetchone()
+
+        if not project_result or project_result['count'] == 0:
             return jsonify({'success': False, 'message': 'Project not found'}), 404
+
+        # Get the organization ID from the project
+        organization_id = project_result['organization_id']
 
         # Check if the user exists
         cursor.execute("SELECT COUNT(*) as count FROM users WHERE id = UUID_TO_BIN(%s)", (user_id,))
-        result = cursor.fetchone()
-        if not result or result[0] == 0:
+        user_result = cursor.fetchone()
+
+        if not user_result or user_result['count'] == 0:
             return jsonify({'success': False, 'message': 'User not found'}), 404
 
         # Check if the user is already a member of the project
@@ -940,21 +1059,59 @@ def api_add_project_member(project_id):
             "SELECT COUNT(*) as count FROM project_users WHERE project_id = UUID_TO_BIN(%s) AND user_id = UUID_TO_BIN(%s)",
             (project_id, user_id)
         )
-        result = cursor.fetchone()
-        if result and result[0] > 0:
+        exists_result = cursor.fetchone()
+
+        if exists_result and exists_result['count'] > 0:
             return jsonify({'success': False, 'message': 'User is already a member of this project'}), 400
 
-        # Add the user to the project
+        # Find the role ID for the given role name in this organization
+        role_id = None
+        if role_name:
+            cursor.execute("""
+                SELECT BIN_TO_UUID(id) as id FROM organization_roles 
+                WHERE organization_id = UUID_TO_BIN(%s) AND name = %s
+            """, (organization_id, role_name))
+            role_result = cursor.fetchone()
+
+            if role_result:
+                role_id = role_result['id']
+            else:
+                # If role doesn't exist, try to get a default role from the organization
+                cursor.execute("""
+                    SELECT BIN_TO_UUID(id) as id FROM organization_roles 
+                    WHERE organization_id = UUID_TO_BIN(%s) LIMIT 1
+                """, (organization_id,))
+                default_role = cursor.fetchone()
+
+                if default_role:
+                    role_id = default_role['id']
+                else:
+                    return jsonify({'success': False, 'message': 'No valid roles found for this organization'}), 400
+        else:
+            # Get a default role for the organization
+            cursor.execute("""
+                SELECT BIN_TO_UUID(id) as id FROM organization_roles 
+                WHERE organization_id = UUID_TO_BIN(%s) LIMIT 1
+            """, (organization_id,))
+            default_role = cursor.fetchone()
+
+            if default_role:
+                role_id = default_role['id']
+            else:
+                return jsonify({'success': False, 'message': 'No roles found for this organization'}), 400
+
+        # Add the user to the project with role
         cursor.execute(
-            "INSERT INTO project_users (project_id, user_id) VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s))",
-            (project_id, user_id)
+            """INSERT INTO project_users (project_id, user_id, role_id) 
+               VALUES (UUID_TO_BIN(%s), UUID_TO_BIN(%s), UUID_TO_BIN(%s))""",
+            (project_id, user_id, role_id)
         )
 
-        # Update user role if provided
-        if role:
+        # Update user role in the users table if provided
+        if role_name:
             cursor.execute(
                 "UPDATE users SET role = %s WHERE id = UUID_TO_BIN(%s)",
-                (role, user_id)
+                (role_name, user_id)
             )
 
         connection.commit()

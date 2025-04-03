@@ -50,10 +50,8 @@
                     <div class="form-group">
                         <label for="member-role">Rôle dans le projet</label>
                         <select id="member-role" name="role">
-                            <option value="Membre">Membre</option>
-                            <option value="Collaborateur">Collaborateur</option>
-                            <option value="Client">Client</option>
-                            <option value="Administrateur">Administrateur</option>
+                            <!-- Organization roles will be loaded dynamically -->
+                            <option value="">Chargement des rôles...</option>
                         </select>
                     </div>
                     <div class="form-actions">
@@ -84,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = modal ? modal.querySelector('#add-member-form') : null;
     const membersTable = modal ? modal.querySelector('.members-table tbody') : null;
     const userSelect = modal ? modal.querySelector('#user-select') : null;
+    const roleSelect = modal ? modal.querySelector('#member-role') : null;
 
     // Get the project ID from the URL
     const urlParts = window.location.pathname.split('/');
@@ -174,22 +173,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to load available users for the dropdown
     async function loadAvailableUsers() {
-        if (!userSelect) return;
+        if (!userSelect || !roleSelect) return;
 
         // Clear current options except the first placeholder
         while (userSelect.options.length > 1) {
             userSelect.remove(1);
         }
 
-        // Add loading option
+        // Clear role options and add loading placeholder
+        while (roleSelect.options.length > 0) {
+            roleSelect.remove(0);
+        }
+
         const loadingOption = document.createElement('option');
-        loadingOption.textContent = 'Chargement des utilisateurs...';
+        loadingOption.textContent = 'Chargement...';
         loadingOption.disabled = true;
         loadingOption.selected = true;
         userSelect.appendChild(loadingOption);
+        roleSelect.appendChild(loadingOption.cloneNode(true));
 
         try {
-            // Fetch available users from the server
+            // Fetch available users from the server (includes roles)
             const response = await fetch(`/api/projects/${projectId}/available-users`);
 
             if (!response.ok) {
@@ -202,8 +206,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(data.message || 'Failed to load available users');
             }
 
-            // Remove loading option
+            // Remove loading option from user select
             userSelect.remove(userSelect.options.length - 1);
+
+            // Clear and populate the role dropdown
+            roleSelect.innerHTML = '';
+            if (data.roles && data.roles.length > 0) {
+                data.roles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role.name;
+                    option.textContent = role.name;
+                    roleSelect.appendChild(option);
+                });
+            } else {
+                // Default roles if none returned
+                const defaultRoles = ['Membre', 'Collaborateur', 'Client', 'Administrateur'];
+                defaultRoles.forEach(roleName => {
+                    const option = document.createElement('option');
+                    option.value = roleName;
+                    option.textContent = roleName;
+                    roleSelect.appendChild(option);
+                });
+            }
 
             // If no available users, show message
             if (!data.users || data.users.length === 0) {
@@ -226,16 +250,10 @@ document.addEventListener('DOMContentLoaded', function() {
             userSelect.selectedIndex = 0;
 
         } catch (error) {
-            console.error('Error loading available users:', error);
+            console.error('Error loading available users and roles:', error);
             // Reset dropdown and show error
-            while (userSelect.options.length > 1) {
-                userSelect.remove(1);
-            }
-
-            const errorOption = document.createElement('option');
-            errorOption.textContent = `Erreur: ${error.message}`;
-            errorOption.disabled = true;
-            userSelect.appendChild(errorOption);
+            userSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            roleSelect.innerHTML = '<option value="">Erreur de chargement</option>';
         }
     }
 

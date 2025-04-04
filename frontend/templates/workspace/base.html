@@ -19,10 +19,6 @@
                 </svg>
                 <span>Organisations</span>
             </a>
-            <a href="{{ url_for('workspace.archived_projects') }}"
-               class="workspace-nav-item {% if request.endpoint == 'workspace.archived_projects' %}active{% endif %}">
-                <span>Projets archivés</span>
-            </a>
         </div>
         <div class="workspace-context">
             {% block workspace_context %}{% endblock %}

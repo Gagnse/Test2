@@ -1,4 +1,4 @@
--- This file contains stored procedures to help retrieve historical changes
+-- procedures to help retrieve historical changes
 -- for entities in the project database
 
 DELIMITER //

@@ -177,6 +177,22 @@ def api_create_project():
 
         project_id = project_result['id']
 
+        # Create project database using Python function
+        try:
+            # Import the function here to avoid circular imports
+            from server.utils.database_utils import create_project_database
+
+            # Call the Python function to create the database with UUID
+            result = create_project_database(project_id, sanitized_number)
+
+            if not result:
+                connection.rollback()
+                return jsonify({'success': False, 'message': 'Failed to create project database'}), 500
+        except Exception as e:
+            connection.rollback()
+            print(f"Error creating project database: {e}")
+            return jsonify({'success': False, 'message': f'Error creating project database: {str(e)}'}), 500
+
         # Find an appropriate role ID for the creator
         # First check if user is super admin of the organization
         cursor.execute("""
@@ -886,6 +902,7 @@ def api_get_project_members(project_id):
             return jsonify({'success': False, 'message': 'Project not found'}), 404
 
         # Get project members with their role names
+        # Change the alias 'or' to 'org_roles' to avoid reserved keyword conflict
         query = """
             SELECT 
                 BIN_TO_UUID(u.id) as id, 
@@ -893,13 +910,13 @@ def api_get_project_members(project_id):
                 u.last_name, 
                 u.email,
                 u.role as user_role,
-                or.name as project_role,
+                org_roles.name as project_role,
                 u.department, 
                 u.location, 
                 pu.joined_at
             FROM users u
             JOIN project_users pu ON u.id = pu.user_id
-            LEFT JOIN organization_roles or ON pu.role_id = or.id
+            LEFT JOIN organization_roles org_roles ON pu.role_id = org_roles.id
             WHERE pu.project_id = UUID_TO_BIN(%s)
         """
         cursor.execute(query, (project_id,))

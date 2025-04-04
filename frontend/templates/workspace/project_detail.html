@@ -183,23 +183,23 @@
                                 <circle cx="12" cy="19" r="1"></circle>
                             </svg>
                         </button>
-                        <div class="dropdown-menu">
-                            <a href="{{ url_for('workspace.generate_pdf', project_id=project.id) }}" target="_blank">
-                                📄 Rapport PDF
-                            </a>
-                            <a href="{{ url_for('workspace.project_parameters', project_id=project.id) }}">
-                                ⚙️ Informations projet
-                            </a>
-                           <a href="#" class="dropdown-item manage-members-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                              <circle cx="9" cy="7" r="4"></circle>
-                              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                            </svg>
-                                Gérer les membres
-                          </a>
-                        </div>
+                            <div class="dropdown-menu">
+                                <a href="{{ url_for('workspace.generate_pdf', project_id=project.id) }}" target="_blank">
+                                    📄 Rapport PDF
+                                </a>
+                                <a href="#" class="open-parameters-modal">
+                                    ⚙️ Informations projet
+                                </a>
+                                <a href="#" class="dropdown-item manage-members-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
+                                    Gérer les membres
+                                </a>
+                            </div>
                     </div>
                 </div>
 
@@ -2315,6 +2315,47 @@
                 });
             });
         });
+
+        document.addEventListener("DOMContentLoaded", function() {
+    // Setup modal trigger for project parameters
+    const parametersButtons = document.querySelectorAll('.open-parameters-modal');
+    parametersButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Close the dropdown menu if it's open
+            const dropdown = document.querySelector('.project-actions-dropdown');
+            if (dropdown) {
+                dropdown.classList.remove('active');
+            }
+
+            // Open the parameters modal
+            if (typeof window.openProjectParametersModal === 'function') {
+                window.openProjectParametersModal();
+            } else {
+                console.error('openProjectParametersModal function not found');
+                // Fallback to the old URL-based method
+                window.location.href = "{{ url_for('workspace.project_parameters', project_id=project.id) }}";
+            }
+        });
+    });
+
+    // Check URL parameters to see if we should open the modal automatically
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('openModal') && urlParams.get('openModal') === 'parameters') {
+        // Remove the parameter from the URL without refreshing the page
+        const newUrl = window.location.pathname +
+            window.location.search.replace(/[?&]openModal=parameters/, '').replace(/^&/, '?');
+        window.history.replaceState({}, document.title, newUrl);
+
+        // A small delay to ensure the modal is fully initialized
+        setTimeout(() => {
+            if (typeof window.openProjectParametersModal === 'function') {
+                window.openProjectParametersModal();
+            }
+        }, 100);
+    }
+});
 
     </script>
 

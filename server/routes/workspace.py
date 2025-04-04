@@ -1238,21 +1238,15 @@ def generate_pdf(project_id):
 #route pour afficher les données du projet dans parameters
 @workspace_bp.route('/projects/<project_id>/project_parameters', methods=['GET', 'POST'])
 def project_parameters(project_id):
+    """Project parameters page/functionality"""
+    if not AuthService.is_authenticated():
+        set_toast('Veuillez vous connecter pour accéder à cette page.', 'error')
+        return redirect(url_for('auth.auth_page'))
+
     users_connection = get_db_connection("users_db")
     users_cursor = users_connection.cursor(dictionary=True)
 
-    # 📥 Charger les données existantes AVANT le POST
-    select_query = """
-        SELECT project_number, name, description,
-               DATE(start_date) AS start_date,
-               DATE(end_date) AS end_date,
-               status, type
-        FROM projects
-        WHERE id = UUID_TO_BIN(%s)
-    """
-    users_cursor.execute(select_query, (project_id,))
-    project = users_cursor.fetchone()
-
+    # Process form submission for POST requests
     if request.method == 'POST':
         data = request.form
 
@@ -1261,7 +1255,6 @@ def project_parameters(project_id):
                 project_number = %s,
                 name = %s,
                 description = %s,
-                start_date = %s,
                 end_date = %s,
                 status = %s,
                 type = %s
@@ -1271,7 +1264,6 @@ def project_parameters(project_id):
             data['project_number'],
             data['name'],
             data['description'],
-            project['start_date'],  # 👈 Tu peux maintenant l'utiliser
             data['end_date'] or None,
             data['status'],
             data['type'],
@@ -1281,12 +1273,16 @@ def project_parameters(project_id):
         users_cursor.close()
         users_connection.close()
 
+        set_toast('Projet mis à jour avec succès!', 'success')
         return redirect(url_for('workspace.project_detail', project_id=project_id))
 
+    # For GET requests, instead of rendering a separate template, redirect to project_detail
+    # with a special parameter to open the modal
     users_cursor.close()
     users_connection.close()
 
-    return render_template('workspace/project_parameters.html', project=project, project_id=project_id)
+    # Redirect to the project detail page with a parameter to open the modal
+    return redirect(url_for('workspace.project_detail', project_id=project_id, openModal='parameters'))
 
 
 @workspace_bp.route('/api/rooms/<room_id>', methods=['GET'])

@@ -1,0 +1,311 @@
+<!-- Project Parameters Modal -->
+<div id="project-parameters-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Modifier le projet</h2>
+            <button class="close-modal-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="project-parameters-form" method="POST" action="{{ url_for('workspace.project_parameters', project_id=project_id) }}">
+                <div class="form-group">
+                    <label for="project_number">Numéro du projet</label>
+                    <input type="text" name="project_number" id="project_number" value="{{ project.project_number }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Nom du projet</label>
+                    <input type="text" name="name" id="name" value="{{ project.name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea name="description" id="description" rows="3">{{ project.description }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Date de début</label>
+                    <p class="form-static">{{ project.start_date }}</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="end_date">Date de fin</label>
+                    <input type="date" name="end_date" id="end_date" value="{{ project.end_date }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Statut</label>
+                    <select name="status" id="status" class="form-control">
+                        <option value="active" {% if project.status == 'active' %}selected{% endif %}>Actif</option>
+                        <option value="pending" {% if project.status == 'pending' %}selected{% endif %}>Pause</option>
+                        <option value="completed" {% if project.status == 'completed' %}selected{% endif %}>Terminé</option>
+                        <option value="archive" {% if project.status == 'archive' %}selected{% endif %}>Archivé</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select name="type" id="type" class="form-control">
+                        <option value="Résidentiel" {% if project.type == 'Résidentiel' %}selected{% endif %}>Résidentiel</option>
+                        <option value="Commercial" {% if project.type == 'Commercial' %}selected{% endif %}>Commercial</option>
+                        <option value="Institutionnel" {% if project.type == 'Institutionnel' %}selected{% endif %}>Institutionnel</option>
+                        <option value="Industriel" {% if project.type == 'Industriel' %}selected{% endif %}>Industriel</option>
+                        <option value="Divers" {% if project.type == 'Divers' %}selected{% endif %}>Divers</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary cancel-btn">Annuler</button>
+                    <button type="submit" class="btn btn-primary save-btn">
+                        <span class="btn-text">Enregistrer</span>
+                        <span class="btn-spinner" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+#project-parameters-modal.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1100; /* Higher z-index to ensure it's above everything */
+    overflow-y: auto;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 30px;
+}
+
+#project-parameters-modal .modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 600px;
+    margin: 20px auto;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Ensure it's positioned above the overlay */
+    z-index: 1101; /* Higher than the modal background */
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#project-parameters-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    flex-shrink: 0;
+}
+
+#project-parameters-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #2d3748;
+}
+
+#project-parameters-modal .close-modal-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #a0aec0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+#project-parameters-modal .close-modal-btn:hover {
+    background-color: #f7fafc;
+    color: #4a5568;
+}
+
+#project-parameters-modal .modal-body {
+    padding: 15px;
+    overflow-y: auto;
+}
+
+#project-parameters-modal .form-group {
+    margin-bottom: 20px;
+}
+
+#project-parameters-modal .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+#project-parameters-modal .form-group input,
+#project-parameters-modal .form-group textarea,
+#project-parameters-modal .form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 0.95rem;
+    color: #2d3748;
+}
+
+#project-parameters-modal .form-group input:focus,
+#project-parameters-modal .form-group textarea:focus,
+#project-parameters-modal .form-group select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    outline: none;
+}
+
+#project-parameters-modal .form-static {
+    padding: 8px 12px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    color: #718096;
+    margin: 0;
+}
+
+#project-parameters-modal .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+#project-parameters-modal .btn {
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#project-parameters-modal .btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+#project-parameters-modal .btn-primary:hover {
+    background-color: #2980b9;
+}
+
+#project-parameters-modal .btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+#project-parameters-modal .btn-secondary:hover {
+    background-color: #cbd5e0;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#project-parameters-modal .spin {
+    animation: spin 1.5s linear infinite;
+}
+
+/* Style to ensure navbar is behind modal */
+body.modal-open {
+    overflow: hidden;
+}
+
+body.modal-open .workspace-navbar {
+    z-index: 1099; /* Lower than modal but higher than other content */
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get modal elements
+    const modal = document.getElementById('project-parameters-modal');
+    const closeButton = document.querySelector('#project-parameters-modal .close-modal-btn');
+    const cancelButton = document.querySelector('#project-parameters-modal .cancel-btn');
+    const form = document.getElementById('project-parameters-form');
+    
+    // Function to open the modal
+    window.openProjectParametersModal = function() {
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+        }
+    };
+    
+    // Close modal when close button is clicked
+    if (closeButton) {
+        closeButton.addEventListener('click', function() {
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+    }
+    
+    // Close modal when cancel button is clicked
+    if (cancelButton) {
+        cancelButton.addEventListener('click', function() {
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+    }
+    
+    // Close modal when clicking outside the modal content
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+    });
+    
+    // Handle form submission
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            // Show loading spinner
+            const submitButton = form.querySelector('.save-btn');
+            const buttonText = submitButton.querySelector('.btn-text');
+            const buttonSpinner = submitButton.querySelector('.btn-spinner');
+            
+            submitButton.disabled = true;
+            buttonText.style.display = 'none';
+            buttonSpinner.style.display = 'inline-block';
+            
+            // Let the form submit normally - no need to prevent default
+        });
+    }
+    
+    // Check if modal should be displayed immediately (URL parameter)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('openModal') && urlParams.get('openModal') === 'parameters') {
+        window.openProjectParametersModal();
+    }
+});
+</script>

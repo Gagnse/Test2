@@ -11,7 +11,7 @@
             </button>
         </div>
         <div class="modal-body">
-            <form id="project-parameters-form" method="POST" action="{{ url_for('workspace.project_parameters', project_id=project_id) }}">
+            <form id="project-parameters-form" method="POST">
                 <div class="form-group">
                     <label for="project_number">Numéro du projet</label>
                     <input type="text" name="project_number" id="project_number" value="{{ project.project_number }}" required>
@@ -254,14 +254,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelButton = document.querySelector('#project-parameters-modal .cancel-btn');
     const form = document.getElementById('project-parameters-form');
     
+    // Extract project ID from the URL
+    function getProjectIdFromUrl() {
+        const urlParts = window.location.pathname.split('/');
+        const projectsIndex = urlParts.indexOf('projects');
+        if (projectsIndex !== -1 && urlParts.length > projectsIndex + 1) {
+            return urlParts[projectsIndex + 1];
+        }
+        return null;
+    }
+
     // Function to open the modal
     window.openProjectParametersModal = function() {
         if (modal) {
+            // Set the form action URL with the correct project ID
+            const projectId = getProjectIdFromUrl();
+            if (projectId && form) {
+                form.action = `/workspace/projects/${projectId}/project_parameters`;
+            }
+
             modal.style.display = 'flex';
             document.body.classList.add('modal-open');
         }
     };
-    
+
     // Close modal when close button is clicked
     if (closeButton) {
         closeButton.addEventListener('click', function() {
@@ -269,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.remove('modal-open');
         });
     }
-    
+
     // Close modal when cancel button is clicked
     if (cancelButton) {
         cancelButton.addEventListener('click', function() {
@@ -277,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.remove('modal-open');
         });
     }
-    
+
     // Close modal when clicking outside the modal content
     window.addEventListener('click', function(event) {
         if (event.target === modal) {
@@ -285,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.remove('modal-open');
         }
     });
-    
+
     // Handle form submission
     if (form) {
         form.addEventListener('submit', function(event) {
@@ -293,11 +309,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitButton = form.querySelector('.save-btn');
             const buttonText = submitButton.querySelector('.btn-text');
             const buttonSpinner = submitButton.querySelector('.btn-spinner');
-            
+
             submitButton.disabled = true;
             buttonText.style.display = 'none';
             buttonSpinner.style.display = 'inline-block';
-            
+
             // Let the form submit normally - no need to prevent default
         });
     }

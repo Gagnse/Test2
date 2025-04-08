@@ -1,0 +1,250 @@
+<!-- Room History Modal -->
+<div id="room-history-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Historique de la pièce - <span class="room-history-title">Pièce</span></h2>
+            <button class="close-modal-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="history-container">
+                <div class="loading-history" style="text-align: center; padding: 20px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    <p>Chargement de l'historique...</p>
+                </div>
+                <table class="history-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Utilisateur</th>
+                            <th>Action</th>
+                            <th>Détails</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- History data will be loaded here dynamically -->
+                    </tbody>
+                </table>
+                <div class="no-history" style="text-align: center; padding: 20px; display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                        <path d="M12 2v10h10"></path>
+                    </svg>
+                    <h3>Aucun historique</h3>
+                    <p>Aucune modification n'a été enregistrée pour cette pièce.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+#room-history-modal.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1100; /* Higher z-index to ensure it's above everything */
+    overflow-y: auto;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 30px;
+}
+
+#room-history-modal .modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 800px;
+    margin: 20px auto;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Ensure it's positioned above the overlay */
+    z-index: 1101; /* Higher than the modal background */
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#room-history-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    flex-shrink: 0;
+}
+
+#room-history-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #2d3748;
+}
+
+#room-history-modal .close-modal-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #a0aec0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+#room-history-modal .close-modal-btn:hover {
+    background-color: #f7fafc;
+    color: #4a5568;
+}
+
+#room-history-modal .modal-body {
+    padding: 15px;
+    overflow-y: auto;
+}
+
+#room-history-modal .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#room-history-modal .history-table th,
+#room-history-modal .history-table td {
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+}
+
+#room-history-modal .history-table th {
+    background-color: #f8fafc;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+#room-history-modal .history-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#room-history-modal .spin {
+    animation: spin 1.5s linear infinite;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const historyModal = document.getElementById('room-history-modal');
+    const historyButtons = document.querySelectorAll('.view-history-btn');
+    const closeButton = historyModal.querySelector('.close-modal-btn');
+
+    // Function to open the history modal for a specific room
+    function openHistoryModal(roomId, roomName) {
+        // Update modal title with room name
+        const titleElement = historyModal.querySelector('.room-history-title');
+        if (titleElement) {
+            titleElement.textContent = roomName;
+        }
+
+        // Show the modal
+        historyModal.style.display = 'flex';
+        document.body.classList.add('modal-open');
+
+        // Show loading indicator
+        const loadingEl = historyModal.querySelector('.loading-history');
+        const tableEl = historyModal.querySelector('.history-table');
+        const noHistoryEl = historyModal.querySelector('.no-history');
+
+        if (loadingEl) loadingEl.style.display = 'block';
+        if (tableEl) tableEl.style.display = 'none';
+        if (noHistoryEl) noHistoryEl.style.display = 'none';
+
+        // Simulate fetching history data (replace with actual API call)
+        setTimeout(function() {
+            // Hide loading indicator
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            // For demonstration, randomly show either table or no history message
+            const hasHistory = Math.random() > 0.5;
+
+            if (hasHistory) {
+                // Populate table with sample data (replace with actual data)
+                const tbody = tableEl.querySelector('tbody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td>2025-04-05 14:32</td>
+                        <td>Jean Dupont</td>
+                        <td>Modification</td>
+                        <td>Changement de la superficie de 24m² à 28m²</td>
+                    </tr>
+                    <tr>
+                        <td>2025-04-01 09:15</td>
+                        <td>Marie Martin</td>
+                        <td>Création</td>
+                        <td>Création initiale de la pièce</td>
+                    </tr>
+                `;
+
+                tableEl.style.display = 'table';
+            } else {
+                noHistoryEl.style.display = 'block';
+            }
+        }, 1000);
+    }
+
+    // Add click event listeners to all history buttons
+    historyButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Get the current selected room info
+            const roomId = sessionStorage.getItem('selectedRoom');
+            const roomName = sessionStorage.getItem('selectedRoomName');
+
+            if (roomId && roomName) {
+                openHistoryModal(roomId, roomName);
+            } else {
+                alert('Veuillez sélectionner une pièce d\'abord');
+            }
+        });
+    });
+
+    // Close modal when close button is clicked
+    if (closeButton) {
+        closeButton.addEventListener('click', function() {
+            historyModal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+    }
+
+    // Close modal when clicking outside the modal content
+    window.addEventListener('click', function(event) {
+        if (event.target === historyModal) {
+            historyModal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+    });
+});
+</script>

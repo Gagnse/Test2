@@ -1587,5 +1587,80 @@ def remove_project_member(project_id):
             connection.close()
 
 
+@workspace_bp.route('/projects/<project_id>/rooms/<room_id>/history')
+def get_room_history(project_id, room_id):
+    """API endpoint to get the history of changes for a specific room"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
 
+    # Create the project database name
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
+
+    # Check if database exists
+    if not database_exists(project_db_name):
+        return jsonify({'success': False, 'message': 'Base de données introuvable'}), 404
+
+    # Connect to the project database
+    connection = get_db_connection(project_db_name)
+    if not connection:
+        return jsonify({'success': False, 'message': 'Impossible de se connecter à la base de données'}), 500
+
+    cursor = None
+    try:
+        cursor = connection.cursor(dictionary=True)
+
+        # Verify if the room exists
+        cursor.execute("SELECT COUNT(*) as count FROM rooms WHERE id = UUID_TO_BIN(%s)", (room_id,))
+        result = cursor.fetchone()
+        if not result or result['count'] == 0:
+            return jsonify({'success': False, 'message': 'Pièce non trouvée'}), 404
+
+        # Query the historical_changes table for this room
+        query = """
+            SELECT 
+                BIN_TO_UUID(hc.id) as id,
+                hc.timestamp,
+                hc.action_type,
+                hc.details,
+                hc.table_name,
+                hc.row_id,
+                BIN_TO_UUID(hc.user_id) as user_id,
+                CONCAT(u.first_name, ' ', u.last_name) as user_name
+            FROM 
+                historical_changes hc
+            LEFT JOIN 
+                rooms r ON hc.row_id = r.id
+            LEFT JOIN 
+                users_db.users u ON hc.user_id = u.id
+            WHERE 
+                hc.table_name = 'rooms' AND hc.row_id = UUID_TO_BIN(%s)
+            ORDER BY 
+                hc.timestamp DESC
+        """
+
+        cursor.execute(query, (room_id,))
+        history = cursor.fetchall()
+
+        # Convert datetime objects to strings for JSON serialization
+        for item in history:
+            if 'timestamp' in item and item['timestamp']:
+                item['timestamp'] = item['timestamp'].isoformat()
+
+        return jsonify({
+            'success': True,
+            'history': history
+        })
+
+    except Exception as e:
+        print(f"Error fetching room history: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 

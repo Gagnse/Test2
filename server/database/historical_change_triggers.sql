@@ -571,6 +571,7 @@ BEGIN
     );
 END //
 
+
 -- UPDATE Trigger for functionality
 CREATE TRIGGER IF NOT EXISTS functionality_after_update
 AFTER UPDATE ON functionality
@@ -1188,7 +1189,7 @@ BEGIN
             'number', NEW.interior_fenestration_number,
             'name', NEW.interior_fenestration_name,
             'commentary', NEW.interior_fenestration_commentary,
-            'quantity', NEW.interior_fenestration_quantity,
+            'quantity', NEW.interior_fenestration_quantity
         ),
         '1.0',
         current_user_id
@@ -1287,12 +1288,12 @@ BEGIN
         OLD.interior_fenestration_id,
         'DELETE',
         JSON_OBJECT(
-                'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.interior_fenestration_category,
-                'number', NEW.interior_fenestration_number,
-                'name', NEW.interior_fenestration_name,
-                'commentary', NEW.interior_fenestration_commentary,
-                'quantity', NEW.interior_fenestration_quantity
+                'room_id', BIN_TO_UUID(OLD.room_id),
+                'category', OLD.interior_fenestration_category,
+                'number', OLD.interior_fenestration_number,
+                'name', OLD.interior_fenestration_name,
+                'commentary', OLD.interior_fenestration_commentary,
+                'quantity', OLD.interior_fenestration_quantity
             ),
         NULL,
         current_version,
@@ -1300,7 +1301,7 @@ BEGIN
     );
 END //
 
-- ============================== EXTERIOR_FENESTRATION TRIGGERS ==============================
+-- ============================== EXTERIOR_FENESTRATION TRIGGERS ==============================
 -- INSERT Trigger for exterior_fenestration
 CREATE TRIGGER IF NOT EXISTS exterior_fenestration_after_insert
 AFTER INSERT ON exterior_fenestration
@@ -1331,7 +1332,7 @@ BEGIN
             'number', NEW.exterior_fenestration_number,
             'name', NEW.exterior_fenestration_name,
             'commentary', NEW.exterior_fenestration_commentary,
-            'quantity', NEW.exterior_fenestration_quantity,
+            'quantity', NEW.exterior_fenestration_quantity
         ),
         '1.0',
         current_user_id
@@ -1430,12 +1431,12 @@ BEGIN
         OLD.exterior_fenestration_id,
         'DELETE',
         JSON_OBJECT(
-                'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.exterior_fenestration_category,
-                'number', NEW.exterior_fenestration_number,
-                'name', NEW.exterior_fenestration_name,
-                'commentary', NEW.exterior_fenestration_commentary,
-                'quantity', NEW.exterior_fenestration_quantity
+                'room_id', BIN_TO_UUID(OLD.room_id),
+                'category', OLD.exterior_fenestration_category,
+                'number', OLD.exterior_fenestration_number,
+                'name', OLD.exterior_fenestration_name,
+                'commentary', OLD.exterior_fenestration_commentary,
+                'quantity', OLD.exterior_fenestration_quantity
             ),
         NULL,
         current_version,
@@ -1443,7 +1444,7 @@ BEGIN
     );
 END //
 
-- ============================== DOORS TRIGGERS ==============================
+-- ============================== DOORS TRIGGERS ==============================
 -- INSERT Trigger for doors
 CREATE TRIGGER IF NOT EXISTS doors_after_insert
 AFTER INSERT ON doors
@@ -1474,7 +1475,7 @@ BEGIN
             'number', NEW.doors_number,
             'name', NEW.doors_name,
             'commentary', NEW.doors_commentary,
-            'quantity', NEW.doors_quantity,
+            'quantity', NEW.doors_quantity
         ),
         '1.0',
         current_user_id
@@ -1573,12 +1574,12 @@ BEGIN
         OLD.doors_id,
         'DELETE',
         JSON_OBJECT(
-                'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.doors_category,
-                'number', NEW.doors_number,
-                'name', NEW.doors_name,
-                'commentary', NEW.doors_commentary,
-                'quantity', NEW.doors_quantity
+                'room_id', BIN_TO_UUID(OLD.room_id),
+                'category', OLD.doors_category,
+                'number', OLD.doors_number,
+                'name', OLD.doors_name,
+                'commentary', OLD.doors_commentary,
+                'quantity', OLD.doors_quantity
             ),
         NULL,
         current_version,
@@ -1586,10 +1587,10 @@ BEGIN
     );
 END //
 
-- ============================== BUILT_IN_FURNITURES TRIGGERS ==============================
--- INSERT Trigger for built_in_furnitures
-CREATE TRIGGER IF NOT EXISTS built_in_furnitures_after_insert
-AFTER INSERT ON built_in_furnitures
+-- ============================== BUILT_IN_FURNITURE TRIGGERS ==============================
+-- INSERT Trigger for built_in_furniture
+CREATE TRIGGER IF NOT EXISTS built_in_furniture_after_insert
+AFTER INSERT ON built_in_furniture
 FOR EACH ROW
 BEGIN
     DECLARE current_user_id BINARY(16);
@@ -1607,26 +1608,26 @@ BEGIN
         version_number,
         user_id
     ) VALUES (
-        'built_in_furnitures',
-        NEW.built_in_furnitures_id,
+        'built_in_furniture',
+        NEW.built_in_furniture_id,
         'INSERT',
         NULL,
         JSON_OBJECT(
             'room_id', BIN_TO_UUID(NEW.room_id),
-            'category', NEW.built_in_furnitures_category,
-            'number', NEW.built_in_furnitures_number,
-            'name', NEW.built_in_furnitures_name,
-            'commentary', NEW.built_in_furnitures_commentary,
-            'quantity', NEW.built_in_furnitures_quantity,
+            'category', NEW.built_in_furniture_category,
+            'number', NEW.built_in_furniture_number,
+            'name', NEW.built_in_furniture_name,
+            'commentary', NEW.built_in_furniture_commentary,
+            'quantity', NEW.built_in_furniture_quantity
         ),
         '1.0',
         current_user_id
     );
 END //
 
--- UPDATE Trigger for built_in_furnitures
-CREATE TRIGGER IF NOT EXISTS built_in_furnitures_after_update
-AFTER UPDATE ON built_in_furnitures
+-- UPDATE Trigger for built_in_furniture
+CREATE TRIGGER IF NOT EXISTS built_in_furniture_after_update
+AFTER UPDATE ON built_in_furniture
 FOR EACH ROW
 BEGIN
     DECLARE current_user_id BINARY(16);
@@ -1636,16 +1637,16 @@ BEGIN
     SET current_user_id = @current_user_id;
 
     -- Check if any field has changed
-    IF NOT (NEW.built_in_furnitures_category <=> OLD.built_in_furnitures_category) OR
-       NOT (NEW.built_in_furnitures_number <=> OLD.built_in_furnitures_number) OR
-       NOT (NEW.built_in_furnitures_name <=> OLD.built_in_furnitures_name) OR
-       NOT (NEW.built_in_furnitures_commentary <=> OLD.built_in_furnitures_commentary) OR
-       NOT (NEW.built_in_furnitures_quantity <=> OLD.built_in_furnitures_quantity)THEN
+    IF NOT (NEW.built_in_furniture_category <=> OLD.built_in_furniture_category) OR
+       NOT (NEW.built_in_furniture_number <=> OLD.built_in_furniture_number) OR
+       NOT (NEW.built_in_furniture_name <=> OLD.built_in_furniture_name) OR
+       NOT (NEW.built_in_furniture_commentary <=> OLD.built_in_furniture_commentary) OR
+       NOT (NEW.built_in_furniture_quantity <=> OLD.built_in_furniture_quantity)THEN
 
         -- Get latest version and increment
         SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
         FROM historical_changes
-        WHERE entity_type = 'built_in_furnitures' AND entity_id = NEW.built_in_furnitures_id;
+        WHERE entity_type = 'built_in_furniture' AND entity_id = NEW.built_in_furniture_id;
 
         SET current_version = current_version + 0.1;
 
@@ -1659,24 +1660,24 @@ BEGIN
             version_number,
             user_id
         ) VALUES (
-            'built_in_furnitures',
-            NEW.built_in_furnitures_id,
+            'built_in_furniture',
+            NEW.built_in_furniture_id,
             'UPDATE',
             JSON_OBJECT(
                 'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.built_in_furnitures_category,
-                'number', NEW.built_in_furnitures_number,
-                'name', NEW.built_in_furnitures_name,
-                'commentary', NEW.built_in_furnitures_commentary,
-                'quantity', NEW.built_in_furnitures_quantity
+                'category', NEW.built_in_furniture_category,
+                'number', NEW.built_in_furniture_number,
+                'name', NEW.built_in_furniture_name,
+                'commentary', NEW.built_in_furniture_commentary,
+                'quantity', NEW.built_in_furniture_quantity
             ),
             JSON_OBJECT(
                 'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.built_in_furnitures_category,
-                'number', NEW.built_in_furnitures_number,
-                'name', NEW.built_in_furnitures_name,
-                'commentary', NEW.built_in_furnitures_commentary,
-                'quantity', NEW.built_in_furnitures_quantity
+                'category', NEW.built_in_furniture_category,
+                'number', NEW.built_in_furniture_number,
+                'name', NEW.built_in_furniture_name,
+                'commentary', NEW.built_in_furniture_commentary,
+                'quantity', NEW.built_in_furniture_quantity
             ),
             current_version,
             current_user_id
@@ -1684,9 +1685,9 @@ BEGIN
     END IF;
 END //
 
--- DELETE Trigger for built_in_furnitures
-CREATE TRIGGER IF NOT EXISTS built_in_furnitures_after_delete
-AFTER DELETE ON built_in_furnitures
+-- DELETE Trigger for built_in_furniture
+CREATE TRIGGER IF NOT EXISTS built_in_furniture_after_delete
+AFTER DELETE ON built_in_furniture
 FOR EACH ROW
 BEGIN
     DECLARE current_user_id BINARY(16);
@@ -1698,7 +1699,7 @@ BEGIN
     -- Get latest version and increment
     SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
     FROM historical_changes
-    WHERE entity_type = 'built_in_furnitures' AND entity_id = OLD.built_in_furnitures_id;
+    WHERE entity_type = 'built_in_furniture' AND entity_id = OLD.built_in_furniture_id;
 
     SET current_version = current_version + 0.1;
 
@@ -1712,16 +1713,16 @@ BEGIN
         version_number,
         user_id
     ) VALUES (
-        'built_in_furnitures',
-        OLD.built_in_furnitures_id,
+        'built_in_furniture',
+        OLD.built_in_furniture_id,
         'DELETE',
         JSON_OBJECT(
-                'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.built_in_furnitures_category,
-                'number', NEW.built_in_furnitures_number,
-                'name', NEW.built_in_furnitures_name,
-                'commentary', NEW.built_in_furnitures_commentary,
-                'quantity', NEW.built_in_furnitures_quantity
+                'room_id', BIN_TO_UUID(OLD.room_id),
+                'category', OLD.built_in_furniture_category,
+                'number', OLD.built_in_furniture_number,
+                'name', OLD.built_in_furniture_name,
+                'commentary', OLD.built_in_furniture_commentary,
+                'quantity', OLD.built_in_furniture_quantity
             ),
         NULL,
         current_version,
@@ -1729,7 +1730,7 @@ BEGIN
     );
 END //
 
-- ============================== ACCESSORIES TRIGGERS ==============================
+-- ============================== ACCESSORIES TRIGGERS ==============================
 -- INSERT Trigger for accessories
 CREATE TRIGGER IF NOT EXISTS accessories_after_insert
 AFTER INSERT ON accessories
@@ -1760,7 +1761,7 @@ BEGIN
             'number', NEW.accessories_number,
             'name', NEW.accessories_name,
             'commentary', NEW.accessories_commentary,
-            'quantity', NEW.accessories_quantity,
+            'quantity', NEW.accessories_quantity
         ),
         '1.0',
         current_user_id
@@ -1859,12 +1860,12 @@ BEGIN
         OLD.accessories_id,
         'DELETE',
         JSON_OBJECT(
-                'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.accessories_category,
-                'number', NEW.accessories_number,
-                'name', NEW.accessories_name,
-                'commentary', NEW.accessories_commentary,
-                'quantity', NEW.accessories_quantity
+                'room_id', BIN_TO_UUID(OLD.room_id),
+                'category', OLD.accessories_category,
+                'number', OLD.accessories_number,
+                'name', OLD.accessories_name,
+                'commentary', OLD.accessories_commentary,
+                'quantity', OLD.accessories_quantity
             ),
         NULL,
         current_version,
@@ -1872,7 +1873,7 @@ BEGIN
     );
 END //
 
-- ============================== PLUMBINGS TRIGGERS ==============================
+-- ============================== PLUMBINGS TRIGGERS ==============================
 -- INSERT Trigger for plumbings
 CREATE TRIGGER IF NOT EXISTS plumbings_after_insert
 AFTER INSERT ON plumbings
@@ -1903,7 +1904,7 @@ BEGIN
             'number', NEW.plumbings_number,
             'name', NEW.plumbings_name,
             'commentary', NEW.plumbings_commentary,
-            'quantity', NEW.plumbings_quantity,
+            'quantity', NEW.plumbings_quantity
         ),
         '1.0',
         current_user_id
@@ -2002,12 +2003,12 @@ BEGIN
         OLD.plumbings_id,
         'DELETE',
         JSON_OBJECT(
-                'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.plumbings_category,
-                'number', NEW.plumbings_number,
-                'name', NEW.plumbings_name,
-                'commentary', NEW.plumbings_commentary,
-                'quantity', NEW.plumbings_quantity
+                'room_id', BIN_TO_UUID(OLD.room_id),
+                'category', OLD.plumbings_category,
+                'number', OLD.plumbings_number,
+                'name', OLD.plumbings_name,
+                'commentary', OLD.plumbings_commentary,
+                'quantity', OLD.plumbings_quantity
             ),
         NULL,
         current_version,
@@ -2015,7 +2016,7 @@ BEGIN
     );
 END //
 
-- ============================== FIRE_PROTECTION TRIGGERS ==============================
+-- ============================== FIRE_PROTECTION TRIGGERS ==============================
 -- INSERT Trigger for fire_protection
 CREATE TRIGGER IF NOT EXISTS fire_protection_after_insert
 AFTER INSERT ON fire_protection
@@ -2046,7 +2047,7 @@ BEGIN
             'number', NEW.fire_protection_number,
             'name', NEW.fire_protection_name,
             'commentary', NEW.fire_protection_commentary,
-            'quantity', NEW.fire_protection_quantity,
+            'quantity', NEW.fire_protection_quantity
         ),
         '1.0',
         current_user_id
@@ -2145,12 +2146,12 @@ BEGIN
         OLD.fire_protection_id,
         'DELETE',
         JSON_OBJECT(
-                'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.fire_protection_category,
-                'number', NEW.fire_protection_number,
-                'name', NEW.fire_protection_name,
-                'commentary', NEW.fire_protection_commentary,
-                'quantity', NEW.fire_protection_quantity
+                'room_id', BIN_TO_UUID(OLD.room_id),
+                'category', OLD.fire_protection_category,
+                'number', OLD.fire_protection_number,
+                'name', OLD.fire_protection_name,
+                'commentary', OLD.fire_protection_commentary,
+                'quantity', OLD.fire_protection_quantity
             ),
         NULL,
         current_version,
@@ -2160,7 +2161,7 @@ END //
 
 
 
-- ============================== ELECTRICAL_OUTLETS TRIGGERS ==============================
+-- ============================== ELECTRICAL_OUTLETS TRIGGERS ==============================
 -- INSERT Trigger for electrical_outlets
 CREATE TRIGGER IF NOT EXISTS electrical_outlets_after_insert
 AFTER INSERT ON electrical_outlets
@@ -2191,7 +2192,7 @@ BEGIN
             'number', NEW.electrical_outlets_number,
             'name', NEW.electrical_outlets_name,
             'commentary', NEW.electrical_outlets_commentary,
-            'quantity', NEW.electrical_outlets_quantity,
+            'quantity', NEW.electrical_outlets_quantity
         ),
         '1.0',
         current_user_id
@@ -2290,12 +2291,12 @@ BEGIN
         OLD.electrical_outlets_id,
         'DELETE',
         JSON_OBJECT(
-                'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.electrical_outlets_category,
-                'number', NEW.electrical_outlets_number,
-                'name', NEW.electrical_outlets_name,
-                'commentary', NEW.electrical_outlets_commentary,
-                'quantity', NEW.electrical_outlets_quantity
+                'room_id', BIN_TO_UUID(OLD.room_id),
+                'category', OLD.electrical_outlets_category,
+                'number', OLD.electrical_outlets_number,
+                'name', OLD.electrical_outlets_name,
+                'commentary', OLD.electrical_outlets_commentary,
+                'quantity', OLD.electrical_outlets_quantity
             ),
         NULL,
         current_version,
@@ -2304,7 +2305,7 @@ BEGIN
 END //
 
 
-- ============================== COMMUNICATION_SECURITY TRIGGERS ==============================
+-- ============================== COMMUNICATION_SECURITY TRIGGERS ==============================
 -- INSERT Trigger for communication_security
 CREATE TRIGGER IF NOT EXISTS communication_security_after_insert
 AFTER INSERT ON communication_security
@@ -2335,7 +2336,7 @@ BEGIN
             'number', NEW.communication_security_number,
             'name', NEW.communication_security_name,
             'commentary', NEW.communication_security_commentary,
-            'quantity', NEW.communication_security_quantity,
+            'quantity', NEW.communication_security_quantity
         ),
         '1.0',
         current_user_id
@@ -2434,12 +2435,12 @@ BEGIN
         OLD.communication_security_id,
         'DELETE',
         JSON_OBJECT(
-                'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.communication_security_category,
-                'number', NEW.communication_security_number,
-                'name', NEW.communication_security_name,
-                'commentary', NEW.communication_security_commentary,
-                'quantity', NEW.communication_security_quantity
+                'room_id', BIN_TO_UUID(OLD.room_id),
+                'category', OLD.communication_security_category,
+                'number', OLD.communication_security_number,
+                'name', OLD.communication_security_name,
+                'commentary', OLD.communication_security_commentary,
+                'quantity', OLD.communication_security_quantity
             ),
         NULL,
         current_version,
@@ -2449,7 +2450,7 @@ END //
 
 
 
-- ============================== FINISHES TRIGGERS ==============================
+-- ============================== FINISHES TRIGGERS ==============================
 -- INSERT Trigger for finishes
 CREATE TRIGGER IF NOT EXISTS finishes_after_insert
 AFTER INSERT ON finishes
@@ -2480,7 +2481,7 @@ BEGIN
             'number', NEW.finishes_number,
             'name', NEW.finishes_name,
             'commentary', NEW.finishes_commentary,
-            'quantity', NEW.finishes_quantity,
+            'quantity', NEW.finishes_quantity
         ),
         '1.0',
         current_user_id
@@ -2579,12 +2580,12 @@ BEGIN
         OLD.finishes_id,
         'DELETE',
         JSON_OBJECT(
-                'room_id', BIN_TO_UUID(NEW.room_id),
-                'category', NEW.finishes_category,
-                'number', NEW.finishes_number,
-                'name', NEW.finishes_name,
-                'commentary', NEW.finishes_commentary,
-                'quantity', NEW.finishes_quantity
+                'room_id', BIN_TO_UUID(OLD.room_id),
+                'category', OLD.finishes_category,
+                'number', OLD.finishes_number,
+                'name', OLD.finishes_name,
+                'commentary', OLD.finishes_commentary,
+                'quantity', OLD.finishes_quantity
             ),
         NULL,
         current_version,

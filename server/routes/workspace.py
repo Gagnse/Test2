@@ -279,7 +279,7 @@ def project_detail(project_id):
     project_data = {}
     tables = [
         "interior_fenestration", "exterior_fenestration", "doors",
-        "built_in_fournitures", "accessories", "plumbings",
+        "built_in_furniture", "accessories", "plumbings",
         "fire_protection", "lighting", "electrical_outlets",
         "communication_security", "medical_equipment",
         "functionality", "arch_requirements", "struct_requirements",
@@ -359,8 +359,8 @@ def project_detail(project_id):
         "exterior_fenestration": ["exterior_fenestration_category", "exterior_fenestration_number",
                                   "exterior_fenestration_name", "exterior_fenestration_quantity"],
         "doors": ["doors_category", "doors_number", "doors_name", "doors_quantity"],
-        "built_in_fournitures": ["built_in_fournitures_category", "built_in_fournitures_number",
-                                 "built_in_fournitures_name", "built_in_fournitures_quantity"],
+        "built_in_furniture": ["built_in_furniture_category", "built_in_furniture_number",
+                                 "built_in_furniture_name", "built_in_furniture_quantity"],
         "accessories": ["accessories_category", "accessories_number", "accessories_name", "accessories_quantity"],
         "plumbings": ["plumbings_category", "plumbings_number", "plumbings_name", "plumbings_quantity"],
         "fire_protection": ["fire_protection_category", "fire_protection_number", "fire_protection_name",
@@ -1631,7 +1631,7 @@ def get_room_history(project_id, room_id):
                 change_date as timestamp,
                 version_number
             FROM historical_changes
-            WHERE entity_type = 'rooms' AND entity_id = UUID_TO_BIN(%s)
+            WHERE entity_type = 'room' AND entity_id = UUID_TO_BIN(%s)
             ORDER BY change_date DESC
             LIMIT 50
         """

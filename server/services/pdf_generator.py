@@ -91,7 +91,7 @@ def generate_pdf(project_info, room_data_dict):
         "exterior_fenestration": "Fenestration Extérieure",
         "interior_fenestration": "Fenestration Intérieure",
         "doors": "Portes",
-        "built_in_fournitures": "Mobilier Intégré",
+        "built_in_furniture": "Mobilier Intégré",
         "accessories": "Accessoires",
         "plumbings": "Plomberie",
         "fire_protection": "Protection Incendie",

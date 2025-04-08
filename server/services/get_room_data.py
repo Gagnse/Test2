@@ -16,7 +16,7 @@ def get_all_room_data(connection):
     # tables to include in the dictionary
     table_names = [
         "interior_fenestration", "exterior_fenestration", "doors",
-        "built_in_fournitures", "accessories", "plumbings",
+        "built_in_furniture", "accessories", "plumbings",
         "fire_protection", "lighting", "electrical_outlets",
         "communication_security", "medical_equipment", "functionality",
         "arch_requirements", "struct_requirements", "risk_elements",

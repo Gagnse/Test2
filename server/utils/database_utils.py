@@ -160,15 +160,15 @@ def create_project_database(project_id, project_number=None):
         """)
 
         cursor.execute("""
-            CREATE TABLE built_in_fournitures (
-                built_in_fournitures_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
+            CREATE TABLE built_in_furniture (
+                built_in_furniture_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
                 room_id BINARY(16) NOT NULL,
-                built_in_fournitures_category VARCHAR(100),
-                built_in_fournitures_number VARCHAR(100),
-                built_in_fournitures_name VARCHAR(200),
-                built_in_fournitures_commentary TEXT,
-                built_in_fournitures_quantity INT,
-                built_in_fournitures_date DATE,
+                built_in_furniture_category VARCHAR(100),
+                built_in_furniture_number VARCHAR(100),
+                built_in_furniture_name VARCHAR(200),
+                built_in_furniture_commentary TEXT,
+                built_in_furniture_quantity INT,
+                built_in_furniture_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -400,7 +400,7 @@ def create_project_database(project_id, project_number=None):
 
             # Execute the procedures SQL file
             procedures_file_path = os.path.join(os.path.dirname(__file__), '..', 'database',
-                                                'historical_procedures.sql')
+                                                'historical_procedure.sql')
             success_procedures = execute_sql_file(connection, procedures_file_path)
             if not success_procedures:
                 print(f"Warning: Failed to create historical utility procedures for {db_name}")
@@ -439,14 +439,17 @@ def execute_sql_file(connection, file_path):
         with open(file_path, 'r') as f:
             sql_script = f.read()
 
+        # Fix common comment issues (- to --)
+        sql_script = sql_script.replace("\n- ", "\n-- ")
+
         # Split script on DELIMITER to handle these statements correctly
         sql_parts = sql_script.split('DELIMITER')
 
         # Execute the first part (before any DELIMITER statement)
         if sql_parts[0].strip():
-            for statement in sql_parts[0].split(';'):
-                if statement.strip():
-                    cursor.execute(statement)
+            statements = [stmt.strip() for stmt in sql_parts[0].split(';') if stmt.strip()]
+            for statement in statements:
+                cursor.execute(statement)
 
         # For the rest, handle the delimiter changes
         for part in sql_parts[1:]:
@@ -454,16 +457,24 @@ def execute_sql_file(connection, file_path):
                 continue
 
             # Get the delimiter
-            delimiter_line, *rest = part.lstrip().split('\n', 1)
-            delimiter = delimiter_line.strip()
+            delimiter_lines = part.lstrip().split('\n', 1)
+            if len(delimiter_lines) < 2:
+                continue
+
+            delimiter = delimiter_lines[0].strip()
+            rest = delimiter_lines[1]
 
             # Join the rest and split by the delimiter
-            sql_commands = ''.join(rest).split(delimiter)
+            sql_commands = rest.split(delimiter)
 
             # Execute each command
             for cmd in sql_commands:
                 if cmd.strip():
-                    cursor.execute(cmd)
+                    try:
+                        cursor.execute(cmd)
+                    except Exception as cmd_error:
+                        print(f"Error executing command: {cmd_error}")
+                        print(f"Command: {cmd[:100]}...")  # Print first 100 chars for debugging
 
         connection.commit()
         return True

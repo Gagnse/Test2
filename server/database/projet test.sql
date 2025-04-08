@@ -1,4 +1,4 @@
-USE spacelogic_57f4970113e811f09c64005056c00001;
+USE SPACELOGIC_1917602c148811f0a5a930b1e8759074;
 
 
 INSERT INTO rooms (program_number, name, description, sector, functional_unit, level, planned_area) VALUES
@@ -211,7 +211,7 @@ INSERT INTO rooms (program_number, name, description, sector, functional_unit, l
     ("3100.10.110", "Utilité souillée", "Utilité souillée", "3100 - AMBULATOIRE", "3000 - PÉDIATRIE", "Rez-de-chaussée", 9),
     ("3100.10.115", "Salle des médicaments", "Salle des médicaments", "3100 - AMBULATOIRE", "3000 - PÉDIATRIE", "Rez-de-chaussée", 11),
     ("3100.10.120", "Dépôt - matériel roulant", "Dépôt de matériel roulant", "3100 - AMBULATOIRE","3000 - PÉDIATRIE", "Rez-de-chaussée", 15),
-    ("3100.10.125", "Dépôt - furnitures", "Dépôt de matériel roulant", "3100 - AMBULATOIRE", "3000 - PÉDIATRIE", "Rez-de-chaussée", 3),
+    ("3100.10.125", "Dépôt - fournitures", "Dépôt de matériel roulant", "3100 - AMBULATOIRE", "3000 - PÉDIATRIE", "Rez-de-chaussée", 3),
     ("3100.10.130", "Toilette - personnel", "Toilette - personnel", "3100 - AMBULATOIRE", "3000 - PÉDIATRIE", "Rez-de-chaussée", 2.5),
     ("3100.10.135", "Alcôve - casiers", "Alcôve", "3100 - AMBULATOIRE", "3000 - PÉDIATRIE", "Rez-de-chaussée", 0.4),
     ("3100.10.140", "Salle discussion de cas", "Salle de discussion de cas", "3100 - AMBULATOIRE", "3000 - PÉDIATRIE", "Rez-de-chaussée", 20),
@@ -320,12 +320,12 @@ SELECT
 FROM rooms r
 JOIN (SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3) AS e;
 
--- Insert built-in furnitures
-INSERT INTO built_in_furnitures (
-    built_in_furnitures_id, room_id,
-    built_in_furnitures_category, built_in_furnitures_number,
-    built_in_furnitures_name, built_in_furnitures_commentary,
-    built_in_furnitures_quantity
+-- Insert built-in furniture
+INSERT INTO built_in_furniture (
+    built_in_furniture_id, room_id,
+    built_in_furniture_category, built_in_furniture_number,
+    built_in_furniture_name, built_in_furniture_commentary,
+    built_in_furniture_quantity
 )
 SELECT
     UUID_TO_BIN(UUID()),

@@ -175,7 +175,7 @@ class User:
                 connection.rollback()
             print(f"Error saving user: {e}")
             import traceback
-            traceback.print_exc()  # Print the full error traceback for debugging
+            traceback.print_exc()
             return False
         finally:
             close_connection(connection, cursor)
@@ -284,7 +284,7 @@ class Project:
 
         try:
             cursor = connection.cursor(dictionary=True)
-            print(f"Debug - Finding projects for user ID: {user_id}")
+            #print(f"Debug - Finding projects for user ID: {user_id}")
 
             query = """
                 SELECT BIN_TO_UUID(p.id) as id, p.project_number, p.name, p.description, 
@@ -295,7 +295,7 @@ class Project:
             """
             cursor.execute(query, (user_id,))
             results = cursor.fetchall()
-            print(f"Debug - Query returned {len(results)} projects")
+            #print(f"Debug - Query returned {len(results)} projects")
 
             for result in results:
                 project = Project(
@@ -701,7 +701,7 @@ class Organizations:
 
         try:
             cursor = connection.cursor(dictionary=True)
-            print(f"Getting users for organization ID: {self.id}")
+            #print(f"Getting users for organization ID: {self.id}")
 
             query = """
                  SELECT BIN_TO_UUID(u.id) as id, u.last_name, u.first_name, u.email, 
@@ -713,7 +713,7 @@ class Organizations:
             cursor.execute(query, (self.id,))
             results = cursor.fetchall()
 
-            print(f"Found {len(results)} users for organization")
+            #print(f"Found {len(results)} users for organization")
 
             for result in results:
                 # Use direct User class import from current module to avoid import issues
@@ -753,7 +753,7 @@ class Organizations:
             # First check if user is super admin - this takes precedence over assigned roles
             if User.is_super_admin(user_id, self.id):
                 # Return Administrateur role for super admins
-                print(f"User {user_id} is super admin of organization {self.id}, returning Administrateur role")
+                #print(f"User {user_id} is super admin of organization {self.id}, returning Administrateur role")
                 return [{'id': 'super-admin', 'name': 'Administrateur', 'description': 'Super Administrator'}]
 
             # Get role IDs from user_organisation_role table
@@ -777,7 +777,7 @@ class Organizations:
                         'created_at': result['created_at']
                     }
                     roles.append(role)
-                    print(f"Found assigned role {result['name']} for user {user_id}")
+                    #print(f"Found assigned role {result['name']} for user {user_id}")
         except Exception as e:
             print(f"Error getting roles for user {user_id} in organization {self.id}: {e}")
             import traceback

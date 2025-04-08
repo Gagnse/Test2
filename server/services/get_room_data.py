@@ -2,18 +2,18 @@ import uuid
 
 
 def get_all_room_data(connection):
-    """Construit un dictionnaire des données de toutes les salles, regroupées par unité fonctionnelle et secteur."""
+    """Create a dictionary from all rooms data, grouped by fonctional_unit and sector"""
     cursor = connection.cursor(dictionary=True)
 
-    # 1️⃣ Récupérer toutes les salles
+    # Get all rooms
     cursor.execute("SELECT id, name, sector, functional_unit FROM rooms")
     rooms = cursor.fetchall()
 
-    print(f"📦 Nombre de salles récupérées : {len(rooms)}")
+    #print(f"Nombre de salles récupérées : {len(rooms)}")
     if not rooms:
         return {}
 
-    # 2️⃣ Définir les tables à inclure
+    # tables to include in the dictionary
     table_names = [
         "interior_fenestration", "exterior_fenestration", "doors",
         "built_in_fournitures", "accessories", "plumbings",
@@ -28,7 +28,7 @@ def get_all_room_data(connection):
     for room in rooms:
         room_id_bytes = room["id"]
         if not room_id_bytes:
-            continue  # Skip si pas d'ID
+            continue  # Skip if no id
         room_id = str(uuid.UUID(bytes=room_id_bytes))
         room_name = room.get("name", "Salle sans nom")
         sector = str(room.get("sector", "Secteur inconnu"))

@@ -1150,3 +1150,1444 @@ BEGIN
             'pressurization', OLD.ventilation_pressurization,
             'environmental_parameters', OLD.ventilation_environmental_parameters,
             'commentary', OLD.ventilation_commentary
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //
+
+-- ============================== INTERIOR_FENESTRATION TRIGGERS ==============================
+-- INSERT Trigger for interior_fenestration
+CREATE TRIGGER IF NOT EXISTS interior_fenestration_after_insert
+AFTER INSERT ON interior_fenestration
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'interior_fenestration',
+        NEW.interior_fenestration_id,
+        'INSERT',
+        NULL,
+        JSON_OBJECT(
+            'room_id', BIN_TO_UUID(NEW.room_id),
+            'category', NEW.interior_fenestration_category,
+            'number', NEW.interior_fenestration_number,
+            'name', NEW.interior_fenestration_name,
+            'commentary', NEW.interior_fenestration_commentary,
+            'quantity', NEW.interior_fenestration_quantity,
+        ),
+        '1.0',
+        current_user_id
+    );
+END //
+
+-- UPDATE Trigger for interior_fenestration
+CREATE TRIGGER IF NOT EXISTS interior_fenestration_after_update
+AFTER UPDATE ON interior_fenestration
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Check if any field has changed
+    IF NOT (NEW.interior_fenestration_category <=> OLD.interior_fenestration_category) OR
+       NOT (NEW.interior_fenestration_number <=> OLD.interior_fenestration_number) OR
+       NOT (NEW.interior_fenestration_name <=> OLD.interior_fenestration_name) OR
+       NOT (NEW.interior_fenestration_commentary <=> OLD.interior_fenestration_commentary) OR
+       NOT (NEW.interior_fenestration_quantity <=> OLD.interior_fenestration_quantity)THEN
+
+        -- Get latest version and increment
+        SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+        FROM historical_changes
+        WHERE entity_type = 'interior_fenestration' AND entity_id = NEW.interior_fenestration_id;
+
+        SET current_version = current_version + 0.1;
+
+        -- Insert into historical_changes
+        INSERT INTO historical_changes (
+            entity_type,
+            entity_id,
+            change_type,
+            old_value,
+            new_value,
+            version_number,
+            user_id
+        ) VALUES (
+            'interior_fenestration',
+            NEW.interior_fenestration_id,
+            'UPDATE',
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.interior_fenestration_category,
+                'number', NEW.interior_fenestration_number,
+                'name', NEW.interior_fenestration_name,
+                'commentary', NEW.interior_fenestration_commentary,
+                'quantity', NEW.interior_fenestration_quantity
+            ),
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.interior_fenestration_category,
+                'number', NEW.interior_fenestration_number,
+                'name', NEW.interior_fenestration_name,
+                'commentary', NEW.interior_fenestration_commentary,
+                'quantity', NEW.interior_fenestration_quantity
+            ),
+            current_version,
+            current_user_id
+        );
+    END IF;
+END //
+
+-- DELETE Trigger for interior_fenestration
+CREATE TRIGGER IF NOT EXISTS interior_fenestration_after_delete
+AFTER DELETE ON interior_fenestration
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Get latest version and increment
+    SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+    FROM historical_changes
+    WHERE entity_type = 'interior_fenestration' AND entity_id = OLD.interior_fenestration_id;
+
+    SET current_version = current_version + 0.1;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'interior_fenestration',
+        OLD.interior_fenestration_id,
+        'DELETE',
+        JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.interior_fenestration_category,
+                'number', NEW.interior_fenestration_number,
+                'name', NEW.interior_fenestration_name,
+                'commentary', NEW.interior_fenestration_commentary,
+                'quantity', NEW.interior_fenestration_quantity
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //
+
+- ============================== EXTERIOR_FENESTRATION TRIGGERS ==============================
+-- INSERT Trigger for exterior_fenestration
+CREATE TRIGGER IF NOT EXISTS exterior_fenestration_after_insert
+AFTER INSERT ON exterior_fenestration
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'exterior_fenestration',
+        NEW.exterior_fenestration_id,
+        'INSERT',
+        NULL,
+        JSON_OBJECT(
+            'room_id', BIN_TO_UUID(NEW.room_id),
+            'category', NEW.exterior_fenestration_category,
+            'number', NEW.exterior_fenestration_number,
+            'name', NEW.exterior_fenestration_name,
+            'commentary', NEW.exterior_fenestration_commentary,
+            'quantity', NEW.exterior_fenestration_quantity,
+        ),
+        '1.0',
+        current_user_id
+    );
+END //
+
+-- UPDATE Trigger for exterior_fenestration
+CREATE TRIGGER IF NOT EXISTS exterior_fenestration_after_update
+AFTER UPDATE ON exterior_fenestration
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Check if any field has changed
+    IF NOT (NEW.exterior_fenestration_category <=> OLD.exterior_fenestration_category) OR
+       NOT (NEW.exterior_fenestration_number <=> OLD.exterior_fenestration_number) OR
+       NOT (NEW.exterior_fenestration_name <=> OLD.exterior_fenestration_name) OR
+       NOT (NEW.exterior_fenestration_commentary <=> OLD.exterior_fenestration_commentary) OR
+       NOT (NEW.exterior_fenestration_quantity <=> OLD.exterior_fenestration_quantity)THEN
+
+        -- Get latest version and increment
+        SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+        FROM historical_changes
+        WHERE entity_type = 'exterior_fenestration' AND entity_id = NEW.exterior_fenestration_id;
+
+        SET current_version = current_version + 0.1;
+
+        -- Insert into historical_changes
+        INSERT INTO historical_changes (
+            entity_type,
+            entity_id,
+            change_type,
+            old_value,
+            new_value,
+            version_number,
+            user_id
+        ) VALUES (
+            'exterior_fenestration',
+            NEW.exterior_fenestration_id,
+            'UPDATE',
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.exterior_fenestration_category,
+                'number', NEW.exterior_fenestration_number,
+                'name', NEW.exterior_fenestration_name,
+                'commentary', NEW.exterior_fenestration_commentary,
+                'quantity', NEW.exterior_fenestration_quantity
+            ),
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.exterior_fenestration_category,
+                'number', NEW.exterior_fenestration_number,
+                'name', NEW.exterior_fenestration_name,
+                'commentary', NEW.exterior_fenestration_commentary,
+                'quantity', NEW.exterior_fenestration_quantity
+            ),
+            current_version,
+            current_user_id
+        );
+    END IF;
+END //
+
+-- DELETE Trigger for exterior_fenestration
+CREATE TRIGGER IF NOT EXISTS exterior_fenestration_after_delete
+AFTER DELETE ON exterior_fenestration
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Get latest version and increment
+    SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+    FROM historical_changes
+    WHERE entity_type = 'exterior_fenestration' AND entity_id = OLD.exterior_fenestration_id;
+
+    SET current_version = current_version + 0.1;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'exterior_fenestration',
+        OLD.exterior_fenestration_id,
+        'DELETE',
+        JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.exterior_fenestration_category,
+                'number', NEW.exterior_fenestration_number,
+                'name', NEW.exterior_fenestration_name,
+                'commentary', NEW.exterior_fenestration_commentary,
+                'quantity', NEW.exterior_fenestration_quantity
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //
+
+- ============================== DOORS TRIGGERS ==============================
+-- INSERT Trigger for doors
+CREATE TRIGGER IF NOT EXISTS doors_after_insert
+AFTER INSERT ON doors
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'doors',
+        NEW.doors_id,
+        'INSERT',
+        NULL,
+        JSON_OBJECT(
+            'room_id', BIN_TO_UUID(NEW.room_id),
+            'category', NEW.doors_category,
+            'number', NEW.doors_number,
+            'name', NEW.doors_name,
+            'commentary', NEW.doors_commentary,
+            'quantity', NEW.doors_quantity,
+        ),
+        '1.0',
+        current_user_id
+    );
+END //
+
+-- UPDATE Trigger for doors
+CREATE TRIGGER IF NOT EXISTS doors_after_update
+AFTER UPDATE ON doors
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Check if any field has changed
+    IF NOT (NEW.doors_category <=> OLD.doors_category) OR
+       NOT (NEW.doors_number <=> OLD.doors_number) OR
+       NOT (NEW.doors_name <=> OLD.doors_name) OR
+       NOT (NEW.doors_commentary <=> OLD.doors_commentary) OR
+       NOT (NEW.doors_quantity <=> OLD.doors_quantity)THEN
+
+        -- Get latest version and increment
+        SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+        FROM historical_changes
+        WHERE entity_type = 'doors' AND entity_id = NEW.doors_id;
+
+        SET current_version = current_version + 0.1;
+
+        -- Insert into historical_changes
+        INSERT INTO historical_changes (
+            entity_type,
+            entity_id,
+            change_type,
+            old_value,
+            new_value,
+            version_number,
+            user_id
+        ) VALUES (
+            'doors',
+            NEW.doors_id,
+            'UPDATE',
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.doors_category,
+                'number', NEW.doors_number,
+                'name', NEW.doors_name,
+                'commentary', NEW.doors_commentary,
+                'quantity', NEW.doors_quantity
+            ),
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.doors_category,
+                'number', NEW.doors_number,
+                'name', NEW.doors_name,
+                'commentary', NEW.doors_commentary,
+                'quantity', NEW.doors_quantity
+            ),
+            current_version,
+            current_user_id
+        );
+    END IF;
+END //
+
+-- DELETE Trigger for doors
+CREATE TRIGGER IF NOT EXISTS doors_after_delete
+AFTER DELETE ON doors
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Get latest version and increment
+    SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+    FROM historical_changes
+    WHERE entity_type = 'doors' AND entity_id = OLD.doors_id;
+
+    SET current_version = current_version + 0.1;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'doors',
+        OLD.doors_id,
+        'DELETE',
+        JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.doors_category,
+                'number', NEW.doors_number,
+                'name', NEW.doors_name,
+                'commentary', NEW.doors_commentary,
+                'quantity', NEW.doors_quantity
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //
+
+- ============================== BUILT_IN_FURNITURES TRIGGERS ==============================
+-- INSERT Trigger for built_in_furnitures
+CREATE TRIGGER IF NOT EXISTS built_in_furnitures_after_insert
+AFTER INSERT ON built_in_furnitures
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'built_in_furnitures',
+        NEW.built_in_furnitures_id,
+        'INSERT',
+        NULL,
+        JSON_OBJECT(
+            'room_id', BIN_TO_UUID(NEW.room_id),
+            'category', NEW.built_in_furnitures_category,
+            'number', NEW.built_in_furnitures_number,
+            'name', NEW.built_in_furnitures_name,
+            'commentary', NEW.built_in_furnitures_commentary,
+            'quantity', NEW.built_in_furnitures_quantity,
+        ),
+        '1.0',
+        current_user_id
+    );
+END //
+
+-- UPDATE Trigger for built_in_furnitures
+CREATE TRIGGER IF NOT EXISTS built_in_furnitures_after_update
+AFTER UPDATE ON built_in_furnitures
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Check if any field has changed
+    IF NOT (NEW.built_in_furnitures_category <=> OLD.built_in_furnitures_category) OR
+       NOT (NEW.built_in_furnitures_number <=> OLD.built_in_furnitures_number) OR
+       NOT (NEW.built_in_furnitures_name <=> OLD.built_in_furnitures_name) OR
+       NOT (NEW.built_in_furnitures_commentary <=> OLD.built_in_furnitures_commentary) OR
+       NOT (NEW.built_in_furnitures_quantity <=> OLD.built_in_furnitures_quantity)THEN
+
+        -- Get latest version and increment
+        SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+        FROM historical_changes
+        WHERE entity_type = 'built_in_furnitures' AND entity_id = NEW.built_in_furnitures_id;
+
+        SET current_version = current_version + 0.1;
+
+        -- Insert into historical_changes
+        INSERT INTO historical_changes (
+            entity_type,
+            entity_id,
+            change_type,
+            old_value,
+            new_value,
+            version_number,
+            user_id
+        ) VALUES (
+            'built_in_furnitures',
+            NEW.built_in_furnitures_id,
+            'UPDATE',
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.built_in_furnitures_category,
+                'number', NEW.built_in_furnitures_number,
+                'name', NEW.built_in_furnitures_name,
+                'commentary', NEW.built_in_furnitures_commentary,
+                'quantity', NEW.built_in_furnitures_quantity
+            ),
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.built_in_furnitures_category,
+                'number', NEW.built_in_furnitures_number,
+                'name', NEW.built_in_furnitures_name,
+                'commentary', NEW.built_in_furnitures_commentary,
+                'quantity', NEW.built_in_furnitures_quantity
+            ),
+            current_version,
+            current_user_id
+        );
+    END IF;
+END //
+
+-- DELETE Trigger for built_in_furnitures
+CREATE TRIGGER IF NOT EXISTS built_in_furnitures_after_delete
+AFTER DELETE ON built_in_furnitures
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Get latest version and increment
+    SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+    FROM historical_changes
+    WHERE entity_type = 'built_in_furnitures' AND entity_id = OLD.built_in_furnitures_id;
+
+    SET current_version = current_version + 0.1;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'built_in_furnitures',
+        OLD.built_in_furnitures_id,
+        'DELETE',
+        JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.built_in_furnitures_category,
+                'number', NEW.built_in_furnitures_number,
+                'name', NEW.built_in_furnitures_name,
+                'commentary', NEW.built_in_furnitures_commentary,
+                'quantity', NEW.built_in_furnitures_quantity
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //
+
+- ============================== ACCESSORIES TRIGGERS ==============================
+-- INSERT Trigger for accessories
+CREATE TRIGGER IF NOT EXISTS accessories_after_insert
+AFTER INSERT ON accessories
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'accessories',
+        NEW.accessories_id,
+        'INSERT',
+        NULL,
+        JSON_OBJECT(
+            'room_id', BIN_TO_UUID(NEW.room_id),
+            'category', NEW.accessories_category,
+            'number', NEW.accessories_number,
+            'name', NEW.accessories_name,
+            'commentary', NEW.accessories_commentary,
+            'quantity', NEW.accessories_quantity,
+        ),
+        '1.0',
+        current_user_id
+    );
+END //
+
+-- UPDATE Trigger for accessories
+CREATE TRIGGER IF NOT EXISTS accessories_after_update
+AFTER UPDATE ON accessories
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Check if any field has changed
+    IF NOT (NEW.accessories_category <=> OLD.accessories_category) OR
+       NOT (NEW.accessories_number <=> OLD.accessories_number) OR
+       NOT (NEW.accessories_name <=> OLD.accessories_name) OR
+       NOT (NEW.accessories_commentary <=> OLD.accessories_commentary) OR
+       NOT (NEW.accessories_quantity <=> OLD.accessories_quantity)THEN
+
+        -- Get latest version and increment
+        SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+        FROM historical_changes
+        WHERE entity_type = 'accessories' AND entity_id = NEW.accessories_id;
+
+        SET current_version = current_version + 0.1;
+
+        -- Insert into historical_changes
+        INSERT INTO historical_changes (
+            entity_type,
+            entity_id,
+            change_type,
+            old_value,
+            new_value,
+            version_number,
+            user_id
+        ) VALUES (
+            'accessories',
+            NEW.accessories_id,
+            'UPDATE',
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.accessories_category,
+                'number', NEW.accessories_number,
+                'name', NEW.accessories_name,
+                'commentary', NEW.accessories_commentary,
+                'quantity', NEW.accessories_quantity
+            ),
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.accessories_category,
+                'number', NEW.accessories_number,
+                'name', NEW.accessories_name,
+                'commentary', NEW.accessories_commentary,
+                'quantity', NEW.accessories_quantity
+            ),
+            current_version,
+            current_user_id
+        );
+    END IF;
+END //
+
+-- DELETE Trigger for accessories
+CREATE TRIGGER IF NOT EXISTS accessories_after_delete
+AFTER DELETE ON accessories
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Get latest version and increment
+    SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+    FROM historical_changes
+    WHERE entity_type = 'accessories' AND entity_id = OLD.accessories_id;
+
+    SET current_version = current_version + 0.1;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'accessories',
+        OLD.accessories_id,
+        'DELETE',
+        JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.accessories_category,
+                'number', NEW.accessories_number,
+                'name', NEW.accessories_name,
+                'commentary', NEW.accessories_commentary,
+                'quantity', NEW.accessories_quantity
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //
+
+- ============================== PLUMBINGS TRIGGERS ==============================
+-- INSERT Trigger for plumbings
+CREATE TRIGGER IF NOT EXISTS plumbings_after_insert
+AFTER INSERT ON plumbings
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'plumbings',
+        NEW.plumbings_id,
+        'INSERT',
+        NULL,
+        JSON_OBJECT(
+            'room_id', BIN_TO_UUID(NEW.room_id),
+            'category', NEW.plumbings_category,
+            'number', NEW.plumbings_number,
+            'name', NEW.plumbings_name,
+            'commentary', NEW.plumbings_commentary,
+            'quantity', NEW.plumbings_quantity,
+        ),
+        '1.0',
+        current_user_id
+    );
+END //
+
+-- UPDATE Trigger for plumbings
+CREATE TRIGGER IF NOT EXISTS plumbings_after_update
+AFTER UPDATE ON plumbings
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Check if any field has changed
+    IF NOT (NEW.plumbings_category <=> OLD.plumbings_category) OR
+       NOT (NEW.plumbings_number <=> OLD.plumbings_number) OR
+       NOT (NEW.plumbings_name <=> OLD.plumbings_name) OR
+       NOT (NEW.plumbings_commentary <=> OLD.plumbings_commentary) OR
+       NOT (NEW.plumbings_quantity <=> OLD.plumbings_quantity)THEN
+
+        -- Get latest version and increment
+        SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+        FROM historical_changes
+        WHERE entity_type = 'plumbings' AND entity_id = NEW.plumbings_id;
+
+        SET current_version = current_version + 0.1;
+
+        -- Insert into historical_changes
+        INSERT INTO historical_changes (
+            entity_type,
+            entity_id,
+            change_type,
+            old_value,
+            new_value,
+            version_number,
+            user_id
+        ) VALUES (
+            'plumbings',
+            NEW.plumbings_id,
+            'UPDATE',
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.plumbings_category,
+                'number', NEW.plumbings_number,
+                'name', NEW.plumbings_name,
+                'commentary', NEW.plumbings_commentary,
+                'quantity', NEW.plumbings_quantity
+            ),
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.plumbings_category,
+                'number', NEW.plumbings_number,
+                'name', NEW.plumbings_name,
+                'commentary', NEW.plumbings_commentary,
+                'quantity', NEW.plumbings_quantity
+            ),
+            current_version,
+            current_user_id
+        );
+    END IF;
+END //
+
+-- DELETE Trigger for plumbings
+CREATE TRIGGER IF NOT EXISTS plumbings_after_delete
+AFTER DELETE ON plumbings
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Get latest version and increment
+    SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+    FROM historical_changes
+    WHERE entity_type = 'plumbings' AND entity_id = OLD.plumbings_id;
+
+    SET current_version = current_version + 0.1;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'plumbings',
+        OLD.plumbings_id,
+        'DELETE',
+        JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.plumbings_category,
+                'number', NEW.plumbings_number,
+                'name', NEW.plumbings_name,
+                'commentary', NEW.plumbings_commentary,
+                'quantity', NEW.plumbings_quantity
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //
+
+- ============================== FIRE_PROTECTION TRIGGERS ==============================
+-- INSERT Trigger for fire_protection
+CREATE TRIGGER IF NOT EXISTS fire_protection_after_insert
+AFTER INSERT ON fire_protection
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'fire_protection',
+        NEW.fire_protection_id,
+        'INSERT',
+        NULL,
+        JSON_OBJECT(
+            'room_id', BIN_TO_UUID(NEW.room_id),
+            'category', NEW.fire_protection_category,
+            'number', NEW.fire_protection_number,
+            'name', NEW.fire_protection_name,
+            'commentary', NEW.fire_protection_commentary,
+            'quantity', NEW.fire_protection_quantity,
+        ),
+        '1.0',
+        current_user_id
+    );
+END //
+
+-- UPDATE Trigger for fire_protection
+CREATE TRIGGER IF NOT EXISTS fire_protection_after_update
+AFTER UPDATE ON fire_protection
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Check if any field has changed
+    IF NOT (NEW.fire_protection_category <=> OLD.fire_protection_category) OR
+       NOT (NEW.fire_protection_number <=> OLD.fire_protection_number) OR
+       NOT (NEW.fire_protection_name <=> OLD.fire_protection_name) OR
+       NOT (NEW.fire_protection_commentary <=> OLD.fire_protection_commentary) OR
+       NOT (NEW.fire_protection_quantity <=> OLD.fire_protection_quantity)THEN
+
+        -- Get latest version and increment
+        SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+        FROM historical_changes
+        WHERE entity_type = 'fire_protection' AND entity_id = NEW.fire_protection_id;
+
+        SET current_version = current_version + 0.1;
+
+        -- Insert into historical_changes
+        INSERT INTO historical_changes (
+            entity_type,
+            entity_id,
+            change_type,
+            old_value,
+            new_value,
+            version_number,
+            user_id
+        ) VALUES (
+            'fire_protection',
+            NEW.fire_protection_id,
+            'UPDATE',
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.fire_protection_category,
+                'number', NEW.fire_protection_number,
+                'name', NEW.fire_protection_name,
+                'commentary', NEW.fire_protection_commentary,
+                'quantity', NEW.fire_protection_quantity
+            ),
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.fire_protection_category,
+                'number', NEW.fire_protection_number,
+                'name', NEW.fire_protection_name,
+                'commentary', NEW.fire_protection_commentary,
+                'quantity', NEW.fire_protection_quantity
+            ),
+            current_version,
+            current_user_id
+        );
+    END IF;
+END //
+
+-- DELETE Trigger for fire_protection
+CREATE TRIGGER IF NOT EXISTS fire_protection_after_delete
+AFTER DELETE ON fire_protection
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Get latest version and increment
+    SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+    FROM historical_changes
+    WHERE entity_type = 'fire_protection' AND entity_id = OLD.fire_protection_id;
+
+    SET current_version = current_version + 0.1;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'fire_protection',
+        OLD.fire_protection_id,
+        'DELETE',
+        JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.fire_protection_category,
+                'number', NEW.fire_protection_number,
+                'name', NEW.fire_protection_name,
+                'commentary', NEW.fire_protection_commentary,
+                'quantity', NEW.fire_protection_quantity
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //
+
+
+
+- ============================== ELECTRICAL_OUTLETS TRIGGERS ==============================
+-- INSERT Trigger for electrical_outlets
+CREATE TRIGGER IF NOT EXISTS electrical_outlets_after_insert
+AFTER INSERT ON electrical_outlets
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'electrical_outlets',
+        NEW.electrical_outlets_id,
+        'INSERT',
+        NULL,
+        JSON_OBJECT(
+            'room_id', BIN_TO_UUID(NEW.room_id),
+            'category', NEW.electrical_outlets_category,
+            'number', NEW.electrical_outlets_number,
+            'name', NEW.electrical_outlets_name,
+            'commentary', NEW.electrical_outlets_commentary,
+            'quantity', NEW.electrical_outlets_quantity,
+        ),
+        '1.0',
+        current_user_id
+    );
+END //
+
+-- UPDATE Trigger for electrical_outlets
+CREATE TRIGGER IF NOT EXISTS electrical_outlets_after_update
+AFTER UPDATE ON electrical_outlets
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Check if any field has changed
+    IF NOT (NEW.electrical_outlets_category <=> OLD.electrical_outlets_category) OR
+       NOT (NEW.electrical_outlets_number <=> OLD.electrical_outlets_number) OR
+       NOT (NEW.electrical_outlets_name <=> OLD.electrical_outlets_name) OR
+       NOT (NEW.electrical_outlets_commentary <=> OLD.electrical_outlets_commentary) OR
+       NOT (NEW.electrical_outlets_quantity <=> OLD.electrical_outlets_quantity)THEN
+
+        -- Get latest version and increment
+        SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+        FROM historical_changes
+        WHERE entity_type = 'electrical_outlets' AND entity_id = NEW.electrical_outlets_id;
+
+        SET current_version = current_version + 0.1;
+
+        -- Insert into historical_changes
+        INSERT INTO historical_changes (
+            entity_type,
+            entity_id,
+            change_type,
+            old_value,
+            new_value,
+            version_number,
+            user_id
+        ) VALUES (
+            'electrical_outlets',
+            NEW.electrical_outlets_id,
+            'UPDATE',
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.electrical_outlets_category,
+                'number', NEW.electrical_outlets_number,
+                'name', NEW.electrical_outlets_name,
+                'commentary', NEW.electrical_outlets_commentary,
+                'quantity', NEW.electrical_outlets_quantity
+            ),
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.electrical_outlets_category,
+                'number', NEW.electrical_outlets_number,
+                'name', NEW.electrical_outlets_name,
+                'commentary', NEW.electrical_outlets_commentary,
+                'quantity', NEW.electrical_outlets_quantity
+            ),
+            current_version,
+            current_user_id
+        );
+    END IF;
+END //
+
+-- DELETE Trigger for electrical_outlets
+CREATE TRIGGER IF NOT EXISTS electrical_outlets_after_delete
+AFTER DELETE ON electrical_outlets
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Get latest version and increment
+    SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+    FROM historical_changes
+    WHERE entity_type = 'electrical_outlets' AND entity_id = OLD.electrical_outlets_id;
+
+    SET current_version = current_version + 0.1;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'electrical_outlets',
+        OLD.electrical_outlets_id,
+        'DELETE',
+        JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.electrical_outlets_category,
+                'number', NEW.electrical_outlets_number,
+                'name', NEW.electrical_outlets_name,
+                'commentary', NEW.electrical_outlets_commentary,
+                'quantity', NEW.electrical_outlets_quantity
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //
+
+
+- ============================== COMMUNICATION_SECURITY TRIGGERS ==============================
+-- INSERT Trigger for communication_security
+CREATE TRIGGER IF NOT EXISTS communication_security_after_insert
+AFTER INSERT ON communication_security
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'communication_security',
+        NEW.communication_security_id,
+        'INSERT',
+        NULL,
+        JSON_OBJECT(
+            'room_id', BIN_TO_UUID(NEW.room_id),
+            'category', NEW.communication_security_category,
+            'number', NEW.communication_security_number,
+            'name', NEW.communication_security_name,
+            'commentary', NEW.communication_security_commentary,
+            'quantity', NEW.communication_security_quantity,
+        ),
+        '1.0',
+        current_user_id
+    );
+END //
+
+-- UPDATE Trigger for communication_security
+CREATE TRIGGER IF NOT EXISTS communication_security_after_update
+AFTER UPDATE ON communication_security
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Check if any field has changed
+    IF NOT (NEW.communication_security_category <=> OLD.communication_security_category) OR
+       NOT (NEW.communication_security_number <=> OLD.communication_security_number) OR
+       NOT (NEW.communication_security_name <=> OLD.communication_security_name) OR
+       NOT (NEW.communication_security_commentary <=> OLD.communication_security_commentary) OR
+       NOT (NEW.communication_security_quantity <=> OLD.communication_security_quantity)THEN
+
+        -- Get latest version and increment
+        SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+        FROM historical_changes
+        WHERE entity_type = 'communication_security' AND entity_id = NEW.communication_security_id;
+
+        SET current_version = current_version + 0.1;
+
+        -- Insert into historical_changes
+        INSERT INTO historical_changes (
+            entity_type,
+            entity_id,
+            change_type,
+            old_value,
+            new_value,
+            version_number,
+            user_id
+        ) VALUES (
+            'communication_security',
+            NEW.communication_security_id,
+            'UPDATE',
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.communication_security_category,
+                'number', NEW.communication_security_number,
+                'name', NEW.communication_security_name,
+                'commentary', NEW.communication_security_commentary,
+                'quantity', NEW.communication_security_quantity
+            ),
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.communication_security_category,
+                'number', NEW.communication_security_number,
+                'name', NEW.communication_security_name,
+                'commentary', NEW.communication_security_commentary,
+                'quantity', NEW.communication_security_quantity
+            ),
+            current_version,
+            current_user_id
+        );
+    END IF;
+END //
+
+-- DELETE Trigger for communication_security
+CREATE TRIGGER IF NOT EXISTS communication_security_after_delete
+AFTER DELETE ON communication_security
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Get latest version and increment
+    SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+    FROM historical_changes
+    WHERE entity_type = 'communication_security' AND entity_id = OLD.communication_security_id;
+
+    SET current_version = current_version + 0.1;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'communication_security',
+        OLD.communication_security_id,
+        'DELETE',
+        JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.communication_security_category,
+                'number', NEW.communication_security_number,
+                'name', NEW.communication_security_name,
+                'commentary', NEW.communication_security_commentary,
+                'quantity', NEW.communication_security_quantity
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //
+
+
+
+- ============================== FINISHES TRIGGERS ==============================
+-- INSERT Trigger for finishes
+CREATE TRIGGER IF NOT EXISTS finishes_after_insert
+AFTER INSERT ON finishes
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'finishes',
+        NEW.finishes_id,
+        'INSERT',
+        NULL,
+        JSON_OBJECT(
+            'room_id', BIN_TO_UUID(NEW.room_id),
+            'category', NEW.finishes_category,
+            'number', NEW.finishes_number,
+            'name', NEW.finishes_name,
+            'commentary', NEW.finishes_commentary,
+            'quantity', NEW.finishes_quantity,
+        ),
+        '1.0',
+        current_user_id
+    );
+END //
+
+-- UPDATE Trigger for finishes
+CREATE TRIGGER IF NOT EXISTS finishes_after_update
+AFTER UPDATE ON finishes
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Check if any field has changed
+    IF NOT (NEW.finishes_category <=> OLD.finishes_category) OR
+       NOT (NEW.finishes_number <=> OLD.finishes_number) OR
+       NOT (NEW.finishes_name <=> OLD.finishes_name) OR
+       NOT (NEW.finishes_commentary <=> OLD.finishes_commentary) OR
+       NOT (NEW.finishes_quantity <=> OLD.finishes_quantity)THEN
+
+        -- Get latest version and increment
+        SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+        FROM historical_changes
+        WHERE entity_type = 'finishes' AND entity_id = NEW.finishes_id;
+
+        SET current_version = current_version + 0.1;
+
+        -- Insert into historical_changes
+        INSERT INTO historical_changes (
+            entity_type,
+            entity_id,
+            change_type,
+            old_value,
+            new_value,
+            version_number,
+            user_id
+        ) VALUES (
+            'finishes',
+            NEW.finishes_id,
+            'UPDATE',
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.finishes_category,
+                'number', NEW.finishes_number,
+                'name', NEW.finishes_name,
+                'commentary', NEW.finishes_commentary,
+                'quantity', NEW.finishes_quantity
+            ),
+            JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.finishes_category,
+                'number', NEW.finishes_number,
+                'name', NEW.finishes_name,
+                'commentary', NEW.finishes_commentary,
+                'quantity', NEW.finishes_quantity
+            ),
+            current_version,
+            current_user_id
+        );
+    END IF;
+END //
+
+-- DELETE Trigger for finishes
+CREATE TRIGGER IF NOT EXISTS finishes_after_delete
+AFTER DELETE ON finishes
+FOR EACH ROW
+BEGIN
+    DECLARE current_user_id BINARY(16);
+    DECLARE current_version DECIMAL(10,1);
+
+    -- Get current user_id from session variable if available
+    SET current_user_id = @current_user_id;
+
+    -- Get latest version and increment
+    SELECT COALESCE(MAX(CAST(version_number AS DECIMAL(10,1))), 0) INTO current_version
+    FROM historical_changes
+    WHERE entity_type = 'finishes' AND entity_id = OLD.finishes_id;
+
+    SET current_version = current_version + 0.1;
+
+    -- Insert into historical_changes
+    INSERT INTO historical_changes (
+        entity_type,
+        entity_id,
+        change_type,
+        old_value,
+        new_value,
+        version_number,
+        user_id
+    ) VALUES (
+        'finishes',
+        OLD.finishes_id,
+        'DELETE',
+        JSON_OBJECT(
+                'room_id', BIN_TO_UUID(NEW.room_id),
+                'category', NEW.finishes_category,
+                'number', NEW.finishes_number,
+                'name', NEW.finishes_name,
+                'commentary', NEW.finishes_commentary,
+                'quantity', NEW.finishes_quantity
+            ),
+        NULL,
+        current_version,
+        current_user_id
+    );
+END //

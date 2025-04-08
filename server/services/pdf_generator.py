@@ -10,6 +10,7 @@ mois_fr = {
 }
 
 def format_date_fr(date_value):
+    """format the date to show as requested (jour mois année)"""
     try:
         if not date_value:
             return "Aucun"
@@ -20,9 +21,11 @@ def format_date_fr(date_value):
         return "Aucun"
 
 def clean_text(text):
+    """clean text to generate PDF"""
     return str(text) if text is not None else ""
 
 def auto_font_size(pdf, text, max_width, base_size=10, min_size=6):
+    """auto font size"""
     font_size = base_size
     while font_size >= min_size:
         pdf.set_font("DejaVu", size=font_size)
@@ -31,8 +34,8 @@ def auto_font_size(pdf, text, max_width, base_size=10, min_size=6):
         font_size -= 0.5
     return min_size
 
-
 def draw_checkbox_row(pdf, label_list, checked_values, col_count=2, label_width=70):
+    """draw checkbox row"""
     pdf.set_font("DejaVu", size=10)
     items = list(label_list)
     mid = (len(items) + 1) // col_count
@@ -46,19 +49,19 @@ def draw_checkbox_row(pdf, label_list, checked_values, col_count=2, label_width=
                 pdf.cell(label_width, 8, f"{checkbox} {label}", ln=0)
         pdf.ln()
 
-
 def generate_pdf(project_info, room_data_dict):
+    """generate PDF report"""
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
 
-    # Charger police DejaVu
+    # Charge DejaVu font
     font_path = "fonts/DejaVuSans.ttf"
     font_bold_path = "fonts/DejaVuSans-Bold.ttf"
     pdf.add_font("DejaVu", "", font_path, uni=True)
     pdf.add_font("DejaVu", "B", font_bold_path, uni=True)
     pdf.set_font("DejaVu", size=10)
 
-    # 🔹 En-tête du projet
+    # project header
     pdf.add_page()
     pdf.set_font("DejaVu", "B", 12)
     pdf.cell(0, 10, f"{project_info['name']} (#{project_info['project_number']})", ln=True)
@@ -256,9 +259,6 @@ def generate_pdf(project_info, room_data_dict):
 
                             pdf.ln(5)
 
-
-
-
                     elif table_name == "struct_requirements":
                         for entry in table_data:
                             def bool_to_oui_non(val):
@@ -294,7 +294,7 @@ def generate_pdf(project_info, room_data_dict):
 
                     elif table_name == "risk_elements":
                         for entry in table_data:
-                            # Définir les labels pour chaque SET
+                            # Define labels for each set
                             risk_general_labels = {
                                 "NA": "Aucun",
                                 "concentrated_acids": "Acides concentrés",
@@ -443,7 +443,7 @@ def generate_pdf(project_info, room_data_dict):
                     elif table_name in special_tables:
                         for entry in table_data:
                             for key, val in entry.items():
-                                if key.endswith('_id') or key in {'room_id', 'creation_date'}:
+                                if key.endswith('_id') or key == 'room_id':
                                     continue
                                 label = clean_text(key.replace('_', ' ').capitalize())
                                 val_clean = clean_text(val)

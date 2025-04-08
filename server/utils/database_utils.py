@@ -46,15 +46,19 @@ def create_project_database(project_id, project_number=None):
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS rooms (
                 id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
-                program_number VARCHAR(50) NOT NULL,
+                program_number VARCHAR(100) NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 description TEXT,
-                sector VARCHAR(50),
-                functional_unit VARCHAR(50),
+                sector VARCHAR(200),
+                functional_unit VARCHAR(100),
                 level VARCHAR(50),
                 planned_area DOUBLE NOT NULL,
                 UNIQUE(program_number)
             )
+        """)
+
+        cursor.execute("""
+            CREATE INDEX idx_rooms_sort ON rooms(functional_unit, sector, name)
         """)
 
         cursor.execute("""
@@ -112,7 +116,6 @@ def create_project_database(project_id, project_number=None):
                 interior_fenestration_name VARCHAR(200),
                 interior_fenestration_commentary TEXT,
                 interior_fenestration_quantity INT,
-                interior_fenestration_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -126,7 +129,6 @@ def create_project_database(project_id, project_number=None):
                 exterior_fenestration_name VARCHAR(200),
                 exterior_fenestration_commentary TEXT,
                 exterior_fenestration_quantity INT,
-                exterior_fenestration_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -140,7 +142,6 @@ def create_project_database(project_id, project_number=None):
                 finishes_name VARCHAR(200),
                 finishes_commentary TEXT,
                 finishes_quantity INT,
-                finishes_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -154,7 +155,6 @@ def create_project_database(project_id, project_number=None):
                 doors_name VARCHAR(200),
                 doors_commentary TEXT,
                 doors_quantity INT,
-                doors_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -182,7 +182,6 @@ def create_project_database(project_id, project_number=None):
                 accessories_name VARCHAR(200),
                 accessories_commentary TEXT,
                 accessories_quantity INT,
-                accessories_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -196,7 +195,6 @@ def create_project_database(project_id, project_number=None):
                 plumbings_name VARCHAR(200),
                 plumbings_commentary TEXT,
                 plumbings_quantity INT,
-                plumbings_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -210,7 +208,6 @@ def create_project_database(project_id, project_number=None):
                 fire_protection_name VARCHAR(200),
                 fire_protection_commentary TEXT,
                 fire_protection_quantity INT,
-                fire_protection_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -224,7 +221,6 @@ def create_project_database(project_id, project_number=None):
                 lighting_name VARCHAR(200),
                 lighting_commentary TEXT,
                 lighting_quantity INT,
-                lighting_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -238,7 +234,6 @@ def create_project_database(project_id, project_number=None):
                 electrical_outlets_name VARCHAR(200),
                 electrical_outlets_commentary TEXT,
                 electrical_outlets_quantity INT,
-                electrical_outlets_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -252,7 +247,6 @@ def create_project_database(project_id, project_number=None):
                 communication_security_name VARCHAR(200),
                 communication_security_commentary TEXT,
                 communication_security_quantity INT,
-                communication_security_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -266,7 +260,6 @@ def create_project_database(project_id, project_number=None):
                 medical_equipment_name VARCHAR(200),
                 medical_equipment_commentary TEXT,
                 medical_equipment_quantity INT,
-                medical_equipment_creation_date DATE,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -291,7 +284,6 @@ def create_project_database(project_id, project_number=None):
 		        functionality_description TEXT,
 		        functionality_proximity TEXT,
 		        functionality_commentary TEXT,
-		        functionality_creation_date DATE,
 		        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 		    )
         """)
@@ -314,7 +306,6 @@ def create_project_database(project_id, project_number=None):
 		        arch_requirements_ext_fen_solar_blind TEXT DEFAULT NULL,
 		        arch_requirements_ext_fen_opaque_blind TEXT DEFAULT NULL,
 		        arch_requirements_commentary TEXT,
-		        arch_requirements_creation_date DATE,
 		        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 		    )
         """)
@@ -333,7 +324,6 @@ def create_project_database(project_id, project_number=None):
 		        struct_requirements_vibrations_sensitivity INT,
 		        struct_requirements_max_vibrations INT DEFAULT NULL,
 		        struct_requirements_commentary TEXT,
-		        struct_requirements_creation_date DATE,
 		        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 		    )
         """)
@@ -356,7 +346,6 @@ def create_project_database(project_id, project_number=None):
 		        risk_elements_other SET('NA', 'lasers', 'animals'),
 		        risk_elements_chemical_products TEXT,
 		        risk_elements_commentary TEXT,
-		        risk_elements_creation_date DATE,
 		        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 	        )
         """)
@@ -373,7 +362,6 @@ def create_project_database(project_id, project_number=None):
                 ventilation_relative_room_pressure VARCHAR(50),
                 ventilation_pressurization VARCHAR(100),
                 ventilation_environmental_parameters TEXT,
-                ventilation_cvac_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)
@@ -391,7 +379,6 @@ def create_project_database(project_id, project_number=None):
                 color_temperature VARCHAR(50),
                 electricity_lighting TEXT,
                 electricity_commentary TEXT,
-                electricity_creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
             )
         """)

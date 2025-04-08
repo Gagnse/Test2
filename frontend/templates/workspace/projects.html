@@ -375,7 +375,7 @@
         flex-direction: column;
         height: 100%;
         max-width: 100%;
-        max-height: 280px;
+        max-height: 350px;
     }
 
     .project-card:hover {
@@ -741,12 +741,13 @@
                 });
 
                 // Show/hide empty state based on search results
-                const emptyState = activeTab.querySelector('.empty-state');
-                const visibleCards = activeTab.querySelectorAll('.project-card-link[style="display: none;"]');
+                const visibleCards = Array.from(activeTab.querySelectorAll('.project-card-link')).filter(card => {
+                    return card.style.display !== 'none';
+                });
 
-                // Only show empty state if needed
+                const emptyState = activeTab.querySelector('.empty-state');
                 if (emptyState) {
-                    if (projectCards.length > 0 && visibleCards.length === projectCards.length) {
+                    if (visibleCards.length === 0) {
                         emptyState.style.display = 'block';
                     } else {
                         emptyState.style.display = 'none';

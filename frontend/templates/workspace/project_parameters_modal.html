@@ -305,6 +305,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle form submission
     if (form) {
         form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
             // Show loading spinner
             const submitButton = form.querySelector('.save-btn');
             const buttonText = submitButton.querySelector('.btn-text');
@@ -314,7 +316,47 @@ document.addEventListener('DOMContentLoaded', function() {
             buttonText.style.display = 'none';
             buttonSpinner.style.display = 'inline-block';
 
-            // Let the form submit normally - no need to prevent default
+            // Get form data
+            const formData = new FormData(form);
+            const projectId = getProjectIdFromUrl();
+
+            // Send form data using fetch API
+            fetch(`/workspace/projects/${projectId}/project_parameters`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide modal
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+
+                // Show success toast
+                if (window.toast) {
+                    window.toast.success('Projet mis à jour avec succès!');
+                }
+
+                // Reload page after small delay to show updated data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            })
+            .catch(error => {
+                console.error('Error updating project:', error);
+
+                // Show error message
+                if (window.toast) {
+                    window.toast.error('Erreur lors de la mise à jour du projet');
+                }
+
+                // Reset button state
+                submitButton.disabled = false;
+                buttonText.style.display = 'inline';
+                buttonSpinner.style.display = 'none';
+            });
         });
     }
     

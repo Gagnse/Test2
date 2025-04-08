@@ -21,13 +21,13 @@ def check_auth():
 
 @workspace_bp.route('/projects')
 def projects():
-    """My projects page (excluding archived ones)"""
+    """My projects page (including archived ones for tab filtering)"""
     user_id = AuthService.get_current_user_id()
 
     user_projects = Project.find_by_user(user_id)
 
-    # ✅ Exclure les projets avec status = 'archive'
-    active_projects = [
+    # Convert all projects to dictionary format without filtering out archived ones
+    all_projects = [
         {
             'id': p.id,
             'name': p.name,
@@ -37,10 +37,10 @@ def projects():
             'status': p.status or 'active',
             'type': p.type or 'N/A'
         }
-        for p in user_projects if (p.status or '').lower() != 'archive'
+        for p in user_projects
     ]
 
-    return render_template('workspace/projects.html', projects=active_projects)
+    return render_template('workspace/projects.html', projects=all_projects)
 
 
 @workspace_bp.route('/projects/new', methods=['GET', 'POST'])
@@ -59,7 +59,7 @@ def new_project():
         # Get the user's organization ID
         organization_id = User.get_user_org_id(user_id)
 
-        print(f"Debug: Data received for project creation: {request.form}")
+        #print(f"Debug: Data received for project creation: {request.form}")
 
         # Sanitize project number for database name
         sanitized_number = ''.join(c for c in project_number if c.isalnum() or c in '-_')
@@ -221,11 +221,11 @@ def organisation_detail(org_id):
 
     return render_template('workspace/organisation_detail.html', organisation=organisation)
 
-#route pour afficher les données du projet
 @workspace_bp.route('/projects/<project_id>')
 def project_detail(project_id):
+    """Show data for Project detail page"""
 
-    # 1️⃣ Se connecter à `users_db`
+    #connection to ADMIN database
     connection = get_db_connection('users_db')
     cursor = connection.cursor(dictionary=True)
 
@@ -239,18 +239,18 @@ def project_detail(project_id):
     cursor.close()
     connection.close()
 
-    # Vérifier si le projet existe
+    # Check if project exists
     if not project:
         return "Erreur : Projet introuvable", 404
 
     project_number = project['project_number']
     project_name = project['name']
 
-    # Créer le nom de la bd
+    # Create the project database name
     clean_uuid = project_id.replace('-', '')
     project_db_name = f"SPACELOGIC_{clean_uuid}"
 
-    # Créer un dictionnaire complet avec toutes les informations du projet
+    # Create a dictionary with all project informations
     project_details = {
         'id': project_id,
         'name': project_name,
@@ -262,20 +262,20 @@ def project_detail(project_id):
         'type': project.get('type', 'Non défini')
     }
 
-    print(f"✅ Projet trouvé : {project_name} → Connexion à {project_db_name}")
+    #print(f"✅ Projet trouvé : {project_name} → Connexion à {project_db_name}")
 
-    # Vérifier si la base existe avant de se connecter
+    # Check if project database exists
     if not database_exists(project_db_name):
         return f"Erreur : La base de données {project_db_name} n'existe pas", 404
 
-    # Connexion à la base spécifique au projet
+    # Connection to project database
     connection = get_db_connection(project_db_name)
     if not connection:
         return f"Erreur : Impossible de se connecter à {project_db_name}", 500
 
     cursor = connection.cursor(dictionary=True)
 
-    # Récupération des données des différentes tables
+    # Get project data
     project_data = {}
     tables = [
         "interior_fenestration", "exterior_fenestration", "doors",
@@ -298,7 +298,7 @@ def project_detail(project_id):
 
             rows = cursor.fetchall() or []
 
-            # Convertir l'ID binaire en UUID
+            # Convert binary ID to UUID
             for row in rows:
                 if primary_key in row and isinstance(row[primary_key], bytes):
                     row[primary_key] = str(uuid.UUID(bytes=row[primary_key]))  # Convertir en UUID string
@@ -306,13 +306,13 @@ def project_detail(project_id):
                     row["room_id"] = str(uuid.UUID(bytes=row["room_id"]))  # Convertir en UUID string
 
             project_data[table] = rows
-            print(f"🔹 {table}: {len(rows)} lignes")
+            #print(f" {table}: {len(rows)} lignes")
 
         except Exception as err:
             print(f"⚠️ Erreur récupération {table} : {err}")
-            project_data[table] = []  # Assure une liste vide en cas d'erreur
+            project_data[table] = []  # Empty list in case of error
 
-    # Récupérer les salles groupées par unité fonctionnelle et secteur
+    # Get rooms order by functional unit and sector
     cursor.execute("""
         SELECT id, name, program_number, sector, functional_unit 
         FROM rooms
@@ -323,7 +323,7 @@ def project_detail(project_id):
     if not rooms:
         print("⚠️ Aucune salle récupérée depuis la base de données !")
 
-    # Menu de gauche : Organisation des données sous forme d'arborescence {Unité fonctionnelle -> Secteur -> Salles}
+    # Left menu : {Fonctional unit -> sector -> room}
     room_hierarchy = {}
     for room in rooms:
         room_id = str(uuid.UUID(bytes=room['id']))  # Convertir en UUID string
@@ -343,16 +343,16 @@ def project_detail(project_id):
 
         room_hierarchy[functional_unit][sector].append({'id': room_id, 'name': display_name})
 
-    # Trier unités fonctionnelles du plus petit au plus grand
+    # Sort room_hierarchy
     room_hierarchy = {k: room_hierarchy[k] for k in
                       sorted(room_hierarchy.keys(), key=lambda x: int(x) if x.isdigit() else float('inf'))}
 
-    print(f"📂 Hiérarchie des salles triée : {room_hierarchy}")
+    #print(f"Hiérarchie des salles triée : {room_hierarchy}")
 
     cursor.close()
     connection.close()
 
-    # Définir les colonnes à afficher pour chaque catégorie
+    # Define columns to display for each table
     columns_to_display = {
         "interior_fenestration": ["interior_fenestration_category", "interior_fenestration_number",
                                   "interior_fenestration_name", "interior_fenestration_quantity"],
@@ -383,38 +383,38 @@ def project_detail(project_id):
         "electricity": ["electricity_lighting_type", "electricity_lighting_level"]
     }
 
-    print(f"📊 Données envoyées à `project_detail.html` : {list(project_data.keys())}")
+    #print(f"Données envoyées à `project_detail.html` : {list(project_data.keys())}")
 
     selected_room_id = request.args.get('room_id', None)
     selected_room_name = None
 
-    # Filtrer les données pour les onglets spéciaux
+    # Filter data for special tabs
     filtered_functionality = []
     if selected_room_id:
         filtered_functionality = [f for f in project_data.get("functionality", []) if
                                   f.get("room_id") == selected_room_id]
 
-        # Trouver le nom de la salle
+        # Find room name
         for f in project_data.get("functionality", []):
             if f.get("room_id") == selected_room_id:
                 selected_room_name = f.get("room_name")
                 break
 
-    # Convertir les sets en listes pour JSON
+    # Convert sets to lists for JSON
     def convert_sets_to_lists(data):
         if isinstance(data, dict):
             return {k: convert_sets_to_lists(v) for k, v in data.items()}
         elif isinstance(data, list):
             return [convert_sets_to_lists(v) for v in data]
         elif isinstance(data, set):
-            return list(data)  # Convertir les sets en liste
+            return list(data)  # Sets to lists
         return data
 
-    # Appliquer la conversion
+    # Apply conversion sets to lists
     project_data = convert_sets_to_lists(project_data)
 
     return render_template("workspace/project_detail.html",
-                           project=project_details,  # Utiliser les détails complets du projet
+                           project=project_details,
                            project_data=project_data,
                            filtered_functionality=filtered_functionality,
                            columns_to_display=columns_to_display,
@@ -423,16 +423,16 @@ def project_detail(project_id):
                            selected_room_name=selected_room_name,
                            )
 
-#route pour ajouter un tuple dans les onglets normaux
 @workspace_bp.route('/projects/<project_id>/add_item', methods=['POST'])
 def add_item(project_id):
+    """add a new item to the project for normal tabs"""
     project_db_name = f"SPACELOGIC_{project_id.replace('-', '')}"
 
-    # Vérifier si la bd projet existe
+    # Check if database exists
     if not database_exists(project_db_name):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
 
-    # On récupère les données envoyées en JSON
+    # Get JSON data
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
@@ -444,7 +444,7 @@ def add_item(project_id):
         return jsonify({"Success": False, "message": "Données invalides"}), 400
     new_data["room_id"] = uuid.UUID(room_id).bytes
 
-    # Connexion à la base de données
+    # Connection to project database
     connection = get_db_connection(project_db_name)
     # Set current user for tracking changes
     user_id = AuthService.get_current_user_id()
@@ -452,10 +452,9 @@ def add_item(project_id):
 
     cursor = connection.cursor()
 
-    # Générer UUID pour id du nouveau tuple
+    # Generate UUID for id new insertion
     new_id = uuid.uuid4().bytes
 
-    # Requête SQL
     columns = ["{}_id".format(category)] + list(new_data.keys())
     values = [new_id] + list(new_data.values())
 
@@ -475,9 +474,9 @@ def add_item(project_id):
         cursor.close()
         connection.close()
 
-#route pour supprimer un tuple dans les onglets normaux
 @workspace_bp.route('/projects/<project_id>/delete_item', methods=['POST'])
 def delete_item(project_id):
+    """Delete an item from the project for normal tabs"""
     project_db_name = f"SPACELOGIC_{project_id.replace('-', '')}"
     if not database_exists(project_db_name):
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
@@ -496,7 +495,7 @@ def delete_item(project_id):
     cursor = connection.cursor()
 
     try:
-        # Supprimer dans la bonne table
+        # Delete in the right table
         query = f"DELETE FROM {category} WHERE {category}_id = UNHEX(REPLACE(%s, '-', ''))"
         cursor.execute(query, (item_id,))
         connection.commit()
@@ -508,19 +507,18 @@ def delete_item(project_id):
         cursor.close()
         connection.close()
 
-#route pour modifier un tuple dans les onglets normaux
 @workspace_bp.route('/projects/<project_id>/edit_item', methods=['POST'])
 def edit_item(project_id):
-    """Modification d'un élément spécifique"""
+    """Modify an item from the project for normal tabs"""
 
-    # Create database name using UUID without hyphens
+    # Create database name using UUID
     clean_uuid = project_id.replace('-', '')
     project_db_name = f"SPACELOGIC_{clean_uuid}"
 
     # Get current user ID for tracking changes
     user_id = AuthService.get_current_user_id()
 
-    # 🔄 Traiter les données reçues
+    # data traitement
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
@@ -545,7 +543,7 @@ def edit_item(project_id):
 
         cursor = connection.cursor()
 
-        # 🔍 Vérifier et corriger l'ID
+        # check item id
         try:
             if isinstance(item_id, str):
                 item_id = item_id.strip()
@@ -565,7 +563,7 @@ def edit_item(project_id):
         except ValueError as e:
             return jsonify({"success": False, "message": f"ID invalide : {e}"}), 400
 
-        # Vérifier que l'ID existe dans la base
+        # check that item_id is in the database
         check_query = f"SELECT COUNT(*) FROM {category} WHERE {category}_id = %s"
         cursor.execute(check_query, (item_id,))
         result = cursor.fetchone()
@@ -573,7 +571,7 @@ def edit_item(project_id):
         if result[0] == 0:
             return jsonify({"success": False, "message": "ID introuvable en base de données"}), 404
 
-        # Construire la requête UPDATE
+        # Create UPDATE SQL query
         set_clause = ", ".join(f"{key} = %s" for key in updated_data.keys())
         values = list(updated_data.values()) + [item_id]
 
@@ -594,9 +592,9 @@ def edit_item(project_id):
         cursor.close()
         connection.close()
 
-#route pour modifier l'onglet fonctionalité
 @workspace_bp.route('/projects/<project_id>/edit_functionality', methods=['POST'])
 def edit_functionality(project_id):
+    """modify fonctionality tab data"""
     clean_uuid = project_id.replace('-', '')
     project_db_name = f"SPACELOGIC_{clean_uuid}"
 
@@ -663,9 +661,9 @@ def edit_functionality(project_id):
         cursor.close()
         connection.close()
 
-#route pour modifier l'onglet exigences architecturales
 @workspace_bp.route('/projects/<project_id>/edit_arch_requirements', methods=['POST'])
 def edit_arch_requirements(project_id):
+    """Modify arch requirements tab data"""
     clean_uuid = project_id.replace('-', '')
     project_db_name = f"SPACELOGIC_{clean_uuid}"
 
@@ -739,9 +737,9 @@ def edit_arch_requirements(project_id):
         cursor.close()
         connection.close()
 
-#route pour modifier l'onglet exigences structurales
 @workspace_bp.route('/projects/<project_id>/edit_struct_requirements', methods=['POST'])
 def edit_struct_requirements(project_id):
+    """Modify struct requirements tab data"""
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
@@ -804,9 +802,9 @@ def edit_struct_requirements(project_id):
         cursor.close()
         connection.close()
 
-#route pour modifier l'onglet éléments à risque
 @workspace_bp.route('/projects/<project_id>/edit_risk_elements', methods=['POST'])
 def edit_risk_elements(project_id):
+    """Modify risk elements tab data"""
     data = request.get_json(silent=True)
 
     if not data:
@@ -881,9 +879,9 @@ def edit_risk_elements(project_id):
         cursor.close()
         connection.close()
 
-#route pour modifier l'onglet ventilation CVAC
 @workspace_bp.route('/projects/<project_id>/edit_ventilation_cvac', methods=['POST'])
 def edit_ventilation_cvac(project_id):
+    """Modify ventilation cvac tab data"""
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
@@ -947,9 +945,9 @@ def edit_ventilation_cvac(project_id):
         cursor.close()
         connection.close()
 
-#modifier onglet électricitié
 @workspace_bp.route('/projects/<project_id>/edit_electricity', methods=['POST'])
 def edit_electricity(project_id):
+    """Modify electricity tab data"""
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"success": False, "message": "Aucune donnée reçue"}), 400
@@ -1016,7 +1014,6 @@ def edit_electricity(project_id):
         cursor.close()
         connection.close()
 
-#route pour ajouter une pièce
 @workspace_bp.route('/projects/<project_id>/add_room', methods=['POST'])
 def add_room(project_id):
     """API endpoint to add a new room to a project"""
@@ -1168,25 +1165,25 @@ def add_room(project_id):
         cursor.close()
         connection.close()
 
-#génération du rapport en pdf
 @workspace_bp.route('/projects/<project_id>/generate_pdf', methods=['GET'])
 def generate_pdf(project_id):
+    """generate a PDF with all project's data"""
 
     clean_uuid = project_id.replace('-', '')
     project_db_name = f"SPACELOGIC_{clean_uuid}"
-    print(f"🔍 Vérification de l'existence de la base : {project_db_name}")
+    #print(f" Vérification de l'existence de la base : {project_db_name}")
 
     if not database_exists(project_db_name):
-        print(f"❌ La base {project_db_name} n'existe pas")
+        #print(f" La base {project_db_name} n'existe pas")
         return jsonify({"success": False, "message": "Base de données introuvable"}), 404
-    print(f"✅ La base {project_db_name} existe : True")
+    #print(f"✅ La base {project_db_name} existe : True")
 
     connection = get_db_connection(project_db_name)
     cursor = connection.cursor(dictionary=True)
-    print(f"🔄 Tentative de connexion à MySQL: {project_db_name} sur localhost:3306")
+    #print(f" Tentative de connexion à MySQL: {project_db_name} sur localhost:3306")
 
     try:
-        # Connexion à la base users_db pour récupérer le nom du projet
+        # Connectio to user_db to get project_id
         users_connection = get_db_connection("users_db")
         users_cursor = users_connection.cursor(dictionary=True)
 
@@ -1205,46 +1202,67 @@ def generate_pdf(project_id):
         project_info = users_cursor.fetchone()
 
         if not project_info:
-            print("❌ Projet introuvable dans users_db")
+            #print("Projet introuvable dans users_db")
             return jsonify({"success": False, "message": "Projet introuvable"}), 404
 
         users_cursor.close()
         users_connection.close()
 
-        # Charger toutes les données de salle, triées
+        # Get all room data
         room_data_dict = get_all_room_data(connection)
 
         if not room_data_dict:
-            print("❌ Aucune salle trouvée pour générer le PDF.")
+            #print("Aucune salle trouvée pour générer le PDF.")
             return jsonify({"success": False, "message": "Aucune salle trouvée"}), 400
 
-        print("🗂️ Unités fonctionnelles trouvées :", list(room_data_dict.keys()))
+        #print("Unités fonctionnelles trouvées :", list(room_data_dict.keys()))
 
-        # Générer le PDF
+        # Generate PDF report
         from server.services.pdf_generator import generate_pdf
         pdf_path = generate_pdf(project_info, room_data_dict)
-        print(f"📄 Rapport PDF généré : {pdf_path}")
+        #print(f"Rapport PDF généré : {pdf_path}")
 
         return send_file(pdf_path, as_attachment=True)
 
     except Exception as e:
-        print(f"❌ Erreur PDF : {e}")
+        #print(f"Erreur PDF : {e}")
         return jsonify({"success": False, "message": str(e)}), 500
 
     finally:
         cursor.close()
         connection.close()
 
-#route pour afficher les données du projet dans parameters
 @workspace_bp.route('/projects/<project_id>/project_parameters', methods=['GET', 'POST'])
 def project_parameters(project_id):
-    """Project parameters page/functionality"""
+    """Project parameters page"""
     if not AuthService.is_authenticated():
         set_toast('Veuillez vous connecter pour accéder à cette page.', 'error')
         return redirect(url_for('auth.auth_page'))
 
     users_connection = get_db_connection("users_db")
     users_cursor = users_connection.cursor(dictionary=True)
+
+    # Fetch project data for displaying in the form
+    users_cursor.execute("""
+        SELECT 
+            project_number,
+            name,
+            description,
+            start_date,
+            end_date,
+            status,
+            type 
+        FROM projects 
+        WHERE id = UUID_TO_BIN(%s);
+    """, (project_id,))
+
+    project = users_cursor.fetchone()
+
+    if not project:
+        users_cursor.close()
+        users_connection.close()
+        set_toast('Projet non trouvé.', 'error')
+        return redirect(url_for('workspace.projects'))
 
     # Process form submission for POST requests
     if request.method == 'POST':
@@ -1274,15 +1292,22 @@ def project_parameters(project_id):
         users_connection.close()
 
         set_toast('Projet mis à jour avec succès!', 'success')
-        return redirect(url_for('workspace.project_detail', project_id=project_id))
 
-    # For GET requests, instead of rendering a separate template, redirect to project_detail
-    # with a special parameter to open the modal
+        # Check if this is an AJAX request by looking at Accept header or X-Requested-With
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.headers.get(
+            'Accept') == 'application/json'
+
+        if is_ajax:
+            return jsonify({'success': True, 'message': 'Projet mis à jour avec succès!'})
+        else:
+            return redirect(url_for('workspace.project_detail', project_id=project_id))
+
+    # For GET requests, render the project parameters form
     users_cursor.close()
     users_connection.close()
 
-    # Redirect to the project detail page with a parameter to open the modal
-    return redirect(url_for('workspace.project_detail', project_id=project_id, openModal='parameters'))
+    # When using the modal, we're already on the project detail page
+    return render_template('workspace/project_parameters.html', project=project, project_id=project_id)
 
 
 @workspace_bp.route('/api/rooms/<room_id>', methods=['GET'])
@@ -1356,10 +1381,9 @@ def get_room_details(room_id):
         if connection:
             connection.close()
 
-#route pour les projets archivés
 @workspace_bp.route('/projects/archived')
 def archived_projects():
-    """Liste des projets archivés de l'utilisateur"""
+    """Archived projects list for a user"""
     user_id = AuthService.get_current_user_id()
     all_projects = Project.find_by_user(user_id)
 
@@ -1377,8 +1401,6 @@ def archived_projects():
     ]
 
     return render_template('workspace/projects.html', projects=archived)
-
-
 
 
 @workspace_bp.route('/projects/<project_id>/project_members')

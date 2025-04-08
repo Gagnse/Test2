@@ -27,11 +27,10 @@ def close_connection(connection, cursor=None):
 
 def database_exists(database_name):
     """
-    Vérifie si une base de données existe dans MySQL.
+    Verify if the database exists.
     """
-    print(f"🔍 Vérification de l'existence de la base : {database_name}")
 
-    # Se connecter à MySQL sans spécifier de base pour pouvoir lister toutes les bases
+    # Connection to MySQL to find all the databases
     connection = mysql.connector.connect(
         host=DB_CONFIG['users_db']['host'],
         user=DB_CONFIG['users_db']['user'],
@@ -55,18 +54,18 @@ def database_exists(database_name):
 
 def get_db_connection(db_name='users_db'):
     """
-    Crée une connexion MySQL pour une base de données spécifique.
+    Create a database connection and return it.
 
-    :param db_name: Nom de la base de données (ex: 'users_db' ou 'SPACELOGIC_<numéro_projet>')
-    :return: Objet de connexion MySQL ou None si la connexion échoue.
+    :param db_name: database name (ex: 'users_db' or 'SPACELOGIC_<project_id>')
+    :return: MySQL connection or None if not found.
     """
     if db_name == 'users_db':
-        # 🔹 Connexion à la base admin (SPACELOGIC_ADMIN_DB)
+        # Connection to admin database (SPACELOGIC_ADMIN_DB)
         config = DB_CONFIG['users_db']
     elif db_name.startswith("SPACELOGIC_"):
-        # 🔹 Connexion dynamique à une base projet (SPACELOGIC_<numéro_projet>)
-        config = DB_CONFIG['users_db'].copy()  # Utilise les mêmes credentials que users_db
-        config['database'] = db_name  # Définit la base spécifique au projet
+        # Connection to a specific project database (SPACELOGIC_<project_id>)
+        config = DB_CONFIG['users_db'].copy()  # Same info as users_db
+        config['database'] = db_name  # find database specific to a project
     else:
         print(f"❌ Erreur : Base inconnue '{db_name}'")
         return None
@@ -82,42 +81,6 @@ def get_db_connection(db_name='users_db'):
     except mysql.connector.Error as err:
         print(f"❌ Erreur de connexion à '{config['database']}': {err}")
         return None
-
-    # def get_db_connection(db_name='users_db'):
-    #     """
-    #     Create and return a database connection for the specified database.
-    #
-    #     :param db_name: The key of the database in DB_CONFIG ('users_db' or 'project_db')
-    #     :return: MySQL connection object or None if connection fails.
-    #     """
-    #     if db_name not in DB_CONFIG:
-    #         print(f"Error: Database '{db_name}' is not defined in DB_CONFIG.")
-    #         return None
-    #
-    #     try:
-    #         config = DB_CONFIG[db_name]  # Récupère les infos de connexion pour la DB choisie
-    #         print(f"Attempting to connect to MySQL database: {config['database']} on {config['host']}:{config['port']}")
-    #
-    #         connection = mysql.connector.connect(
-    #             host=config['host'],
-    #             user=config['user'],
-    #             password=config['password'],
-    #             database=config['database'],
-    #             port=config['port']
-    #         )
-    #
-    #         if connection.is_connected():
-    #             print(f"Successfully connected to MySQL database '{config['database']}'!")
-    #             return connection
-    #         else:
-    #             print("Connection object created but not connected")
-    #     except Error as e:
-    #         print(f"Error connecting to MySQL: {e}")
-    #     except Exception as e:
-    #         print(f"Unexpected error connecting to MySQL: {e}")
-    #
-    #     print("Failed to establish database connection. Check your MySQL settings and ensure the server is running.")
-    #     return None
 
 
 

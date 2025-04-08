@@ -193,6 +193,9 @@ def api_create_project():
             print(f"Error creating project database: {e}")
             return jsonify({'success': False, 'message': f'Error creating project database: {str(e)}'}), 500
 
+        #cursor.execute("SELECT DATABASE()")
+        #print("Database currently in use:", cursor.fetchone())
+
         # Find an appropriate role ID for the creator
         # First check if user is super admin of the organization
         cursor.execute("""

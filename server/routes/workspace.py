@@ -1597,17 +1597,19 @@ def get_room_history(project_id, room_id):
     clean_uuid = project_id.replace('-', '')
     project_db_name = f"SPACELOGIC_{clean_uuid}"
 
+    print(f"Fetching history for room {room_id} from database {project_db_name}")
+
     # Check if database exists
     if not database_exists(project_db_name):
         return jsonify({'success': False, 'message': 'Base de données introuvable'}), 404
 
     # Connect to the project database
-    connection = get_db_connection(project_db_name)
-    if not connection:
-        return jsonify({'success': False, 'message': 'Impossible de se connecter à la base de données'}), 500
-
-    cursor = None
+    connection = None
     try:
+        connection = get_db_connection(project_db_name)
+        if not connection:
+            return jsonify({'success': False, 'message': 'Impossible de se connecter à la base de données'}), 500
+
         cursor = connection.cursor(dictionary=True)
 
         # Verify if the room exists
@@ -1616,36 +1618,105 @@ def get_room_history(project_id, room_id):
         if not result or result['count'] == 0:
             return jsonify({'success': False, 'message': 'Pièce non trouvée'}), 404
 
-        # Query the historical_changes table for this room
+        # Using the actual column names from your schema, filter by entity_type = 'rooms'
         query = """
             SELECT 
-                BIN_TO_UUID(hc.id) as id,
-                hc.timestamp,
-                hc.action_type,
-                hc.details,
-                hc.table_name,
-                hc.row_id,
-                BIN_TO_UUID(hc.user_id) as user_id,
-                CONCAT(u.first_name, ' ', u.last_name) as user_name
-            FROM 
-                historical_changes hc
-            LEFT JOIN 
-                rooms r ON hc.row_id = r.id
-            LEFT JOIN 
-                users_db.users u ON hc.user_id = u.id
-            WHERE 
-                hc.table_name = 'rooms' AND hc.row_id = UUID_TO_BIN(%s)
-            ORDER BY 
-                hc.timestamp DESC
+                BIN_TO_UUID(id) as id,
+                BIN_TO_UUID(user_id) as user_id,
+                entity_type,
+                BIN_TO_UUID(entity_id) as entity_id,
+                change_type as action_type,
+                old_value as details_old,
+                new_value as details_new,
+                change_date as timestamp,
+                version_number
+            FROM historical_changes
+            WHERE entity_type = 'rooms' AND entity_id = UUID_TO_BIN(%s)
+            ORDER BY change_date DESC
+            LIMIT 50
         """
 
         cursor.execute(query, (room_id,))
         history = cursor.fetchall()
 
-        # Convert datetime objects to strings for JSON serialization
+        print(f"Found {len(history)} history records for room {room_id}")
+
+        # Get user names for the history entries
+        user_ids = [item['user_id'] for item in history if item['user_id']]
+        user_names = {}
+
+        if user_ids:
+            try:
+                users_connection = get_db_connection('users_db')
+                users_cursor = users_connection.cursor(dictionary=True)
+
+                # Prepare placeholders for user_ids
+                placeholders = ', '.join(['UUID_TO_BIN(%s)' for _ in user_ids])
+
+                users_cursor.execute(f"""
+                    SELECT BIN_TO_UUID(id) as id, first_name, last_name
+                    FROM users
+                    WHERE id IN ({placeholders})
+                """, user_ids)
+
+                for user in users_cursor.fetchall():
+                    user_names[user['id']] = f"{user['first_name']} {user['last_name']}"
+
+                users_cursor.close()
+                users_connection.close()
+            except Exception as user_error:
+                print(f"Error fetching user names: {user_error}")
+
+        # Convert datetime objects to strings and format JSON values
         for item in history:
             if 'timestamp' in item and item['timestamp']:
                 item['timestamp'] = item['timestamp'].isoformat()
+
+            # Add user_name field
+            if item['user_id'] and item['user_id'] in user_names:
+                item['user_name'] = user_names[item['user_id']]
+            else:
+                item['user_name'] = 'Système'
+
+            # Format the JSON values for better readability
+            formatted_details = []
+
+            # Parse JSON in old_value if present
+            if item['details_old']:
+                try:
+                    import json
+                    old_data = json.loads(item['details_old'])
+                    if isinstance(old_data, dict):
+                        # Format as key-value pairs
+                        formatted_old = "\n".join([f"{k}: {v}" for k, v in old_data.items()])
+                        formatted_details.append(f"Valeurs précédentes:\n{formatted_old}")
+                except:
+                    # If not valid JSON, use as is
+                    formatted_details.append(f"Valeur précédente: {item['details_old']}")
+
+            # Parse JSON in new_value if present
+            if item['details_new']:
+                try:
+                    import json
+                    new_data = json.loads(item['details_new'])
+                    if isinstance(new_data, dict):
+                        # Format as key-value pairs
+                        formatted_new = "\n".join([f"{k}: {v}" for k, v in new_data.items()])
+                        formatted_details.append(f"Nouvelles valeurs:\n{formatted_new}")
+                except:
+                    # If not valid JSON, use as is
+                    formatted_details.append(f"Nouvelle valeur: {item['details_new']}")
+
+            # Join the formatted parts
+            item['details'] = "\n\n".join(formatted_details)
+
+            # Add a user-friendly action description
+            if item['action_type'] == 'INSERT':
+                item['action_type'] = 'Création'
+            elif item['action_type'] == 'UPDATE':
+                item['action_type'] = 'Modification'
+            elif item['action_type'] == 'DELETE':
+                item['action_type'] = 'Suppression'
 
         return jsonify({
             'success': True,
@@ -1653,14 +1724,13 @@ def get_room_history(project_id, room_id):
         })
 
     except Exception as e:
-        print(f"Error fetching room history: {e}")
+        print(f"Error in get_room_history: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500
 
     finally:
-        if cursor:
+        if 'cursor' in locals() and cursor:
             cursor.close()
         if connection:
             connection.close()
-

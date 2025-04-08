@@ -152,99 +152,20 @@
 #room-history-modal .spin {
     animation: spin 1.5s linear infinite;
 }
+
+#room-history-modal .history-table td pre {
+    white-space: pre-wrap;
+    font-family: inherit;
+    margin: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 5px;
+    background-color: #f8fafc;
+    border-radius: 4px;
+}
+
+#room-history-modal .history-table th:nth-child(4),
+#room-history-modal .history-table td:nth-child(4) {
+    width: 40%;
+}
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const historyModal = document.getElementById('room-history-modal');
-    const historyButtons = document.querySelectorAll('.view-history-btn');
-    const closeButton = historyModal.querySelector('.close-modal-btn');
-
-    // Function to open the history modal for a specific room
-    function openHistoryModal(roomId, roomName) {
-        // Update modal title with room name
-        const titleElement = historyModal.querySelector('.room-history-title');
-        if (titleElement) {
-            titleElement.textContent = roomName;
-        }
-
-        // Show the modal
-        historyModal.style.display = 'flex';
-        document.body.classList.add('modal-open');
-
-        // Show loading indicator
-        const loadingEl = historyModal.querySelector('.loading-history');
-        const tableEl = historyModal.querySelector('.history-table');
-        const noHistoryEl = historyModal.querySelector('.no-history');
-
-        if (loadingEl) loadingEl.style.display = 'block';
-        if (tableEl) tableEl.style.display = 'none';
-        if (noHistoryEl) noHistoryEl.style.display = 'none';
-
-        // Simulate fetching history data (replace with actual API call)
-        setTimeout(function() {
-            // Hide loading indicator
-            if (loadingEl) loadingEl.style.display = 'none';
-
-            // For demonstration, randomly show either table or no history message
-            const hasHistory = Math.random() > 0.5;
-
-            if (hasHistory) {
-                // Populate table with sample data (replace with actual data)
-                const tbody = tableEl.querySelector('tbody');
-                tbody.innerHTML = `
-                    <tr>
-                        <td>2025-04-05 14:32</td>
-                        <td>Jean Dupont</td>
-                        <td>Modification</td>
-                        <td>Changement de la superficie de 24m² à 28m²</td>
-                    </tr>
-                    <tr>
-                        <td>2025-04-01 09:15</td>
-                        <td>Marie Martin</td>
-                        <td>Création</td>
-                        <td>Création initiale de la pièce</td>
-                    </tr>
-                `;
-
-                tableEl.style.display = 'table';
-            } else {
-                noHistoryEl.style.display = 'block';
-            }
-        }, 1000);
-    }
-
-    // Add click event listeners to all history buttons
-    historyButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-
-            // Get the current selected room info
-            const roomId = sessionStorage.getItem('selectedRoom');
-            const roomName = sessionStorage.getItem('selectedRoomName');
-
-            if (roomId && roomName) {
-                openHistoryModal(roomId, roomName);
-            } else {
-                alert('Veuillez sélectionner une pièce d\'abord');
-            }
-        });
-    });
-
-    // Close modal when close button is clicked
-    if (closeButton) {
-        closeButton.addEventListener('click', function() {
-            historyModal.style.display = 'none';
-            document.body.classList.remove('modal-open');
-        });
-    }
-
-    // Close modal when clicking outside the modal content
-    window.addEventListener('click', function(event) {
-        if (event.target === historyModal) {
-            historyModal.style.display = 'none';
-            document.body.classList.remove('modal-open');
-        }
-    });
-});
-</script>

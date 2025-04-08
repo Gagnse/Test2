@@ -2391,117 +2391,187 @@
             });
         });
 
-        // Update this function inside an existing DOMContentLoaded event listener
-document.querySelectorAll('.view-history-btn').forEach(button => {
-    button.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent event from bubbling up
+document.addEventListener('DOMContentLoaded', function() {
+    const historyModal = document.getElementById('room-history-modal');
+    const historyButtons = document.querySelectorAll('.view-history-btn');
+    const closeButton = historyModal.querySelector('.close-modal-btn');
 
-        // Close the dropdown
-        const dropdown = this.closest('.project-actions-dropdown');
-        if (dropdown) {
-            dropdown.classList.remove('active');
-        }
-
-        // Get the current selected room info
-        const roomId = sessionStorage.getItem('selectedRoom');
-        const roomName = sessionStorage.getItem('selectedRoomName');
-
-        if (!roomId || !roomName) {
-            alert('Veuillez sélectionner une pièce d\'abord');
-            return;
+    // Function to open the history modal for a specific room
+    function openHistoryModal(roomId, roomName) {
+        // Update modal title with room name
+        const titleElement = historyModal.querySelector('.room-history-title');
+        if (titleElement) {
+            titleElement.textContent = roomName;
         }
 
         // Show the modal
-        const historyModal = document.getElementById('room-history-modal');
-        if (historyModal) {
-            // Update title
-            const titleEl = historyModal.querySelector('.room-history-title');
-            if (titleEl) titleEl.textContent = roomName;
+        historyModal.style.display = 'flex';
+        document.body.classList.add('modal-open');
 
-            // Display the modal
-            historyModal.style.display = 'flex';
-            document.body.classList.add('modal-open');
+        // Show loading indicator
+        const loadingEl = historyModal.querySelector('.loading-history');
+        const tableEl = historyModal.querySelector('.history-table');
+        const noHistoryEl = historyModal.querySelector('.no-history');
 
-            // Prepare for loading
-            const loadingEl = historyModal.querySelector('.loading-history');
-            const tableEl = historyModal.querySelector('.history-table');
-            const noHistoryEl = historyModal.querySelector('.no-history');
+        if (loadingEl) loadingEl.style.display = 'block';
+        if (tableEl) tableEl.style.display = 'none';
+        if (noHistoryEl) noHistoryEl.style.display = 'none';
 
-            if (loadingEl) loadingEl.style.display = 'block';
-            if (tableEl) tableEl.style.display = 'none';
-            if (noHistoryEl) noHistoryEl.style.display = 'none';
+        // Extract project ID from the URL
+        const urlParts = window.location.pathname.split('/');
+        const projectsIndex = urlParts.indexOf('projects');
+        let projectId = '';
 
-            // Extract project ID from the URL
-            const urlParts = window.location.pathname.split('/');
-            const projectsIndex = urlParts.indexOf('projects');
-            let projectId = '';
+        if (projectsIndex !== -1 && urlParts.length > projectsIndex + 1) {
+            projectId = urlParts[projectsIndex + 1];
+        }
 
-            if (projectsIndex !== -1 && urlParts.length > projectsIndex + 1) {
-                projectId = urlParts[projectsIndex + 1];
+        if (!projectId) {
+            console.error('Could not extract project ID from URL');
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (noHistoryEl) {
+                noHistoryEl.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <h3>Erreur</h3>
+                    <p>ID du projet non trouvé.</p>
+                `;
+                noHistoryEl.style.display = 'block';
             }
+            return;
+        }
 
-            if (!projectId) {
-                console.error('Could not extract project ID from URL');
+        // Fetch room history from the server
+        fetch(`/workspace/projects/${projectId}/rooms/${roomId}/history`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Hide loading indicator
                 if (loadingEl) loadingEl.style.display = 'none';
-                if (noHistoryEl) noHistoryEl.style.display = 'block';
-                return;
-            }
 
-            // Fetch room history from the server
-            fetch(`/workspace/projects/${projectId}/rooms/${roomId}/history`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Error: ${response.status}`);
+                if (data.success && data.history && data.history.length > 0) {
+                    // Populate table with history data
+                    const tbody = tableEl.querySelector('tbody');
+                    if (tbody) {
+                        tbody.innerHTML = '';
+
+                        data.history.forEach(item => {
+                            const row = document.createElement('tr');
+
+                            // Format the timestamp to a readable date/time
+                            const date = new Date(item.timestamp);
+                            const formattedDate = date.toLocaleString();
+
+                            // Create cells
+                            const dateCell = document.createElement('td');
+                            dateCell.textContent = formattedDate;
+
+                            const userCell = document.createElement('td');
+                            userCell.textContent = item.user_name || 'Système';
+
+                            const actionCell = document.createElement('td');
+                            actionCell.textContent = item.action_type || 'Modification';
+
+                            const detailsCell = document.createElement('td');
+                            // Use pre element to preserve formatting of the details
+                            const preElement = document.createElement('pre');
+                            preElement.style.whiteSpace = 'pre-wrap';
+                            preElement.style.fontFamily = 'inherit';
+                            preElement.style.margin = '0';
+                            preElement.textContent = item.details || '-';
+                            detailsCell.appendChild(preElement);
+
+                            // Add all cells to the row
+                            row.appendChild(dateCell);
+                            row.appendChild(userCell);
+                            row.appendChild(actionCell);
+                            row.appendChild(detailsCell);
+
+                            tbody.appendChild(row);
+                        });
+
+                        if (tableEl) tableEl.style.display = 'table';
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    // Hide loading indicator
-                    if (loadingEl) loadingEl.style.display = 'none';
-
-                    if (data.success && data.history && data.history.length > 0) {
-                        // Populate table with history data
-                        const tbody = tableEl.querySelector('tbody');
-                        if (tbody) {
-                            tbody.innerHTML = '';
-
-                            data.history.forEach(item => {
-                                const row = document.createElement('tr');
-                                row.innerHTML = `
-                                    <td>${new Date(item.timestamp).toLocaleString()}</td>
-                                    <td>${item.user_name || 'Système'}</td>
-                                    <td>${item.action_type || 'Modification'}</td>
-                                    <td>${item.details || '-'}</td>
-                                `;
-                                tbody.appendChild(row);
-                            });
-
-                            if (tableEl) tableEl.style.display = 'table';
-                        }
-                    } else {
-                        // Show no history message
-                        if (noHistoryEl) noHistoryEl.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching room history:', error);
-                    // Hide loading indicator
-                    if (loadingEl) loadingEl.style.display = 'none';
+                } else {
                     // Show no history message
                     if (noHistoryEl) {
                         noHistoryEl.innerHTML = `
                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="8" x2="12" y2="12"></line>
-                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                                <path d="M12 2v10h10"></path>
                             </svg>
-                            <h3>Erreur</h3>
-                            <p>Impossible de charger l'historique. Veuillez réessayer plus tard.</p>
+                            <h3>Aucun historique</h3>
+                            <p>Aucune modification n'a été enregistrée pour cette pièce.</p>
                         `;
                         noHistoryEl.style.display = 'block';
                     }
-                });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching room history:', error);
+                // Hide loading indicator
+                if (loadingEl) loadingEl.style.display = 'none';
+                // Show no history message
+                if (noHistoryEl) {
+                    noHistoryEl.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <h3>Erreur</h3>
+                        <p>Impossible de charger l'historique: ${error.message}</p>
+                    `;
+                    noHistoryEl.style.display = 'block';
+                }
+            });
+    }
+
+    // Add click event listeners to all history buttons
+    historyButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation(); // Prevent event from bubbling up
+
+            // Close the dropdown
+            const dropdown = this.closest('.project-actions-dropdown');
+            if (dropdown) {
+                dropdown.classList.remove('active');
+            }
+
+            // Get the current selected room info
+            const roomId = sessionStorage.getItem('selectedRoom');
+            const roomName = sessionStorage.getItem('selectedRoomName');
+
+            if (!roomId || !roomName) {
+                alert('Veuillez sélectionner une pièce d\'abord');
+                return;
+            }
+
+            openHistoryModal(roomId, roomName);
+        });
+    });
+
+    // Close modal when close button is clicked
+    if (closeButton) {
+        closeButton.addEventListener('click', function() {
+            historyModal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+    }
+
+    // Close modal when clicking outside the modal content
+    window.addEventListener('click', function(event) {
+        if (event.target === historyModal) {
+            historyModal.style.display = 'none';
+            document.body.classList.remove('modal-open');
         }
     });
 });

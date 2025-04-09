@@ -62,24 +62,6 @@ def create_project_database(project_id, project_number=None):
         """)
 
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS disciplines (
-                id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
-                name VARCHAR(50) NOT NULL,
-                UNIQUE(name)
-            )
-        """)
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS room_disciplines (
-                room_id BINARY(16) NOT NULL,
-                discipline_id BINARY(16) NOT NULL,
-                PRIMARY KEY (room_id, discipline_id),
-                FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
-                FOREIGN KEY (discipline_id) REFERENCES disciplines(id) ON DELETE CASCADE
-            )
-        """)
-
-        cursor.execute("""
             CREATE TABLE IF NOT EXISTS historical_changes (
                 id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
                 user_id BINARY(16) NULL,

@@ -1,0 +1,335 @@
+<!-- Entity History Modal -->
+<div id="entity-history-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Historique - <span class="entity-type-title">Type</span> - <span class="entity-history-title">Pièce</span></h2>
+            <button class="close-modal-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="history-container">
+                <div class="loading-history" style="text-align: center; padding: 20px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    <p>Chargement de l'historique...</p>
+                </div>
+                <table class="history-table resizable-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th class="resizable">
+                                <div class="th-content">Date</div>
+                                <div class="resize-handle"></div>
+                            </th>
+                            <th class="resizable">
+                                <div class="th-content">Utilisateur</div>
+                                <div class="resize-handle"></div>
+                            </th>
+                            <th class="resizable">
+                                <div class="th-content">Action</div>
+                                <div class="resize-handle"></div>
+                            </th>
+                            <th class="resizable">
+                                <div class="th-content">Détails</div>
+                                <div class="resize-handle"></div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- History data will be loaded here dynamically -->
+                    </tbody>
+                </table>
+                <div class="no-history" style="text-align: center; padding: 20px; display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                        <path d="M12 2v10h10"></path>
+                    </svg>
+                    <h3>Aucun historique</h3>
+                    <p>Aucune modification n'a été enregistrée pour ce type d'entité.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+#entity-history-modal.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1100; /* Higher z-index to ensure it's above everything */
+    overflow-y: auto;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 30px;
+}
+
+#entity-history-modal .modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    margin: 20px auto;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Ensure it's positioned above the overlay */
+    z-index: 1101; /* Higher than the modal background */
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#entity-history-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    flex-shrink: 0;
+}
+
+#entity-history-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #2d3748;
+}
+
+#entity-history-modal .close-modal-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #a0aec0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+#entity-history-modal .close-modal-btn:hover {
+    background-color: #f7fafc;
+    color: #4a5568;
+}
+
+#entity-history-modal .modal-body {
+    padding: 15px;
+    overflow-y: auto;
+}
+
+#entity-history-modal .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#entity-history-modal .history-table th,
+#entity-history-modal .history-table td {
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+}
+
+#entity-history-modal .history-table th {
+    background-color: #f8fafc;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+#entity-history-modal .history-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#entity-history-modal .spin {
+    animation: spin 1.5s linear infinite;
+}
+
+#entity-history-modal .history-table td pre {
+    white-space: pre-wrap;
+    font-family: inherit;
+    margin: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 5px;
+    background-color: #f8fafc;
+    border-radius: 4px;
+}
+
+#entity-history-modal .history-table th:nth-child(4),
+#entity-history-modal .history-table td:nth-child(4) {
+    width: auto;
+}
+
+.resizable-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.resizable-table th {
+    position: relative;
+    padding-right: 20px; /* Make room for the resize handle */
+    overflow: hidden;
+}
+
+.resizable-table .th-content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.resizable-table .resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 100%;
+    cursor: col-resize;
+    background-color: transparent;
+}
+
+.resizable-table .resize-handle:hover,
+.resizable-table .resize-handle.dragging {
+    background-color: #cbd5e0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize resizable columns
+    initResizableTable();
+});
+
+function initResizableTable() {
+    const table = document.querySelector('#entity-history-modal .resizable-table');
+    if (!table) return;
+
+    const handles = table.querySelectorAll('.resize-handle');
+    let currentHandle = null;
+    let startX = 0;
+    let startWidth = 0;
+
+    // Save column widths to localStorage
+    function saveColumnWidths() {
+        const headers = table.querySelectorAll('th');
+        const widths = Array.from(headers).map(th => th.style.width);
+        localStorage.setItem('entity-history-table-widths', JSON.stringify(widths));
+    }
+
+    // Load column widths from localStorage
+    function loadColumnWidths() {
+        try {
+            const widths = JSON.parse(localStorage.getItem('entity-history-table-widths'));
+            if (widths && widths.length) {
+                const headers = table.querySelectorAll('th');
+                headers.forEach((th, index) => {
+                    if (widths[index]) {
+                        th.style.width = widths[index];
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Error loading saved column widths:', e);
+        }
+    }
+
+    // Load saved widths when the table is first shown
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === 'style' &&
+                table.style.display !== 'none') {
+                loadColumnWidths();
+                observer.disconnect();
+            }
+        });
+    });
+
+    observer.observe(table, { attributes: true });
+
+    handles.forEach(handle => {
+        handle.addEventListener('mousedown', function(e) {
+            currentHandle = e.target;
+            const th = currentHandle.parentElement;
+
+            startX = e.pageX;
+            startWidth = th.offsetWidth;
+
+            currentHandle.classList.add('dragging');
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+
+            e.preventDefault();
+        });
+    });
+
+    function handleMouseMove(e) {
+        if (!currentHandle) return;
+
+        const th = currentHandle.parentElement;
+        const newWidth = startWidth + (e.pageX - startX);
+
+        // Set a minimum width to prevent columns from getting too small
+        if (newWidth >= 50) {
+            th.style.width = `${newWidth}px`;
+        }
+    }
+
+    function handleMouseUp() {
+        if (currentHandle) {
+            currentHandle.classList.remove('dragging');
+            currentHandle = null;
+
+            // Save the new column widths
+            saveColumnWidths();
+
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        }
+    }
+
+    // Reset button functionality
+    const resetButton = document.createElement('button');
+    resetButton.textContent = 'Réinitialiser les colonnes';
+    resetButton.className = 'reset-columns-btn';
+    resetButton.style.marginTop = '10px';
+    resetButton.style.padding = '5px 10px';
+    resetButton.style.backgroundColor = '#f8fafc';
+    resetButton.style.border = '1px solid #e2e8f0';
+    resetButton.style.borderRadius = '4px';
+    resetButton.style.cursor = 'pointer';
+
+    resetButton.addEventListener('click', function() {
+        const headers = table.querySelectorAll('th');
+        headers.forEach(th => {
+            th.style.width = '';
+        });
+        localStorage.removeItem('entity-history-table-widths');
+    });
+
+    // Add the reset button below the table
+    const historyContainer = document.querySelector('#entity-history-modal .history-container');
+    if (historyContainer && !historyContainer.querySelector('.reset-columns-btn')) {
+        historyContainer.appendChild(resetButton);
+    }
+}
+</script>

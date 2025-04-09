@@ -2906,21 +2906,52 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Placeholder for history button
-    const historyBtn = document.querySelector('.functionality-history-btn');
-    if (historyBtn) {
-        historyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add data-entity-type attribute to all history buttons
+        // For the main functionality tab
+        const functionalityHistoryBtn = document.querySelector('#tab-functionality .functionality-history-btn');
+        if (functionalityHistoryBtn) {
+            functionalityHistoryBtn.setAttribute('data-entity-type', 'functionality');
+        }
 
-            // Close dropdown
-            const dropdown = this.closest('.project-actions-dropdown');
-            dropdown.classList.remove('active');
+        // For architecture requirements tab
+        const archHistoryBtn = document.querySelector('#tab-arch_requirements .functionality-history-btn');
+        if (archHistoryBtn) {
+            archHistoryBtn.setAttribute('data-entity-type', 'arch_requirements');
+        }
 
-            // For now, just show an alert as the modal isn't implemented yet
-            alert('Fonctionnalité en développement: historique des modifications de fonctionnalité');
+        // For structural requirements tab
+        const structHistoryBtn = document.querySelector('#tab-struct_requirements .functionality-history-btn');
+        if (structHistoryBtn) {
+            structHistoryBtn.setAttribute('data-entity-type', 'struct_requirements');
+        }
+
+        // For risk elements tab
+        const riskHistoryBtn = document.querySelector('#tab-risk_elements .functionality-history-btn');
+        if (riskHistoryBtn) {
+            riskHistoryBtn.setAttribute('data-entity-type', 'risk_elements');
+        }
+
+        // For ventilation CVAC tab
+        const ventilationHistoryBtn = document.querySelector('#tab-ventilation_cvac .functionality-history-btn');
+        if (ventilationHistoryBtn) {
+            ventilationHistoryBtn.setAttribute('data-entity-type', 'ventilation_cvac');
+        }
+
+        // For electricity tab
+        const electricityHistoryBtn = document.querySelector('#tab-electricity .functionality-history-btn');
+        if (electricityHistoryBtn) {
+            electricityHistoryBtn.setAttribute('data-entity-type', 'electricity');
+        }
+
+        // For other tabs with the functionality-history-btn class
+        document.querySelectorAll('.tab-content .functionality-history-btn[data-category]').forEach(btn => {
+            const category = btn.getAttribute('data-category');
+            if (category) {
+                btn.setAttribute('data-entity-type', category);
+            }
         });
-    }
+    });
 });
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -2974,9 +3005,6 @@ document.addEventListener("DOMContentLoaded", function() {
         alert('Veuillez sélectionner une pièce d\'abord');
         return;
       }
-
-      // Show an alert for now
-      alert(`Fonctionnalité en développement: historique des modifications de ${category} pour ${roomName}`);
     });
   });
 
@@ -2994,6 +3022,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </script>
 
+<script src="{{ url_for('static', filename='js/entity_history.js') }}"></script>
 
 {% endblock %}
 
@@ -3056,8 +3085,45 @@ document.addEventListener("DOMContentLoaded", function() {
     align-items: center;
     }
 
+    /* Workspace Actions */
+    .workspace-actions {
+    display: flex;
+    gap: 10px;
+    }
+
+    .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    }
+
     .btn svg {
     margin-right: 8px;
+    }
+
+    .btn-primary {
+    background-color: #3498db;
+    color: white;
+    }
+
+    .btn-primary:hover {
+    background-color: #2980b9;
+    }
+
+    .btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+    background-color: #cbd5e0;
     }
 
     /* Workspace Content Styles */
@@ -3347,6 +3413,20 @@ document.addEventListener("DOMContentLoaded", function() {
     /* Only show for very long names that are truncated */
     display: none;
     }
+
+    /* Modal Styles (Additional) */
+    .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow-y: auto;
+    }
+
 
     /* Spinner animation */
     @keyframes spin {
@@ -3694,4 +3774,5 @@ document.addEventListener("DOMContentLoaded", function() {
     {% include "workspace/project_members_modal.html" %}
     {% include "workspace/project_parameters_modal.html" %}
     {% include "workspace/room_history_modal.html" %}
+    {% include "workspace/entity_history_modal.html" %}
     {% endblock %}

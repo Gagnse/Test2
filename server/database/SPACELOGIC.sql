@@ -72,10 +72,10 @@ CREATE TABLE IF NOT EXISTS rooms (
     PRIMARY KEY (no_programme)
 );
 
-CREATE TABLE IF NOT EXISTS disciplines (
-    nom VARCHAR(50),
-    PRIMARY KEY (nom)
-);
+# CREATE TABLE IF NOT EXISTS disciplines (
+#     nom VARCHAR(50),
+#     PRIMARY KEY (nom)
+# );
 
 CREATE TABLE IF NOT EXISTS historicalChanges (
     id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) NOT NULL,
@@ -181,19 +181,19 @@ CREATE TABLE IF NOT EXISTS room_project (
     ON UPDATE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS discipline_room (
-    room_no_programme VARCHAR(50) NOT NULL,
-    discipline_nom VARCHAR(50) NOT NULL,
-    PRIMARY KEY (room_no_programme, discipline_nom),
-    FOREIGN KEY (discipline_nom)
-    REFERENCES disciplines(nom)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-    FOREIGN KEY (room_no_programme)
-    REFERENCES rooms (no_programme)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-);
+# CREATE TABLE IF NOT EXISTS discipline_room (
+#     room_no_programme VARCHAR(50) NOT NULL,
+#     discipline_nom VARCHAR(50) NOT NULL,
+#     PRIMARY KEY (room_no_programme, discipline_nom),
+#     FOREIGN KEY (discipline_nom)
+#     REFERENCES disciplines(nom)
+#     ON DELETE CASCADE
+#     ON UPDATE CASCADE,
+#     FOREIGN KEY (room_no_programme)
+#     REFERENCES rooms (no_programme)
+#     ON DELETE CASCADE
+#     ON UPDATE CASCADE
+# );
 
 #-----------------------------Procédures--------------------------------------
 

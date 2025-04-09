@@ -328,7 +328,34 @@
                     {% if category == "functionality" %}
                     <div id="tab-functionality" class="tab-content {% if loop.first %}active{% endif %}">
                         <div class="special-tab-container">
-                            <h1>Fonctionnalité <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            <div class="tab-header">
+                                <h1>Fonctionnalité</h1>
+                                <div class="project-actions-dropdown">
+                                    <button class="dropdown-toggle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="1"></circle>
+                                            <circle cx="12" cy="5" r="1"></circle>
+                                            <circle cx="12" cy="19" r="1"></circle>
+                                        </svg>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="#" class="edit-functionality-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                            Modifier
+                                        </a>
+                                        <a href="#" class="functionality-history-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                                                <path d="M12 2v10h10"></path>
+                                            </svg>
+                                            Historique
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                             {% if items %}
                             {% for item in items %}
                             <form class="functionality-form" data-room-id="{{ item.room_id }}" style="display: none;">
@@ -444,7 +471,34 @@
                     {% elif category == "arch_requirements" %}
                     <div id="tab-arch_requirements" class="tab-content">
                         <div class="special-tab-container">
-                            <h1>Exigences architecturales <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            <div class="tab-header">
+                                <h1>Exigences architecturales</h1>
+                                <div class="project-actions-dropdown">
+                                    <button class="dropdown-toggle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="1"></circle>
+                                            <circle cx="12" cy="5" r="1"></circle>
+                                            <circle cx="12" cy="19" r="1"></circle>
+                                        </svg>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="#" class="edit-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                            Modifier
+                                        </a>
+                                        <a href="#" class="functionality-history-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                                                <path d="M12 2v10h10"></path>
+                                            </svg>
+                                            Historique
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                             {% if items %}
                             {% for item in items %}
                             <form class="arch_requirements-form" data-room-id="{{ item.room_id }}" style="display: none;">
@@ -557,7 +611,34 @@
                     {% elif category == "struct_requirements" %}
                     <div id="tab-struct_requirements" class="tab-content">
                         <div class="special-tab-container">
-                            <h1>Exigences structurales <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            <div class="tab-header">
+                                <h1>Exigences structurales</h1>
+                                <div class="project-actions-dropdown">
+                                    <button class="dropdown-toggle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="1"></circle>
+                                            <circle cx="12" cy="5" r="1"></circle>
+                                            <circle cx="12" cy="19" r="1"></circle>
+                                        </svg>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="#" class="edit-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                            Modifier
+                                        </a>
+                                        <a href="#" class="functionality-history-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                                                <path d="M12 2v10h10"></path>
+                                            </svg>
+                                            Historique
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                             {% if items %}
                             {% for item in items %}
                             <form class="struct-form" data-room-id="{{ item.room_id }}" style="display: none;">
@@ -626,7 +707,34 @@
                     {% elif category == "risk_elements" %}
                     <div id="tab-risk_elements" class="tab-content">
                         <div class="special-tab-container">
-                            <h1>Éléments à risques <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            <div class="tab-header">
+                                <h1>Éléments à risques</h1>
+                                <div class="project-actions-dropdown">
+                                    <button class="dropdown-toggle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="1"></circle>
+                                            <circle cx="12" cy="5" r="1"></circle>
+                                            <circle cx="12" cy="19" r="1"></circle>
+                                        </svg>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="#" class="edit-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                            Modifier
+                                        </a>
+                                        <a href="#" class="functionality-history-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                                                <path d="M12 2v10h10"></path>
+                                            </svg>
+                                            Historique
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                             {% if items %}
 
                             {% set general_labels = {
@@ -756,7 +864,34 @@
                     {% elif category == "ventilation_cvac" %}
                     <div id="tab-ventilation_cvac" class="tab-content">
                         <div class="special-tab-container">
-                            <h1>Ventilation CVAC <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            <div class="tab-header">
+                                <h1>Ventilation CVAC</h1>
+                                <div class="project-actions-dropdown">
+                                    <button class="dropdown-toggle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="1"></circle>
+                                            <circle cx="12" cy="5" r="1"></circle>
+                                            <circle cx="12" cy="19" r="1"></circle>
+                                        </svg>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="#" class="edit-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                            Modifier
+                                        </a>
+                                        <a href="#" class="functionality-history-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                                                <path d="M12 2v10h10"></path>
+                                            </svg>
+                                            Historique
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                             {% if items %}
                             {% for item in items %}
                             <form class="ventilation-form" data-room-id="{{ item.room_id }}" style="display: none;">
@@ -815,7 +950,34 @@
                     {% elif category == "electricity" %}
                     <div id="tab-electricity" class="tab-content">
                         <div class="special-tab-container">
-                            <h1>Électricité <span class="edit-icon" title="Modifier">&#9998;</span></h1>
+                            <div class="tab-header">
+                                <h1>Électricité</h1>
+                                <div class="project-actions-dropdown">
+                                    <button class="dropdown-toggle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="1"></circle>
+                                            <circle cx="12" cy="5" r="1"></circle>
+                                            <circle cx="12" cy="19" r="1"></circle>
+                                        </svg>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="#" class="edit-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                            Modifier
+                                        </a>
+                                        <a href="#" class="functionality-history-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                                                <path d="M12 2v10h10"></path>
+                                            </svg>
+                                            Historique
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                             {% if items %}
                             {% for item in items %}
                             <form class="electricity-form" data-room-id="{{ item.room_id }}" style="display: none;">
@@ -884,8 +1046,31 @@
                     <div id="tab-{{ category }}" class="tab-content {% if loop.first %}active{% endif %}">
                         <div class="tab-header">
                             <h2>{{ tab_titles.get(category, category.replace('_', ' ').capitalize()) }}</h2>
-                            <button class="add-item-button" data-category="{{ category }}" style="display: none;">➕
-                            </button>
+                            <div class="project-actions-dropdown">
+                                <button class="dropdown-toggle">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                        <circle cx="12" cy="5" r="1"></circle>
+                                        <circle cx="12" cy="19" r="1"></circle>
+                                    </svg>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a href="#" class="add-item-button" data-category="{{ category }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Ajouter un élément
+                                    </a>
+                                    <a href="#" class="functionality-history-btn" data-category="{{ category }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                                            <path d="M12 2v10h10"></path>
+                                        </svg>
+                                        Historique
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                         <table>
                             <thead>
@@ -1010,9 +1195,19 @@
                     }).join("");
 
                     row.innerHTML += `
-            <td>
-                <button class="confirm-add" title="Ajouter">✔️</button>
-            </td>
+            <td class="action-buttons">
+                <button class="confirm-add" title="Ajouter">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+                <button class="cancel-add" title="Annuler">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+          </td>
         `;
 
                     table.prepend(row);
@@ -1043,6 +1238,9 @@
                                     columns.forEach(key => {
                                         newRow.innerHTML += `<td data-key="${key}">${newData[key]}</td>`;
                                     });
+                                    document.querySelectorAll(".add-item-button").forEach(btn => {
+                                      btn.style.display = "inline-flex";
+                                    });
 
                                     newRow.innerHTML += `
                             <td>
@@ -1057,6 +1255,16 @@
                                 }
                             });
                     });
+
+                    const cancelAddition = function() {
+                    row.remove();
+                    // Make sure the add button is still visible and enabled
+                    document.querySelectorAll(".add-item-button").forEach(btn => {
+                      btn.style.display = "inline-flex";
+                    });
+                  };
+
+                  row.querySelector(".cancel-add").addEventListener("click", cancelAddition);
                 });
             });
         });
@@ -2575,727 +2783,911 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-    </script>
 
 
-    {% endblock %}
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle dropdown toggle in functionality tab
+    const functionalityDropdownToggle = document.querySelector('#tab-functionality .dropdown-toggle');
+    if (functionalityDropdownToggle) {
+        functionalityDropdownToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = this.closest('.project-actions-dropdown');
+            dropdown.classList.toggle('active');
+        });
+    }
 
-    {% block extra_css %}
-    {{ super() }}
+    // Close dropdown when clicking elsewhere
+    document.addEventListener('click', function(e) {
+        const functionalityDropdown = document.querySelector('#tab-functionality .project-actions-dropdown');
+        if (functionalityDropdown && !functionalityDropdown.contains(e.target)) {
+            functionalityDropdown.classList.remove('active');
+        }
+    });
+
+    // Handle edit button click
+    const editFunctionalityBtn = document.querySelector('.edit-functionality-btn');
+    if (editFunctionalityBtn) {
+        editFunctionalityBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Close dropdown
+            const dropdown = this.closest('.project-actions-dropdown');
+            dropdown.classList.remove('active');
+
+            // Get the visible form
+            const form = document.querySelector('.functionality-form[style*="display: block"]');
+            if (form) {
+                // Enable all form inputs
+                form.querySelectorAll('input, textarea').forEach(el => {
+                    el.removeAttribute('disabled');
+                });
+
+                // Add save button if it doesn't exist
+                if (!form.querySelector('.save-button')) {
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'save-button';
+                    saveBtn.textContent = 'Enregistrer';
+                    saveBtn.style.marginTop = '10px';
+                    saveBtn.style.marginRight = '10px';
+
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'cancel-button';
+                    cancelBtn.textContent = 'Annuler';
+                    cancelBtn.style.marginTop = '10px';
+
+                    const btnContainer = document.createElement('div');
+                    btnContainer.className = 'form-actions';
+                    btnContainer.appendChild(saveBtn);
+                    btnContainer.appendChild(cancelBtn);
+
+                    form.appendChild(btnContainer);
+
+                    // Add event listeners
+                    saveBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        // Save functionality form - using existing functionality
+                        const roomId = form.dataset.roomId;
+                        const data = {
+                            room_id: roomId,
+                            functionality_occupants_number: form.querySelector('#occupants').value,
+                            functionality_desk_number: form.querySelector('#desk').value,
+                            functionality_lab_number: form.querySelector('#lab').value,
+                            functionality_schedule: form.querySelector('#schedule').value,
+                            functionality_description: form.querySelector('#description').value,
+                            functionality_proximity: form.querySelector('#proximity').value,
+                            functionality_commentary: form.querySelector('#commentary').value,
+                            functionality_access: [],
+                            functionality_consideration: []
+                        };
+
+                        form.querySelectorAll('input[name="functionality_access"]:checked').forEach(cb => {
+                            data.functionality_access.push(cb.value);
+                        });
+
+                        form.querySelectorAll('input[name="functionality_consideration"]:checked').forEach(cb => {
+                            data.functionality_consideration.push(cb.value);
+                        });
+
+                        // Get project ID from URL
+                        const urlParts = window.location.pathname.split('/');
+                        const projectsIndex = urlParts.indexOf('projects');
+                        const projectId = urlParts[projectsIndex + 1];
+
+                        fetch(`/workspace/projects/${projectId}/edit_functionality`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(data)
+                        })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                alert('Modifications enregistrées !');
+                                form.querySelectorAll('input, textarea').forEach(el => {
+                                    el.setAttribute('disabled', 'true');
+                                });
+                                btnContainer.remove();
+                            } else {
+                                alert('Erreur : ' + res.message);
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Erreur :', err);
+                            alert('Une erreur est survenue lors de la sauvegarde');
+                        });
+                    });
+
+                    cancelBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        location.reload();
+                    });
+                }
+            }
+        });
+    }
+
+    // Placeholder for history button
+    const historyBtn = document.querySelector('.functionality-history-btn');
+    if (historyBtn) {
+        historyBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Close dropdown
+            const dropdown = this.closest('.project-actions-dropdown');
+            dropdown.classList.remove('active');
+
+            // For now, just show an alert as the modal isn't implemented yet
+            alert('Fonctionnalité en développement: historique des modifications de fonctionnalité');
+        });
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+  console.log("Initializing dropdown handlers...");
+
+  // Clear any existing click handlers on dropdown toggles to avoid conflicts
+  document.querySelectorAll(".dropdown-toggle").forEach(toggle => {
+    const newToggle = toggle.cloneNode(true);
+    toggle.parentNode.replaceChild(newToggle, toggle);
+  });
+
+  // Re-add click handlers to all dropdown toggles
+  document.querySelectorAll(".dropdown-toggle").forEach(toggle => {
+    console.log("Adding click handler to dropdown toggle", toggle);
+
+    toggle.addEventListener("click", function(e) {
+      console.log("Dropdown toggle clicked");
+      e.preventDefault();
+      e.stopPropagation();
+
+      // First close all other dropdowns
+      document.querySelectorAll('.project-actions-dropdown.active').forEach(openDropdown => {
+        if (openDropdown !== this.closest('.project-actions-dropdown')) {
+          openDropdown.classList.remove('active');
+        }
+      });
+
+      // Then toggle this dropdown
+      const dropdown = this.closest('.project-actions-dropdown');
+      dropdown.classList.toggle('active');
+      console.log("Dropdown active state:", dropdown.classList.contains('active'));
+    });
+  });
+
+  // Handle history button clicks
+  document.querySelectorAll(".functionality-history-btn").forEach(button => {
+    button.addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Close the dropdown
+      const dropdown = this.closest('.project-actions-dropdown');
+      dropdown.classList.remove('active');
+
+      // Get the current selected room info
+      const roomId = sessionStorage.getItem('selectedRoom');
+      const roomName = sessionStorage.getItem('selectedRoomName');
+      const category = this.getAttribute('data-category');
+
+      if (!roomId || !roomName) {
+        alert('Veuillez sélectionner une pièce d\'abord');
+        return;
+      }
+
+      // Show an alert for now
+      alert(`Fonctionnalité en développement: historique des modifications de ${category} pour ${roomName}`);
+    });
+  });
+
+  // Close dropdowns when clicking elsewhere on the page
+  document.addEventListener("click", function(e) {
+    if (!e.target.closest('.project-actions-dropdown')) {
+      document.querySelectorAll('.project-actions-dropdown.active').forEach(dropdown => {
+        dropdown.classList.remove('active');
+      });
+    }
+  });
+});
+
+
+
+</script>
+
+
+{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+
     <style>
-        /* Workspace Navbar Styles */
-        .workspace-navbar {
-            background-color: #f0f4f8;
-            border-bottom: 1px solid #e2e8f0;
-            position: sticky;
-            top: 70px;
-            z-index: 900;
-        }
+    /* Workspace Navbar Styles */
+    .workspace-navbar {
+    background-color: #f0f4f8;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 70px;
+    z-index: 900;
+    }
 
-        .workspace-navbar-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            height: 50px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+    .workspace-navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 50px;
+    max-width: 1400px;
+    margin: 0 auto;
+    }
 
-        .workspace-nav-items {
-            display: flex;
-            gap: 10px;
-        }
+    .workspace-nav-items {
+    display: flex;
+    gap: 10px;
+    }
 
-        .workspace-nav-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 15px;
-            border-radius: 5px;
-            color: #4a5568;
-            transition: all 0.2s ease;
-        }
+    .workspace-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    border-radius: 5px;
+    color: #4a5568;
+    transition: all 0.2s ease;
+    }
 
-        .workspace-nav-item svg {
-            margin-right: 8px;
-        }
+    .workspace-nav-item svg {
+    margin-right: 8px;
+    }
 
-        .workspace-nav-item:hover {
-            background-color: #e2e8f0;
-        }
+    .workspace-nav-item:hover {
+    background-color: #e2e8f0;
+    }
 
-        .workspace-nav-item.active {
-            background-color: #3498db;
-            color: white;
-        }
+    .workspace-nav-item.active {
+    background-color: #3498db;
+    color: white;
+    }
 
-        .workspace-nav-item.active svg {
-            stroke: white;
-        }
+    .workspace-nav-item.active svg {
+    stroke: white;
+    }
 
-        .workspace-context {
-            display: flex;
-            align-items: center;
-        }
+    .workspace-context {
+    display: flex;
+    align-items: center;
+    }
 
-        /* Workspace Actions */
-        .workspace-actions {
-            display: flex;
-            gap: 10px;
-        }
+    .btn svg {
+    margin-right: 8px;
+    }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 16px;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: none;
-        }
+    /* Workspace Content Styles */
+    .workspace-content {
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 20px;
+    min-height: calc(100vh - 220px); /* Account for header, navbar, and footer */
+    }
 
-        .btn svg {
-            margin-right: 8px;
-        }
+    /* Main container adjustment for workspace */
+    main .container {
+    max-width: 100%;
+    width: 100%;
+    padding: 0;
+    }
 
-        .btn-primary {
-            background-color: #3498db;
-            color: white;
-        }
+    /* Project specific styles */
+    .edit-icon, .delete-icon {
+    cursor: pointer;
+    padding: 5px;
+    font-size: 16px;
+    margin-left: 8px;
+    }
 
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
+    .edit-icon:hover {
+    color: #3498db;
+    }
 
-        .btn-secondary {
-            background-color: #e2e8f0;
-            color: #4a5568;
-        }
+    .delete-icon:hover {
+    color: red;
+    }
 
-        .btn-secondary:hover {
-            background-color: #cbd5e0;
-        }
+    td[contenteditable="true"] {
+    background-color: #ffffcc;
+    }
 
-        /* Workspace Content Styles */
-        .workspace-content {
-            max-width: 1400px;
-            margin: 20px auto;
-            padding: 0 20px;
-            min-height: calc(100vh - 220px); /* Account for header, navbar, and footer */
-        }
+    .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 20px;
+    }
 
-        /* Main container adjustment for workspace */
-        main .container {
-            max-width: 100%;
-            width: 100%;
-            padding: 0;
-        }
+    .tab-button {
+    padding: 8px 12px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    font-weight: bold;
+    }
 
-        /* Project specific styles */
-        .edit-icon, .delete-icon {
-            cursor: pointer;
-            padding: 5px;
-            font-size: 16px;
-            margin-left: 8px;
-        }
+    .tab-button.active {
+    background: #3498db;
+    color: white;
+    }
 
-        .edit-icon:hover {
-            color: #3498db;
-        }
+    .tab-content-container {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
 
-        .delete-icon:hover {
-            color: red;
-        }
+    .tab-content {
+    display: none;
+    }
 
-        td[contenteditable="true"] {
-            background-color: #ffffcc;
-        }
+    .tab-content.active {
+    display: block;
+    }
 
-        .tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 20px;
-        }
+    .tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    }
 
-        .tab-button {
-            padding: 8px 12px;
-            border: none;
-            background: #ddd;
-            cursor: pointer;
-            font-weight: bold;
-        }
+    .tab-header h2 {
+    margin: 0;
+    }
 
-        .tab-button.active {
-            background: #3498db;
-            color: white;
-        }
+    .input-row input {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    }
 
-        .tab-content-container {
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
+    .input-row button.confirm-add {
+    padding: 6px 10px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    }
 
-        .tab-content {
-            display: none;
-        }
+    .input-row button.confirm-add:hover {
+    background-color: #45a049;
+    }
 
-        .tab-content.active {
-            display: block;
-        }
+    table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    }
 
-        .tab-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
+    th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+    }
 
-        .tab-header h2 {
-            margin: 0;
-        }
+    th {
+    background: #f5f5f5;
+    }
 
-        .input-row input {
-            width: 100%;
-            padding: 6px 8px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+    .sortable {
+    cursor: pointer;
+    position: relative;
+    padding-right: 20px;
+    }
 
-        .input-row button.confirm-add {
-            padding: 6px 10px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+    .sort-icon {
+    font-size: 14px;
+    margin-left: 5px;
+    color: #666;
+    }
 
-        .input-row button.confirm-add:hover {
-            background-color: #45a049;
-        }
+    .project-container {
+    display: flex;
+    align-items: flex-start;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
+    /* Styles for sidebar tree */
+    .sidebar {
+    width: 250px; /* Fixed width */
+    min-width: 250px; /* Prevent shrinking */
+    padding: 20px;
+    background: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-right: 20px;
+    flex-shrink: 0; /* Prevent shrinking in flex layouts */
+    }
 
-        th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
+    .sidebar ul {
+    list-style-type: none;
+    padding-left: 0;
+    }
 
-        th {
-            background: #f5f5f5;
-        }
+    .sidebar > ul > li {
+    margin-bottom: 8px;
+    }
 
-        .sortable {
-            cursor: pointer;
-            position: relative;
-            padding-right: 20px;
-        }
+    .sidebar li {
+    margin: 4px 0;
+    }
 
-        .sort-icon {
-            font-size: 14px;
-            margin-left: 5px;
-            color: #666;
-        }
+    .sidebar .room-item {
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    }
 
-        .project-container {
-            display: flex;
+    .sidebar .room-item:hover {
+    background-color: #e2e8f0;
+    }
+
+    /* Toggle handling */
+    .toggle {
+    cursor: pointer;
+    user-select: none;
+    display: block;
+    padding: 4px 0;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+    }
+
+    .toggle:hover {
+    color: #3498db;
+    }
+
+    .toggle.open {
+    color: #3498db;
+    }
+
+    /* Nested content handling */
+    .nested {
+    display: none;
+    padding-left: 15px !important;
+    margin-left: 5px !important;
+    }
+
+    .nested.active {
+    display: block;
+    }
+
+    /* Room item when selected */
+    .room-item {
+    /* Default state - no blue highlighting */
+    color: inherit;
+    background-color: transparent;
+    font-weight: normal;
+    }
+
+    .room-item.active-room {
+    font-weight: bold;
+    color: #3498db;
+    background-color: #ebf5ff;
+    }
+
+    /* Styles for sidebar title */
+    .sidebar-title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 1.1rem;
+    color: #2d3748;
+    }
+
+    /* Styles for add room container and button */
+    .add-room-container {
+    margin-top: 15px;
+    }
+
+    .add-room-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: none;
+    border: none;
+    color: #a0aec0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
+    }
+
+    .add-room-link:hover {
+    color: #3498db;
+    background-color: #f7fafc;
+    border-radius: 4px;
+    }
+
+    .add-room-link svg {
+    stroke: #a0aec0;
+    transition: all 0.2s ease;
+    }
+
+    .add-room-link:hover svg {
+    stroke: #3498db;
+    }
+
+    /* Add tooltip for long room names */
+    .sidebar .room-item:hover {
+    position: relative;
+    }
+
+    .sidebar .room-item:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background: #2d3748;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    z-index: 10;
+    white-space: nowrap;
+    /* Only show for very long names that are truncated */
+    display: none;
+    }
+
+    /* Spinner animation */
+    @keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+    }
+
+    /* Section styles for functionality tab */
+    .section {
+    background-color: #f8fafc;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+    }
+
+    .section h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+    color: #334155;
+    }
+
+    .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    }
+
+    .column {
+    flex: 1;
+    min-width: 250px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+    .project-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-height: 300px;
+        margin-bottom: 20px;
+    }
+
+    .content {
+        width: 100%;
+    }
+
+    .tabs {
+        overflow-x: auto;
+    }
+
+    .workspace-navbar-container {
+        flex-direction: column;
+        height: auto;
+        padding: 10px;
+    }
+
+    .workspace-nav-items {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 10px;
+    }
+
+    .workspace-context {
+        width: 100%;
+        justify-content: center;
+        padding-top: 10px;
+        border-top: 1px solid #e2e8f0;
+    }
+    }
+
+    .project-info-header {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .project-info-main {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 5px;
+    }
+
+    .project-title-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    }
+
+    .project-title-with-logo {
+    display: flex;
+    align-items: center;
+    }
+
+    .project-type-logo {
+    display: flex;
+    align-items: center;
+    color: #3498db;
+    margin-right: 12px;
+    }
+
+    .project-title-container h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #2d3748;
+    }
+
+    .project-number {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    color: #4a5568;
+    }
+
+    .project-number-label {
+    font-weight: 600;
+    margin-right: 5px;
+    }
+
+    .project-info-details {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 5px;
+    }
+
+    .info-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    margin-top: 5px;
+    }
+
+    .info-item {
+    margin-bottom: 5px;
+    }
+
+    .info-label {
+    font-size: 0.85rem;
+    color: #718096;
+    font-weight: 600;
+    margin-bottom: 2px;
+    }
+
+    .info-value {
+    font-size: 0.9rem;
+    color: #4a5568;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+    .project-title-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .info-columns {
+        grid-template-columns: 1fr;
+    }
+    }
+
+    /* Room Info Panel Styles */
+    .room-info-panel {
+        background-color: #f8fafc;
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .room-info-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .room-info-header h2 {
+        margin: 0;
+        font-size: 1.3rem;
+        color: #2d3748;
+    }
+
+    .room-info-details {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .room-info-header {
+            flex-direction: column;
             align-items: flex-start;
         }
 
-        /* Styles for sidebar tree */
-        .sidebar {
-            width: 250px; /* Fixed width */
-            min-width: 250px; /* Prevent shrinking */
-            padding: 20px;
-            background: #f8fafc;
-            border-right: 1px solid #e2e8f0;
-            height: calc(100vh - 120px);
-            overflow-y: auto;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-right: 20px;
-            flex-shrink: 0; /* Prevent shrinking in flex layouts */
+        .room-info-details {
+            grid-template-columns: 1fr;
         }
-
-        .sidebar ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-
-        .sidebar > ul > li {
-            margin-bottom: 8px;
-        }
-
-        .sidebar li {
-            margin: 4px 0;
-        }
-
-        .sidebar .room-item {
-            cursor: pointer;
-            padding: 4px 8px;
-            transition: background-color 0.2s;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .sidebar .room-item:hover {
-            background-color: #e2e8f0;
-        }
-
-        /* Toggle handling */
-        .toggle {
-            cursor: pointer;
-            user-select: none;
-            display: block;
-            padding: 4px 0;
-            transition: all 0.2s;
-            font-size: 0.85rem;
-        }
-
-        .toggle:hover {
-            color: #3498db;
-        }
-
-        .toggle.open {
-            color: #3498db;
-        }
-
-        /* Nested content handling */
-        .nested {
-            display: none;
-            padding-left: 15px !important;
-            margin-left: 5px !important;
-        }
-
-        .nested.active {
-            display: block;
-        }
-
-        /* Room item when selected */
-        .room-item {
-            /* Default state - no blue highlighting */
-            color: inherit;
-            background-color: transparent;
-            font-weight: normal;
-        }
-
-        .room-item.active-room {
-            font-weight: bold;
-            color: #3498db;
-            background-color: #ebf5ff;
-        }
-
-        /* Styles for sidebar title */
-        .sidebar-title {
-            margin-top: 0;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 1.1rem;
-            color: #2d3748;
-        }
-
-        /* Styles for add room container and button */
-        .add-room-container {
-            margin-top: 15px;
-        }
-
-        .add-room-link {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 10px;
-            background: none;
-            border: none;
-            color: #a0aec0;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            width: 100%;
-            text-align: left;
-        }
-
-        .add-room-link:hover {
-            color: #3498db;
-            background-color: #f7fafc;
-            border-radius: 4px;
-        }
-
-        .add-room-link svg {
-            stroke: #a0aec0;
-            transition: all 0.2s ease;
-        }
-
-        .add-room-link:hover svg {
-            stroke: #3498db;
-        }
-
-        /* Add tooltip for long room names */
-        .sidebar .room-item:hover {
-            position: relative;
-        }
-
-        .sidebar .room-item:hover::after {
-            content: attr(title);
-            position: absolute;
-            left: 100%;
-            top: 0;
-            background: #2d3748;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            z-index: 10;
-            white-space: nowrap;
-            /* Only show for very long names that are truncated */
-            display: none;
-        }
-
-        /* Modal Styles (Additional) */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            overflow-y: auto;
-        }
-
-        .modal.active {
-            display: block;
-        }
-
-        .form-error {
-            background-color: #FEF2F2;
-            border: 1px solid #F87171;
-            color: #B91C1C;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-        }
-
-        /* Spinner animation */
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .spin {
-            animation: spin 1.5s linear infinite;
-        }
-
-        /* Form help text */
-        .form-help {
-            color: #718096;
-            font-size: 0.8rem;
-            margin-top: 3px;
-        }
-
-        /* Project status styles */
-        .project-status {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            background-color: #d1fae5;
-            color: #047857;
-        }
-
-        /* Section styles for functionality tab */
-        .section {
-            background-color: #f8fafc;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .section h2 {
-            margin-top: 0;
-            margin-bottom: 12px;
-            font-size: 1.2rem;
-            color: #334155;
-        }
-
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .column {
-            flex: 1;
-            min-width: 250px;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .project-container {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                max-height: 300px;
-                margin-bottom: 20px;
-            }
-
-            .content {
-                width: 100%;
-            }
-
-            .tabs {
-                overflow-x: auto;
-            }
-
-            .workspace-navbar-container {
-                flex-direction: column;
-                height: auto;
-                padding: 10px;
-            }
-
-            .workspace-nav-items {
-                width: 100%;
-                overflow-x: auto;
-                padding-bottom: 10px;
-            }
-
-            .workspace-context {
-                width: 100%;
-                justify-content: center;
-                padding-top: 10px;
-                border-top: 1px solid #e2e8f0;
-            }
-        }
-
-        .project-info-header {
-            background-color: #f8fafc;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 5px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .project-info-main {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 5px;
-        }
-
-        .project-title-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .project-title-with-logo {
-            display: flex;
-            align-items: center;
-        }
-
-        .project-type-logo {
-            display: flex;
-            align-items: center;
-            color: #3498db;
-            margin-right: 12px;
-        }
-
-        .project-title-container h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            color: #2d3748;
-        }
-
-        .project-number {
-            display: flex;
-            align-items: center;
-            font-size: 1rem;
-            color: #4a5568;
-        }
-
-        .project-number-label {
-            font-weight: 600;
-            margin-right: 5px;
-        }
-
-        .project-status-badge {
-            margin-left: 15px;
-        }
-
-        .project-info-details {
-            border-top: 1px solid #e2e8f0;
-            padding-top: 5px;
-        }
-
-        .info-columns {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-            margin-top: 5px;
-        }
-
-        .info-item {
-            margin-bottom: 5px;
-        }
-
-        .info-label {
-            font-size: 0.85rem;
-            color: #718096;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .info-value {
-            font-size: 0.9rem;
-            color: #4a5568;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .project-title-container {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .project-status-badge {
-                margin-left: 0;
-                margin-top: 5px;
-            }
-
-            .info-columns {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Room Info Panel Styles */
-            .room-info-panel {
-                background-color: #f8fafc;
-                border-radius: 8px;
-                padding: 15px 20px;
-                margin-bottom: 20px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            }
-
-            .room-info-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 10px;
-            }
-
-            .room-info-header h2 {
-                margin: 0;
-                font-size: 1.3rem;
-                color: #2d3748;
-            }
-
-            .room-info-badge {
-                background-color: #ebf8ff;
-                color: #3498db;
-                padding: 4px 8px;
-                border-radius: 4px;
-                font-size: 0.9rem;
-            }
-
-            .room-number-label {
-                font-weight: 600;
-            }
-
-            .room-info-details {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
-            }
-
-            @media (max-width: 768px) {
-                .room-info-header {
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-
-                .room-info-badge {
-                    margin-top: 8px;
-                }
-
-                .room-info-details {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-        /* Dropdown Menu Styles */
-            .project-actions-dropdown {
-                position: relative;
-            }
-
-            .dropdown-toggle {
-                background: none;
-                border: none;
-                cursor: pointer;
-                padding: 5px;
-                border-radius: 4px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .dropdown-toggle:hover {
-                background-color: #e2e8f0;
-            }
-
-            .dropdown-menu {
-                position: absolute;
-                right: 0;
-                top: 100%;
-                background-color: white;
-                border-radius: 6px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                padding: 8px 0;
-                min-width: 200px;
-                z-index: 1000;
-                display: none;
-            }
-
-            .dropdown-menu a {
-                display: block;
-                padding: 8px 16px;
-                color: #4a5568;
-                text-decoration: none;
-                transition: background-color 0.2s;
-            }
-
-            .dropdown-menu a:hover {
-                background-color: #f7fafc;
-                color: #3498db;
-            }
-
-            .project-actions-dropdown.active .dropdown-menu {
-                display: block;
-            }
+    }
+
+    /* Dropdown Menu Styles */
+    .project-actions-dropdown {
+        position: relative;
+    }
+
+    .dropdown-toggle {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dropdown-toggle:hover {
+        background-color: #e2e8f0;
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        background-color: white;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 8px 0;
+        min-width: 200px;
+        z-index: 1000;
+        display: none;
+    }
+
+    .dropdown-menu a {
+        display: block;
+        padding: 8px 16px;
+        color: #4a5568;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #f7fafc;
+        color: #3498db;
+    }
+
+    .project-actions-dropdown.active .dropdown-menu {
+        display: block;
+    }
+
+            .special-tab-container .tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.special-tab-container .tab-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #2d3748;
+}
+
+/* Dropdown menu styling for the tab */
+.dropdown-menu a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-menu a svg {
+    color: #718096;
+}
+
+.dropdown-menu a:hover svg {
+    color: #3498db;
+}
+
+
+.special-tab-container .dropdown-toggle:hover {
+    color: #3498db;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.confirm-add, .cancel-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirm-add {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.confirm-add:hover {
+  background-color: #45a049;
+}
+
+.cancel-add {
+  background-color: #f44336;
+  color: white;
+}
+
+.cancel-add:hover {
+  background-color: #d32f2f;
+}
+
+.input-row input {
+  border: 1px solid #ddd;
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.input-row input:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.input-row td {
+  padding: 8px 10px;
+}
 
     </style>
     {% include "workspace/room_creation_modal.html" %}

@@ -19,13 +19,25 @@
                     </svg>
                     <p>Chargement de l'historique...</p>
                 </div>
-                <table class="history-table" style="display: none;">
+                <table class="history-table resizable-table" style="display: none;">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Utilisateur</th>
-                            <th>Action</th>
-                            <th>Détails</th>
+                            <th class="resizable">
+                                <div class="th-content">Date</div>
+                                <div class="resize-handle"></div>
+                            </th>
+                            <th class="resizable">
+                                <div class="th-content">Utilisateur</div>
+                                <div class="resize-handle"></div>
+                            </th>
+                            <th class="resizable">
+                                <div class="th-content">Action</div>
+                                <div class="resize-handle"></div>
+                            </th>
+                            <th class="resizable">
+                                <div class="th-content">Détails</div>
+                                <div class="resize-handle"></div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -66,7 +78,6 @@
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     width: 90%;
-    max-width: 800px;
     margin: 20px auto;
     overflow: hidden;
     animation: modalFadeIn 0.3s;
@@ -166,6 +177,157 @@
 
 #room-history-modal .history-table th:nth-child(4),
 #room-history-modal .history-table td:nth-child(4) {
-    width: 40%;
+    width: auto;
+}
+
+.resizable-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.resizable-table th {
+    position: relative;
+    padding-right: 20px; /* Make room for the resize handle */
+    overflow: hidden;
+}
+
+.resizable-table .th-content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.resizable-table .resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 100%;
+    cursor: col-resize;
+    background-color: transparent;
+}
+
+.resizable-table .resize-handle:hover,
+.resizable-table .resize-handle.dragging {
+    background-color: #cbd5e0;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize resizable columns
+    initResizableTable();
+});
+
+function initResizableTable() {
+    const table = document.querySelector('.resizable-table');
+    if (!table) return;
+
+    const handles = table.querySelectorAll('.resize-handle');
+    let currentHandle = null;
+    let startX = 0;
+    let startWidth = 0;
+
+    // Save column widths to localStorage
+    function saveColumnWidths() {
+        const headers = table.querySelectorAll('th');
+        const widths = Array.from(headers).map(th => th.style.width);
+        localStorage.setItem('history-table-widths', JSON.stringify(widths));
+    }
+
+    // Load column widths from localStorage
+    function loadColumnWidths() {
+        try {
+            const widths = JSON.parse(localStorage.getItem('history-table-widths'));
+            if (widths && widths.length) {
+                const headers = table.querySelectorAll('th');
+                headers.forEach((th, index) => {
+                    if (widths[index]) {
+                        th.style.width = widths[index];
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Error loading saved column widths:', e);
+        }
+    }
+
+    // Load saved widths when the table is first shown
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === 'style' &&
+                table.style.display !== 'none') {
+                loadColumnWidths();
+                observer.disconnect();
+            }
+        });
+    });
+
+    observer.observe(table, { attributes: true });
+
+    handles.forEach(handle => {
+        handle.addEventListener('mousedown', function(e) {
+            currentHandle = e.target;
+            const th = currentHandle.parentElement;
+
+            startX = e.pageX;
+            startWidth = th.offsetWidth;
+
+            currentHandle.classList.add('dragging');
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+
+            e.preventDefault();
+        });
+    });
+
+    function handleMouseMove(e) {
+        if (!currentHandle) return;
+
+        const th = currentHandle.parentElement;
+        const newWidth = startWidth + (e.pageX - startX);
+
+        // Set a minimum width to prevent columns from getting too small
+        if (newWidth >= 50) {
+            th.style.width = `${newWidth}px`;
+        }
+    }
+
+    function handleMouseUp() {
+        if (currentHandle) {
+            currentHandle.classList.remove('dragging');
+            currentHandle = null;
+
+            // Save the new column widths
+            saveColumnWidths();
+
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        }
+    }
+
+    // Reset button functionality - add this inside your modal
+    const resetButton = document.createElement('button');
+    resetButton.textContent = 'Réinitialiser les colonnes';
+    resetButton.className = 'reset-columns-btn';
+    resetButton.style.marginTop = '10px';
+    resetButton.style.padding = '5px 10px';
+    resetButton.style.backgroundColor = '#f8fafc';
+    resetButton.style.border = '1px solid #e2e8f0';
+    resetButton.style.borderRadius = '4px';
+    resetButton.style.cursor = 'pointer';
+
+    resetButton.addEventListener('click', function() {
+        const headers = table.querySelectorAll('th');
+        headers.forEach(th => {
+            th.style.width = '';
+        });
+        localStorage.removeItem('history-table-widths');
+    });
+
+    // Add the reset button below the table
+    const historyContainer = document.querySelector('.history-container');
+    historyContainer.appendChild(resetButton);
+}
+</script>

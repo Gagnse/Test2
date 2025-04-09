@@ -421,7 +421,7 @@ def create_project_database(project_id, project_number=None):
 
 def execute_sql_file(connection, file_path):
     """
-    Executes SQL statements from a file
+    Executes SQL statements from a file, correctly handling DELIMITER changes
 
     Args:
         connection: An active database connection
@@ -439,42 +439,51 @@ def execute_sql_file(connection, file_path):
         with open(file_path, 'r') as f:
             sql_script = f.read()
 
-        # Fix common comment issues (- to --)
-        sql_script = sql_script.replace("\n- ", "\n-- ")
+        # First, handle the DELIMITER statements in the script
+        current_delimiter = ";"
+        statements = []
+        buffer = ""
 
-        # Split script on DELIMITER to handle these statements correctly
-        sql_parts = sql_script.split('DELIMITER')
+        for line in sql_script.splitlines():
+            line = line.strip()
 
-        # Execute the first part (before any DELIMITER statement)
-        if sql_parts[0].strip():
-            statements = [stmt.strip() for stmt in sql_parts[0].split(';') if stmt.strip()]
-            for statement in statements:
-                cursor.execute(statement)
-
-        # For the rest, handle the delimiter changes
-        for part in sql_parts[1:]:
-            if not part.strip():
+            # Skip comments and empty lines
+            if not line or line.startswith("--") or line.startswith("#"):
                 continue
 
-            # Get the delimiter
-            delimiter_lines = part.lstrip().split('\n', 1)
-            if len(delimiter_lines) < 2:
+            # Handle DELIMITER command
+            if line.upper().startswith("DELIMITER"):
+                # Complete any pending statement with the old delimiter
+                if buffer:
+                    statements.append(buffer)
+                    buffer = ""
+
+                # Extract the new delimiter
+                current_delimiter = line.split()[1]
                 continue
 
-            delimiter = delimiter_lines[0].strip()
-            rest = delimiter_lines[1]
+            # Add line to the buffer
+            buffer += line + "\n"
 
-            # Join the rest and split by the delimiter
-            sql_commands = rest.split(delimiter)
+            # Check if the line ends with the current delimiter
+            if line.endswith(current_delimiter):
+                # Remove the delimiter from the end
+                if current_delimiter != ";":
+                    buffer = buffer[:-len(current_delimiter) - 1] + "\n"
 
-            # Execute each command
-            for cmd in sql_commands:
-                if cmd.strip():
-                    try:
-                        cursor.execute(cmd)
-                    except Exception as cmd_error:
-                        print(f"Error executing command: {cmd_error}")
-                        print(f"Command: {cmd[:100]}...")  # Print first 100 chars for debugging
+                # Add the completed statement
+                statements.append(buffer)
+                buffer = ""
+
+        # Add any remaining statement
+        if buffer:
+            statements.append(buffer)
+
+        # Execute each statement
+        for stmt in statements:
+            stmt = stmt.strip()
+            if stmt:
+                cursor.execute(stmt)
 
         connection.commit()
         return True
@@ -483,6 +492,7 @@ def execute_sql_file(connection, file_path):
         if connection:
             connection.rollback()
         print(f"Error executing SQL file: {e}")
+        print(f"Statement causing error: {stmt if 'stmt' in locals() else 'Unknown'}")
         return False
 
     finally:

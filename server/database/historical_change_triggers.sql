@@ -528,8 +528,6 @@ BEGIN
     );
 END //
 
-DELIMITER ;
-
 -- ============================== FUNCTIONALITY TRIGGERS ==============================
 -- INSERT Trigger for functionality
 CREATE TRIGGER IF NOT EXISTS functionality_after_insert
@@ -2592,3 +2590,4 @@ BEGIN
         current_user_id
     );
 END //
+DELIMITER ;

@@ -249,7 +249,7 @@ def create_project_database(project_id, project_number=None):
         cursor.execute("""
             CREATE TABLE functionality (
 		        functionality_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
-		        room_id BINARY(16) NOT NULL,
+		        room_id BINARY(16) NOT NULL UNIQUE,
 		        functionality_occupants_number INT,
 		        functionality_desk_number INT,
 		        functionality_lab_number INT,
@@ -273,7 +273,7 @@ def create_project_database(project_id, project_number=None):
         cursor.execute("""
             CREATE TABLE arch_requirements (
 		        arch_requirements_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
-		        room_id BINARY(16) NOT NULL,
+		        room_id BINARY(16) NOT NULL UNIQUE,
 		        arch_requirements_critic_length INT,
 		        arch_requirements_critic_width INT,
 		        arch_requirements_critic_height INT,
@@ -295,7 +295,7 @@ def create_project_database(project_id, project_number=None):
         cursor.execute("""
             CREATE TABLE struct_requirements (
 		        struct_requirements_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
-		        room_id BINARY(16) NOT NULL,
+		        room_id BINARY(16) NOT NULL UNIQUE,
 		        struct_requirements_floor_overload_required INT,
 		        struct_requirements_overload INT DEFAULT NULL,
 		        struct_requirements_equipment_weight INT DEFAULT NULL,
@@ -313,7 +313,7 @@ def create_project_database(project_id, project_number=None):
         cursor.execute("""
             CREATE TABLE risk_elements (
 		        risk_elements_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
-		        room_id BINARY(16) NOT NULL,
+		        room_id BINARY(16) NOT NULL UNIQUE,
 		        risk_elements_general SET('NA', 'concentrated_acids', 'concentrated_base',
 		            'water_air_reactive', 'radioactive'),
 		        risk_elements_general_radioactive TEXT DEFAULT NULL,
@@ -335,7 +335,7 @@ def create_project_database(project_id, project_number=None):
         cursor.execute("""
             CREATE TABLE ventilation_cvac (
                 ventilation_cvac_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
-                room_id BINARY(16) NOT NULL,
+                room_id BINARY(16) NOT NULL UNIQUE,
                 ventilation_care_area_type VARCHAR(100),
                 ventilation VARCHAR(200),
                 ventilation_special_mechanics TEXT,
@@ -351,7 +351,7 @@ def create_project_database(project_id, project_number=None):
         cursor.execute("""
             CREATE TABLE electricity (
                 electricity_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) PRIMARY KEY,
-                room_id BINARY(16) NOT NULL,
+                room_id BINARY(16) NOT NULL UNIQUE,
                 electricity_care_area_type VARCHAR(100),
                 electricity_smoke_fire_detection VARCHAR(100),
                 electricity_special_equipment TEXT,

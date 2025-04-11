@@ -1,0 +1,140 @@
+<div id="tab-functionality" class="tab-content {% if loop.first %}active{% endif %}">
+    <div class="special-tab-container">
+        <div class="tab-header">
+            <h1>Fonctionnalité</h1>
+            <div class="project-actions-dropdown">
+                <button class="dropdown-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="#" class="edit-functionality-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Modifier
+                    </a>
+                    <a href="#" class="functionality-history-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                            <path d="M12 2v10h10"></path>
+                        </svg>
+                        Historique
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if items %}
+        {% for item in items %}
+        <form class="functionality-form" data-room-id="{{ item.room_id }}" style="display: none;">
+            <div class="section">
+                <h2>Général</h2>
+                <div class="row">
+                    <div class="column">
+                        <label><strong>Nb occupants:</strong> <input type="number" id="occupants"
+                                                                     value="{{ item.functionality_occupants_number or 0 }}"
+                                                                     disabled>
+                            Qté</label>
+                        <label><strong>Nb postes travail - Bureau:</strong> <input type="number"
+                                                                                   id="desk"
+                                                                                   value="{{ item.functionality_desk_number or 0 }}"
+                                                                                   disabled>
+                            Qté</label>
+                        <label><strong>Nb postes travail - Labo:</strong> <input type="number"
+                                                                                 id="lab"
+                                                                                 value="{{ item.functionality_lab_number or 0 }}"
+                                                                                 disabled>
+                            Qté</label>
+                        <label><strong>Horaire typique:</strong> <input type="text" id="schedule"
+                                                                        value="{{ item.functionality_schedule or '' }}"
+                                                                        disabled>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <h2>Accès</h2>
+                <div class="row">
+                    <div class="column">
+                        {% set access_options = {
+                        'client_access': 'Accessibilité à la clientèle',
+                        'stretcher_access': 'Accessibilité aux civières',
+                        'bed_access': 'Accessibilité aux lits',
+                        'patients_access': 'Accessibilité aux patients bariatriques',
+                        'exterior_access': 'Accessibilité de l\'extérieur',
+                        'hallway_access': 'Accessibilité via corridor',
+                        'adj_room_access': 'Accessibilité via pièce adjacente',
+                        'other': 'Autre'
+                        } %}
+                        {% for key, label in access_options.items() %}
+                        <label>
+                            <input type="checkbox" name="functionality_access" value="{{ key }}"
+                                   {% if key in (item.functionality_access or []) %}checked{% endif
+                                   %}
+                                   disabled>
+                            {{ label }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Considérations et classifications</h2>
+                <div class="row">
+                    <div class="column">
+                        {% set consideration_options = {
+                        'NA': 'N/A',
+                        'anti_suicide': 'Aménagement antisuicide',
+                        'waterproof': 'Étanchéité',
+                        'radiation': 'Radioactivité/Radiation',
+                        'electromagnetic': 'Électromagnétiques',
+                        'sterile': 'Milieu stérile',
+                        'vibrations_sensitivity': 'Sensible vibrations',
+                        'wet_lab': 'Labo humide',
+                        'dry_lab': 'Labo sec',
+                        'biosecurity': 'Biosécurité',
+                        'pet_shop': 'Animalerie'
+                        } %}
+                        {% for key, label in consideration_options.items() %}
+                        <label>
+                            <input type="checkbox" name="functionality_consideration"
+                                   value="{{ key }}"
+                                   {% if key in (item.functionality_consideration or []) %}checked{%
+                                   endif %}
+                                   disabled>
+                            {{ label }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Description des activités</h2>
+                <textarea id="description"
+                          disabled>{{ item.functionality_description or '' }}</textarea>
+            </div>
+
+            <div class="section">
+                <h2>Liens de proximité et/ou fonctionnels</h2>
+                <textarea id="proximity"
+                          disabled>{{ item.functionality_proximity or '' }}</textarea>
+            </div>
+
+            <div class="section">
+                <h2>Commentaires de l'établissement</h2>
+                <textarea id="commentary"
+                          disabled>{{ item.functionality_commentary or '' }}</textarea>
+            </div>
+        </form>
+        {% endfor %}
+        {% else %}
+        <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+        {% endif %}
+    </div>
+</div>

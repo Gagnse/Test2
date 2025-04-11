@@ -1,0 +1,137 @@
+<div id="tab-arch_requirements" class="tab-content">
+    <div class="special-tab-container">
+        <div class="tab-header">
+            <h1>Exigences architecturales</h1>
+            <div class="project-actions-dropdown">
+                <button class="dropdown-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="#" class="edit-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Modifier
+                    </a>
+                    <a href="#" class="functionality-history-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                            <path d="M12 2v10h10"></path>
+                        </svg>
+                        Historique
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if items %}
+        {% for item in items %}
+        <form class="arch_requirements-form" data-room-id="{{ item.room_id }}" style="display: none;">
+            <div class="section">
+                <h2>Dimensions critiques</h2>
+                <label>Longueur critique (mm) :
+                    <input type="number" name="arch_requirements_critic_length"
+                           id="arch_requirements_critic_length"
+                           value="{{ item.arch_requirements_critic_length or '' }}" disabled>
+                </label>
+                <label>Largeur critique (mm) :
+                    <input type="number" name="arch_requirements_critic_width"
+                           id="arch_requirements_critic_width"
+                           value="{{ item.arch_requirements_critic_width or '' }}" disabled>
+                </label>
+                <label>Hauteur critique (mm) :
+                    <input type="number" name="arch_requirements_critic_height"
+                           id="arch_requirements_critic_height"
+                           value="{{ item.arch_requirements_critic_height or '' }}" disabled>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Validation et acoustique</h2>
+                <label>Validation requise :
+                    <input type="number" name="arch_requirements_validation_req"
+                           id="arch_requirements_validation_req"
+                           value="{{ item.arch_requirements_validation_req or 0 }}" disabled>
+                </label>
+                <label>Performance acoustique (NRC ou autre) :
+                    <input type="number" name="arch_requirements_acoustic"
+                           id="arch_requirements_acoustic"
+                           value="{{ item.arch_requirements_acoustic or 0 }}" disabled>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Fenéstration intérieure</h2>
+                {% set int_fen_options = {
+                'not_required': 'Non requise',
+                'with_hallway': 'Vue sur corridor',
+                'clear_glass': 'Verre clair',
+                'frosted_glass': 'Verre givré',
+                'semi_frosted_glass': 'Verre semi-givré',
+                'one_way_glass': 'Verre unidirectionnel',
+                'integrated_blind': 'Store intégré'
+                } %}
+                {% for opt, label in int_fen_options.items() %}
+                <label>
+                    <input type="checkbox" name="arch_requirements_int_fenestration"
+                           value="{{ opt }}" {% if opt in (item.arch_requirements_int_fenestration
+                           or []) %}checked{% endif %}
+                           disabled>
+                    {{ label }}
+                </label>
+                {% endfor %}
+                <label>Adjacence :
+                    <textarea name="arch_requirements_int_fen_adj_room"
+                              id="arch_requirements_int_fen_adj_room" disabled>{{ item.arch_requirements_int_fen_adj_room or '' }}</textarea>
+                </label>
+                <label>Autre :
+                    <textarea name="arch_requirements_int_fen_other"
+                              id="arch_requirements_int_fen_other" disabled>{{ item.arch_requirements_int_fen_other or '' }}</textarea>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Fenéstration extérieure</h2>
+                {% set ext_fen_options = {
+                'not_required': 'Non requise',
+                'required': 'Requise',
+                'total_obscurity': 'Obscurité totale',
+                'frosted_glass': 'Verre givré',
+                'tinted_glass': 'Verre teinté',
+                'integrated_blind': 'Store intégré'
+                } %}
+                {% for opt, label in ext_fen_options.items() %}
+                <label>
+                    <input type="checkbox" name="arch_requirements_ext_fenestration"
+                           value="{{ opt }}" {% if opt in (item.arch_requirements_ext_fenestration
+                           or []) %}checked{% endif %}
+                           disabled>
+                    {{ label }}
+                </label>
+                {% endfor %}
+                <label>Stores solaires :
+                    <textarea name="arch_requirements_ext_fen_solar_blind"
+                              id="arch_requirements_ext_fen_solar_blind" disabled>{{ item.arch_requirements_ext_fen_solar_blind or '' }}</textarea>
+                </label>
+                <label>Stores opaques :
+                    <textarea name="arch_requirements_ext_fen_opaque_blind"
+                              id="arch_requirements_ext_fen_opaque_blind" disabled>{{ item.arch_requirements_ext_fen_opaque_blind or '' }}</textarea>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Commentaires</h2>
+                <textarea name="arch_requirements_commentary" id="arch_requirements_commentary"
+                          disabled>{{ item.arch_requirements_commentary or '' }}</textarea>
+            </div>
+        </form>
+        {% endfor %}
+        {% else %}
+        <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+        {% endif %}
+    </div>
+</div>

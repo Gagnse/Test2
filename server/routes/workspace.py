@@ -1749,6 +1749,10 @@ def get_entity_history(project_id, entity_type):
 
     # Define allowed entity types for security
     allowed_entity_types = [
+        'interior_fenestration', 'exterior_fenestration', 'doors',
+        'built_in_furniture', 'accessories', 'plumbings',
+        'fire_protection', 'lighting', 'electrical_outlets',
+        'communication_security', 'medical_equipment',
         'functionality', 'arch_requirements', 'struct_requirements',
         'risk_elements', 'ventilation_cvac', 'electricity'
     ]
@@ -1781,8 +1785,7 @@ def get_entity_history(project_id, entity_type):
         if not result or result['count'] == 0:
             return jsonify({'success': False, 'message': 'Pièce non trouvée'}), 404
 
-        # Simplified approach to get all history entries for this entity type
-        # We'll just filter by entity_type and display all entries
+        # Query to get the history for the specific entity type
         query = """
             SELECT 
                 BIN_TO_UUID(id) as id,
@@ -1832,9 +1835,6 @@ def get_entity_history(project_id, entity_type):
 
         history = filtered_history
         print(f"After filtering, found {len(history)} history records for {entity_type} in room {room_id}")
-        history = cursor.fetchall()
-
-        print(f"Found {len(history)} history records for {entity_type} in room {room_id}")
 
         # Get user names for the history entries
         user_ids = [item['user_id'] for item in history if item['user_id']]
@@ -1848,14 +1848,15 @@ def get_entity_history(project_id, entity_type):
                 # Prepare placeholders for user_ids
                 placeholders = ', '.join(['UUID_TO_BIN(%s)' for _ in user_ids])
 
-                users_cursor.execute(f"""
-                    SELECT BIN_TO_UUID(id) as id, first_name, last_name
-                    FROM users
-                    WHERE id IN ({placeholders})
-                """, user_ids)
+                if placeholders:  # Only execute if there are placeholders
+                    users_cursor.execute(f"""
+                        SELECT BIN_TO_UUID(id) as id, first_name, last_name
+                        FROM users
+                        WHERE id IN ({placeholders})
+                    """, user_ids)
 
-                for user in users_cursor.fetchall():
-                    user_names[user['id']] = f"{user['first_name']} {user['last_name']}"
+                    for user in users_cursor.fetchall():
+                        user_names[user['id']] = f"{user['first_name']} {user['last_name']}"
 
                 users_cursor.close()
                 users_connection.close()

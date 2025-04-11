@@ -388,3 +388,44 @@ document.addEventListener("DOMContentLoaded", function () {
         activateTab(savedTab);
     }
 });
+
+// Function to initialize dropdown toggles for special tabs
+function initSpecialTabDropdowns() {
+    // Get all dropdown toggles in special tabs
+    const specialTabDropdowns = document.querySelectorAll('.special-tab-container .dropdown-toggle');
+
+    // Add click event listeners to each toggle
+    specialTabDropdowns.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Toggle the active class on the parent dropdown
+            const dropdown = this.closest('.project-actions-dropdown');
+
+            // First close all other dropdowns
+            document.querySelectorAll('.project-actions-dropdown.active').forEach(openDropdown => {
+                if (openDropdown !== dropdown) {
+                    openDropdown.classList.remove('active');
+                }
+            });
+
+            // Toggle this dropdown
+            dropdown.classList.toggle('active');
+        });
+    });
+
+    // Close all dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.project-actions-dropdown')) {
+            document.querySelectorAll('.project-actions-dropdown.active').forEach(dropdown => {
+                dropdown.classList.remove('active');
+            });
+        }
+    });
+}
+
+// Call this function when the document is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initSpecialTabDropdowns();
+});

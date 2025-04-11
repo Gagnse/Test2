@@ -10,6 +10,12 @@ document.addEventListener("DOMContentLoaded", function() {
     // Initialize room info panel
     initRoomInfoPanel();
 
+    // Initialize dropdown handlers (fixes issue with dropdowns not working)
+    initDropdownHandlers();
+
+    // Setup various modal handlers
+    setupModalHandlers();
+
     // Hide all + buttons on load
     document.querySelectorAll(".add-item-button").forEach(btn => {
         btn.style.display = "none";
@@ -19,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll(".folder-toggle").forEach(folder => {
         folder.addEventListener("click", function() {
             const nestedList = this.nextElementSibling;
-            nestedList.style.display = nestedList.style.display === "block" ? "none" : "block";
+            nestedList.classList.toggle("active");
             this.classList.toggle("open");
         });
     });
@@ -67,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function() {
             sessionStorage.setItem("selectedRoomName", roomName);
 
             // Show name in "Salle sélectionnée :"
-            document.querySelectorAll(".selected-room-name span").forEach(span => {
+            document.querySelectorAll(".selected-room-title").forEach(span => {
                 span.textContent = roomName;
             });
 
@@ -189,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 let parent = roomItem.parentElement;
                 while (parent) {
                     if (parent.classList.contains("nested")) {
-                        parent.style.display = "block";
+                        parent.classList.add("active");
                         const toggle = parent.previousElementSibling;
                         if (toggle && toggle.classList.contains("toggle")) {
                             toggle.classList.add("open");
@@ -509,10 +515,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             });
     }
-
-    // Initialize all components
-    initDropdownHandlers();
-    setupModalHandlers();
 
     // Add data-entity-type attribute to all entity history buttons
     document.querySelectorAll('.functionality-history-btn').forEach(btn => {

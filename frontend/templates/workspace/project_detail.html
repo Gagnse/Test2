@@ -428,7 +428,7 @@
     window.columnsToDisplay = {{ columns_to_display | tojson }};
 </script>
 
-<!-- Load our separated JS files -->
+<!-- Load our separated JS files in the correct order -->
 <script src="{{ url_for('static', filename='js/project_detail/project_detail_main.js') }}"></script>
 <script src="{{ url_for('static', filename='js/project_detail/room_data_handlers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/project_detail/table_editors.js') }}"></script>

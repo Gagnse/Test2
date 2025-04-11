@@ -422,13 +422,30 @@
         </div>
     </div>
 {% endblock %}
-
 {% block extra_js %}
 <script>
+    // Make columnsToDisplay globally available
     window.columnsToDisplay = {{ columns_to_display | tojson }};
+
+    // Define a global app namespace to share data and functions between modules
+    window.ProjectApp = {
+        // Core data
+        data: {
+            selectedRoomId: null,
+            selectedRoomName: null,
+            editingRow: null,
+            originalRowValues: new Map()
+        },
+
+        // Core DOM element references that will be needed across modules
+        elements: {},
+
+        // Function registry for cross-module access
+        functions: {}
+    };
 </script>
 
-<!-- Load our separated JS files in the correct order -->
+<!-- Load JS files in the correct dependency order -->
 <script src="{{ url_for('static', filename='js/project_detail/project_detail_main.js') }}"></script>
 <script src="{{ url_for('static', filename='js/project_detail/room_data_handlers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/project_detail/table_editors.js') }}"></script>

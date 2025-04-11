@@ -1,0 +1,92 @@
+<div id="tab-electricity" class="tab-content">
+    <div class="special-tab-container">
+        <div class="tab-header">
+            <h1>Électricité</h1>
+            <div class="project-actions-dropdown">
+                <button class="dropdown-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="#" class="edit-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Modifier
+                    </a>
+                    <a href="#" class="functionality-history-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                            <path d="M12 2v10h10"></path>
+                        </svg>
+                        Historique
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if items %}
+        {% for item in items %}
+        <form class="electricity-form" data-room-id="{{ item.room_id }}" style="display: none;">
+            <div class="section">
+                <h2>Type de zone de soins</h2>
+                <label>
+                    <input type="text" name="electricity_care_area_type"
+                           id="electricity_care_area_type"
+                           value="{{ item.electricity_care_area_type or '' }}" disabled>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Détection et équipements</h2>
+                <label>Détection incendie :
+                    <input type="text" name="electricity_smoke_fire_detection"
+                           id="electricity_smoke_fire_detection"
+                           value="{{ item.electricity_smoke_fire_detection or '' }}" disabled>
+                </label>
+                <label>Équipement spécial :
+                    <textarea name="electricity_special_equipment"
+                              id="electricity_special_equipment" disabled>{{ item.electricity_special_equipment or '' }}</textarea>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Éclairage</h2>
+                <label>Type d'éclairage :
+                    <input type="text" name="electricity_lighting_type"
+                           id="electricity_lighting_type"
+                           value="{{ item.electricity_lighting_type or '' }}" disabled>
+                </label>
+                <label>Niveau d'éclairement :
+                    <input type="text" name="electricity_lighting_level"
+                           id="electricity_lighting_level"
+                           value="{{ item.electricity_lighting_level or '' }}" disabled>
+                </label>
+                <label>Contrôle de l'éclairage :
+                    <input type="text" name="electricity_lighting_control"
+                           id="electricity_lighting_control"
+                           value="{{ item.electricity_lighting_control or '' }}" disabled>
+                </label>
+                <label>Température de couleur :
+                    <input type="text" name="color_temperature" id="color_temperature"
+                           value="{{ item.color_temperature or '' }}" disabled>
+                </label>
+                <label>Détails sur l'éclairage :
+                    <textarea name="electricity_lighting" id="electricity_lighting" disabled>{{ item.electricity_lighting or '' }}</textarea>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Commentaires</h2>
+                <textarea name="electricity_commentary" id="electricity_commentary" disabled>{{ item.electricity_commentary or '' }}</textarea>
+            </div>
+        </form>
+        {% endfor %}
+        {% else %}
+        <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+        {% endif %}
+    </div>
+</div>

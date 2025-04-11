@@ -1,0 +1,154 @@
+<div id="tab-risk_elements" class="tab-content">
+    <div class="special-tab-container">
+        <div class="tab-header">
+            <h1>Éléments à risques</h1>
+            <div class="project-actions-dropdown">
+                <button class="dropdown-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="#" class="edit-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Modifier
+                    </a>
+                    <a href="#" class="functionality-history-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                            <path d="M12 2v10h10"></path>
+                        </svg>
+                        Historique
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if items %}
+
+        {% set general_labels = {
+        'NA': 'N/A',
+        'concentrated_acids': 'Acides concentrés',
+        'concentrated_base': 'Bases concentrées',
+        'water_air_reactive': 'Réactif à l\'eau ou à l\'air',
+        'radioactive': 'Radioactif'
+        } %}
+        {% set bio_labels = {
+        'NA': 'N/A',
+        'biological_products': 'Produits biologiques',
+        'pathogens_humans': 'Agents pathogènes (humains)',
+        'pathogens_animals': 'Agents pathogènes (animaux)'
+        } %}
+        {% set gas_labels = {
+        'NA': 'N/A',
+        'gas_cylinders': 'Bouteilles de gaz',
+        'important_qty': 'Grande quantité',
+        'toxic_gas': 'Gaz toxique'
+        } %}
+        {% set liquids_labels = {
+        'NA': 'N/A',
+        'flammable': 'Inflammable',
+        'important_qty': 'Grande quantité',
+        'cryogenic': 'Cryogénique'
+        } %}
+        {% set other_labels = {
+        'NA': 'N/A',
+        'lasers': 'Lasers',
+        'animals': 'Animaux'
+        } %}
+
+        {% for item in items %}
+        <form class="risk-form" data-room-id="{{ item.room_id }}" style="display: none;">
+            <div class="section">
+                <h2>Risques généraux</h2>
+                {% for opt in general_labels %}
+                <label>
+                    <input type="checkbox" name="risk_elements_general" value="{{ opt }}" {% if opt
+                           in (item.risk_elements_general or []) %}checked{% endif %}
+                           disabled>
+                    {{ general_labels[opt] }}
+                </label>
+                {% endfor %}
+                <label>Précisions sur radioactivité :
+                    <textarea id="risk_elements_general_radioactive" disabled>{{ item.risk_elements_general_radioactive or '' }}</textarea>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Produits biologiques</h2>
+                {% for opt in bio_labels %}
+                <label>
+                    <input type="checkbox" name="risk_elements_biological" value="{{ opt }}" {% if
+                           opt in (item.risk_elements_biological or []) %}checked{% endif %}
+                           disabled>
+                    {{ bio_labels[opt] }}
+                </label>
+                {% endfor %}
+            </div>
+
+            <div class="section">
+                <h2>Gaz</h2>
+                {% for opt in gas_labels %}
+                <label>
+                    <input type="checkbox" name="risk_elements_gas" value="{{ opt }}" {% if opt in
+                           (item.risk_elements_gas or []) %}checked{% endif %}
+                           disabled>
+                    {{ gas_labels[opt] }}
+                </label>
+                {% endfor %}
+                <label>Quantité :
+                    <textarea id="risk_elements_gas_qty" disabled>{{ item.risk_elements_gas_qty or '' }}</textarea>
+                </label>
+                <label>Gaz toxiques :
+                    <textarea id="risk_elements_gas_toxic_gas" disabled>{{ item.risk_elements_gas_toxic_gas or '' }}</textarea>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Liquides</h2>
+                {% for opt in liquids_labels %}
+                <label>
+                    <input type="checkbox" name="risk_elements_liquids" value="{{ opt }}" {% if opt
+                           in (item.risk_elements_liquids or []) %}checked{% endif %}
+                           disabled>
+                    {{ liquids_labels[opt] }}
+                </label>
+                {% endfor %}
+                <label>Quantité :
+                    <textarea id="risk_elements_liquids_qty" disabled>{{ item.risk_elements_liquids_qty or '' }}</textarea>
+                </label>
+                <label>Précisions cryogéniques :
+                    <textarea id="risk_elements_liquids_cryogenic" disabled>{{ item.risk_elements_liquids_cryogenic or '' }}</textarea>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Autres éléments</h2>
+                {% for opt in other_labels %}
+                <label>
+                    <input type="checkbox" name="risk_elements_other" value="{{ opt }}" {% if opt in
+                           (item.risk_elements_other or []) %}checked{% endif %}
+                           disabled>
+                    {{ other_labels[opt] }}
+                </label>
+                {% endfor %}
+                <label>Produits chimiques :
+                    <textarea id="risk_elements_chemical_products" disabled>{{ item.risk_elements_chemical_products or '' }}</textarea>
+                </label>
+            </div>
+
+            <div class="section">
+                <h2>Commentaires</h2>
+                <textarea id="risk_elements_commentary" disabled>{{ item.risk_elements_commentary or '' }}</textarea>
+            </div>
+        </form>
+        {% endfor %}
+        {% else %}
+        <p>⚠️ Aucune donnée trouvée pour la salle sélectionnée.</p>
+        {% endif %}
+    </div>
+</div>

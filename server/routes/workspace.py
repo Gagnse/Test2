@@ -1930,3 +1930,130 @@ def get_entity_history(project_id, entity_type):
             cursor.close()
         if connection:
             connection.close()
+
+
+@workspace_bp.route('/api/projects/<project_id>/tabs/<category>')
+def get_tab_data(project_id, category):
+    """API endpoint to get data for a specific tab"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    print(f"Fetching tab data for project {project_id}, category {category}")
+
+    # Create the project database name
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
+
+    # Check if database exists
+    if not database_exists(project_db_name):
+        print(f"Project database {project_db_name} not found")
+        return jsonify({'success': False, 'message': 'Project database not found'}), 404
+
+    # Get room_id from query params if provided
+    room_id = request.args.get('room_id')
+    print(f"Room ID from request: {room_id}")
+
+    # Connect to the project database
+    connection = get_db_connection(project_db_name)
+    if not connection:
+        print(f"Could not connect to database {project_db_name}")
+        return jsonify({'success': False, 'message': 'Could not connect to database'}), 500
+
+    cursor = None
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+
+        # If this is a special tab that's room-specific
+        special_tabs = ['functionality', 'arch_requirements', 'struct_requirements',
+                        'risk_elements', 'ventilation_cvac', 'electricity']
+
+        if category in special_tabs and room_id:
+            # Convert room_id to UUID bytes if it's a string
+            try:
+                room_id_bytes = uuid.UUID(room_id).bytes if room_id else None
+                print(f"Converting room_id {room_id} to binary")
+            except ValueError as e:
+                print(f"Error converting room_id: {e}")
+                return jsonify({'success': False, 'message': f'Invalid room ID: {str(e)}'}), 400
+
+            # Query specific tab data for the selected room
+            query = f"""
+                SELECT {category}.*, {category}.{category}_id, rooms.id AS room_id, rooms.name AS room_name 
+                FROM {category} 
+                LEFT JOIN rooms ON {category}.room_id = rooms.id
+                WHERE rooms.id = %s
+            """
+            print(f"Executing room-specific query: {query}")
+            cursor.execute(query, (room_id_bytes,))
+
+        else:
+            # Query all data for the selected tab/category
+            query = f"""
+                SELECT {category}.*, {category}.{category}_id, rooms.id AS room_id, rooms.name AS room_name 
+                FROM {category} 
+                LEFT JOIN rooms ON {category}.room_id = rooms.id
+            """
+            print(f"Executing general query: {query}")
+            cursor.execute(query)
+
+        rows = cursor.fetchall() or []
+        print(f"Found {len(rows)} rows")
+
+        # Convert binary IDs to UUID strings
+        for row in rows:
+            if f"{category}_id" in row and isinstance(row[f"{category}_id"], bytes):
+                row[f"{category}_id"] = str(uuid.UUID(bytes=row[f"{category}_id"]))
+            if "room_id" in row and isinstance(row["room_id"], bytes):
+                row["room_id"] = str(uuid.UUID(bytes=row["room_id"]))
+
+        # For special tabs, convert comma-separated strings to lists
+        if category in special_tabs:
+            for row in rows:
+                for key in row:
+                    if isinstance(row[key], str) and ',' in row[key]:
+                        # Check if this is likely a list
+                        if not row[key].startswith('{') and not row[key].startswith('['):
+                            row[key] = row[key].split(',')
+
+        return jsonify({
+            'success': True,
+            'category': category,
+            'items': rows
+        })
+
+    except Exception as e:
+        print(f"Error fetching tab data: {e}")
+        import traceback
+        traceback_str = traceback.format_exc()
+        print(f"Traceback: {traceback_str}")
+        return jsonify({
+            'success': False,
+            'message': str(e),
+            'traceback': traceback_str
+        }), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+def get_tab_template(category):
+    """API endpoint to get the HTML template for a special tab"""
+    items = request.args.get('items', '[]')
+
+    try:
+        import json
+        items_data = json.loads(items)
+
+        # Render the appropriate template based on category
+        template_path = f"workspace/tabs/{category}_tab.html"
+        return render_template(template_path, items=items_data)
+
+    except Exception as e:
+        print(f"Error rendering tab template: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Error rendering template: {str(e)}", 500

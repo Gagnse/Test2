@@ -314,125 +314,40 @@
                     </div>
                 </div>
 
-                <!-- Tabs -->
+               <!-- Tabs -->
                 <div class="tabs">
                     {% for category, title in tab_titles.items() %}
                     <button class="tab-button" data-tab="tab-{{ category }}">{{ title }}</button>
                     {% endfor %}
                 </div>
 
-                <!-- Tabs data -->
+                <!-- Tab content container with empty divs that will be populated on demand -->
                 <div class="tab-content-container">
-                    {% for category, items in project_data.items() %}
-                    <!--Functionality tab-->
-                    {% if category == "functionality" %}
-                    {% include "workspace/tabs/functionality_tab.html" %}
-
-                    <!-- arch requirements tab-->
-                    {% elif category == "arch_requirements" %}
-                    {% include "workspace/tabs/arch_requirements_tab.html" %}
-
-                    <!-- struct requirements tab -->
-                    {% elif category == "struct_requirements" %}
-                    {% include "workspace/tabs/struct_requirements_tab.html" %}
-
-                    <!-- risk elements tab-->
-                    {% elif category == "risk_elements" %}
-                    {% include "workspace/tabs/risk_elements_tab.html" %}
-
-                    <!-- ventilation cvac tab-->
-                    {% elif category == "ventilation_cvac" %}
-                    {% include "workspace/tabs/ventilation_cvac_tab.html" %}
-
-                    <!-- electricity tab-->
-                    {% elif category == "electricity" %}
-                    {% include "workspace/tabs/electricity_tab.html" %}
-
-                    <!--Normal tabs-->
-                    {% else %}
-                    <div id="tab-{{ category }}" class="tab-content {% if loop.first %}active{% endif %}">
-                        <div class="tab-header">
-                            <h2>{{ tab_titles.get(category, category.replace('_', ' ').capitalize()) }}</h2>
-                            <div class="project-actions-dropdown">
-                                <button class="dropdown-toggle">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                        <circle cx="12" cy="5" r="1"></circle>
-                                        <circle cx="12" cy="19" r="1"></circle>
-                                    </svg>
-                                </button>
-                                <div class="dropdown-menu">
-                                    <a href="#" class="add-item-button" data-category="{{ category }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Ajouter un élément
-                                    </a>
-                                    <a href="#" class="functionality-history-btn" data-category="{{ category }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
-                                            <path d="M12 2v10h10"></path>
-                                        </svg>
-                                        Historique
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <table>
-                            <thead>
-                            <tr>
-                                {% for key in columns_to_display[category] if key in items[0] %}
-                                <th class="sortable" data-column="{{ key }}" data-order="none">
-                                    {{ column_titles.get(key, key) }}
-                                    <span class="sort-icon">↕️</span>
-                                </th>
-                                {% endfor %}
-
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for item in items %}
-                            <tr data-id="{{ item[category ~ '_id'] }}"
-                                data-category="{{ category }}"
-                                data-room-id="{{ item['room_id'] if 'room_id' in item else '' }}"
-                                data-room-name="{{ item['room_name'] if 'room_name' in item else '' }}">
-
-                                <!-- Not show room_id and room_name -->
-                                <td style="display: none;">{{ item['room_id'] if 'room_id' in item else '' }}</td>
-                                <td style="display: none;">{{ item['room_name'] if 'room_name' in item else '' }}</td>
-
-                                {% for key in columns_to_display[category] if key in item %}
-                                <td contenteditable="false" data-key="{{ key }}">{{ item[key] }}</td>
-                                {% endfor %}
-                                <td>
-                                    <span class="edit-icon" title="Modifier">&#9998;</span>
-                                    <span class="delete-icon" title="Supprimer">&#128465;</span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+                    {% for category, title in tab_titles.items() %}
+                    <div id="tab-{{ category }}" class="tab-content">
+                        <!-- Content will be loaded dynamically via JavaScript -->
                     </div>
-                    {% endif %}
                     {% endfor %}
                 </div>
+
             </div>
         </div>
     </div>
 {% endblock %}
 {% block extra_js %}
 <script>
-    // Make columnsToDisplay globally available
+
+    // Store column display configuration and tab titles in global variables
+    window.columnTitles = {{ column_titles | tojson }};
     window.columnsToDisplay = {{ columns_to_display | tojson }};
+    window.tabTitles = {{ tab_titles | tojson }};
 
     // Define a global app namespace to share data and functions between modules
     window.ProjectApp = {
         // Core data
         data: {
-            selectedRoomId: null,
-            selectedRoomName: null,
+            selectedRoomId: {{ selected_room_id | tojson if selected_room_id else 'null' }},
+            selectedRoomName: {{ selected_room_name | tojson if selected_room_name else 'null' }},
             editingRow: null,
             originalRowValues: new Map()
         },
@@ -446,6 +361,7 @@
 </script>
 
 <!-- Load JS files in the correct dependency order -->
+<script src="{{ url_for('static', filename='js/project_detail/tab_lazy_loading.js') }}"></script>
 <script src="{{ url_for('static', filename='js/project_detail/project_detail_main.js') }}"></script>
 <script src="{{ url_for('static', filename='js/project_detail/room_data_handlers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/project_detail/table_editors.js') }}"></script>

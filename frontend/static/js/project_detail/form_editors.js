@@ -1,6 +1,17 @@
 /**
  * Handles form editing functionality for the project detail page's special tabs
  */
+
+function getProjectIdFromUrl() {
+    const urlParts = window.location.pathname.split('/');
+    const projectsIndex = urlParts.indexOf('projects');
+    if (projectsIndex !== -1 && urlParts.length > projectsIndex + 1) {
+        return urlParts[projectsIndex + 1];
+    }
+    console.error("Could not extract project ID from URL");
+    return null;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     // Functionality tab edit button
     const functionalityEditIcon = document.querySelector("#tab-functionality .edit-icon");
@@ -42,7 +53,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         data.functionality_consideration.push(cb.value);
                     });
 
-                    fetch(`/workspace/projects/{{ project.id }}/edit_functionality`, {
+                    const projectId = getProjectIdFromUrl();
+                    fetch(`/workspace/projects/${projectId}/edit_functionality`, {
                         method: "POST",
                         headers: {"Content-Type": "application/json"},
                         body: JSON.stringify(data)
@@ -104,7 +116,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         data.arch_requirements_ext_fenestration.push(cb.value);
                     });
 
-                    fetch(`/workspace/projects/{{ project.id }}/edit_arch_requirements`, {
+                    const projectId = getProjectIdFromUrl();
+                    fetch(`/workspace/projects/${projectId}/edit_arch_requirements`, {
                         method: "POST",
                         headers: {"Content-Type": "application/json"},
                         body: JSON.stringify(data)
@@ -156,8 +169,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         struct_requirements_commentary: form.querySelector("#struct_commentary").value
                     };
 
-
-                    fetch(`/workspace/projects/{{ project.id }}/edit_struct_requirements`, {
+                    const projectId = getProjectIdFromUrl();
+                    fetch(`/workspace/projects/${projectId}/edit_struct_requirements`, {
                         method: "POST",
                         headers: {"Content-Type": "application/json"},
                         body: JSON.stringify(data)
@@ -218,7 +231,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     form.querySelectorAll("input[name='risk_elements_liquids']:checked").forEach(cb => data.risk_elements_liquids.push(cb.value));
                     form.querySelectorAll("input[name='risk_elements_other']:checked").forEach(cb => data.risk_elements_other.push(cb.value));
 
-                    fetch(`/workspace/projects/{{ project.id }}/edit_risk_elements`, {
+                    const projectId = getProjectIdFromUrl();
+                    fetch(`/workspace/projects/${projectId}/edit_risk_elements`, {
                         method: "POST",
                         headers: {"Content-Type": "application/json"},
                         body: JSON.stringify(data)
@@ -269,7 +283,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         ventilation_environmental_parameters: form.querySelector("#ventilation_environmental_parameters").value
                     };
 
-                    fetch(`/workspace/projects/{{ project.id }}/edit_ventilation_cvac`, {
+                    const projectId = getProjectIdFromUrl();
+                    fetch(`/workspace/projects/${projectId}/edit_ventilation_cvac`, {
                         method: "POST",
                         headers: {"Content-Type": "application/json"},
                         body: JSON.stringify(data)
@@ -324,7 +339,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         electricity_commentary: form.querySelector("#electricity_commentary").value
                     };
 
-                    fetch(`/workspace/projects/{{ project.id }}/edit_electricity`, {
+                    const projectId = getProjectIdFromUrl();
+                    fetch(`/workspace/projects/${projectId}/edit_electricity`, {
                         method: "POST",
                         headers: {"Content-Type": "application/json"},
                         body: JSON.stringify(data)
@@ -387,45 +403,4 @@ document.addEventListener("DOMContentLoaded", function () {
     if (savedTab) {
         activateTab(savedTab);
     }
-});
-
-// Function to initialize dropdown toggles for special tabs
-function initSpecialTabDropdowns() {
-    // Get all dropdown toggles in special tabs
-    const specialTabDropdowns = document.querySelectorAll('.special-tab-container .dropdown-toggle');
-
-    // Add click event listeners to each toggle
-    specialTabDropdowns.forEach(toggle => {
-        toggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            // Toggle the active class on the parent dropdown
-            const dropdown = this.closest('.project-actions-dropdown');
-
-            // First close all other dropdowns
-            document.querySelectorAll('.project-actions-dropdown.active').forEach(openDropdown => {
-                if (openDropdown !== dropdown) {
-                    openDropdown.classList.remove('active');
-                }
-            });
-
-            // Toggle this dropdown
-            dropdown.classList.toggle('active');
-        });
-    });
-
-    // Close all dropdowns when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.project-actions-dropdown')) {
-            document.querySelectorAll('.project-actions-dropdown.active').forEach(dropdown => {
-                dropdown.classList.remove('active');
-            });
-        }
-    });
-}
-
-// Call this function when the document is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initSpecialTabDropdowns();
 });

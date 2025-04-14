@@ -2057,3 +2057,90 @@ def get_tab_template(category):
         import traceback
         traceback.print_exc()
         return f"Error rendering template: {str(e)}", 500
+
+
+@workspace_bp.route('/projects/<project_id>/get_tab_template/<category>', methods=['GET'])
+def get_tab_template(project_id, category):
+    """API endpoint to get the HTML template for a special tab"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    # Get room_id from query parameters
+    room_id = request.args.get('room_id')
+    if not room_id:
+        return "Room ID is required", 400
+
+    # Check that the category is valid
+    allowed_categories = [
+        'functionality', 'arch_requirements', 'struct_requirements',
+        'risk_elements', 'ventilation_cvac', 'electricity'
+    ]
+
+    if category not in allowed_categories:
+        return f"Invalid category: {category}", 400
+
+    # Create database connection to get the tab data
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
+
+    # Check if database exists
+    if not database_exists(project_db_name):
+        return f"Project database {project_db_name} not found", 404
+
+    connection = get_db_connection(project_db_name)
+    if not connection:
+        return f"Could not connect to database {project_db_name}", 500
+
+    cursor = None
+    try:
+        cursor = connection.cursor(dictionary=True)
+
+        # Convert room_id to UUID bytes
+        try:
+            room_id_bytes = uuid.UUID(room_id).bytes
+        except ValueError:
+            return f"Invalid room ID format: {room_id}", 400
+
+        # Query the specific tab data for this room
+        query = f"""
+            SELECT * FROM {category}
+            WHERE room_id = %s
+        """
+        cursor.execute(query, (room_id_bytes,))
+        items = cursor.fetchall() or []
+
+        # Convert binary IDs to string format
+        for item in items:
+            if f"{category}_id" in item and isinstance(item[f"{category}_id"], bytes):
+                item[f"{category}_id"] = str(uuid.UUID(bytes=item[f"{category}_id"]))
+            if "room_id" in item and isinstance(item["room_id"], bytes):
+                item["room_id"] = room_id
+
+        # Get room name for display
+        cursor.execute("SELECT name FROM rooms WHERE id = %s", (room_id_bytes,))
+        room_result = cursor.fetchone()
+        room_name = room_result['name'] if room_result else "Unknown Room"
+
+        # Convert comma-separated values to lists
+        for item in items:
+            for key, value in item.items():
+                if isinstance(value, str) and ',' in value:
+                    # Only convert if it looks like a list and not JSON
+                    if not (value.startswith('{') or value.startswith('[')):
+                        item[key] = value.split(',')
+
+        # Render the appropriate template
+        template_path = f"workspace/tabs/{category}_tab.html"
+        return render_template(template_path, items=items, room_name=room_name)
+
+    except Exception as e:
+        print(f"Error rendering tab template: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Error processing tab data: {str(e)}", 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()

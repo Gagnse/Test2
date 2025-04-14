@@ -147,8 +147,8 @@ function fetchTabData(category, projectId, tabContentElement) {
         return;
     }
 
-    // Construct the API URL
-    let url = `/workspace/projects/${projectId}/get_tab_data/${category}`;
+    // Construct the API URL - CHANGED: Updated URL to match the backend route
+    let url = `/workspace/api/projects/${projectId}/tabs/${category}`;
     if (selectedRoomId) {
         url += `?room_id=${selectedRoomId}`;
     }
@@ -673,7 +673,7 @@ function initializeTableActions(container, category) {
                 const projectId = getProjectIdFromUrl();
 
                 if (projectId) {
-                    fetch(`/projects/${projectId}/entity_history/${category}?room_id=${selectedRoomId}`)
+                    fetch(`/workspace/projects/${projectId}/entity_history/${category}?room_id=${selectedRoomId}`)
                         .then(response => response.json())
                         .then(data => {
                             if (loadingElement) loadingElement.style.display = 'none';
@@ -807,7 +807,7 @@ function initializeSpecialTabEvents(container, category) {
                 const projectId = getProjectIdFromUrl();
 
                 if (projectId) {
-                    fetch(`/projects/${projectId}/entity_history/${category}?room_id=${selectedRoomId}`)
+                    fetch(`/workspace/projects/${projectId}/entity_history/${category}?room_id=${selectedRoomId}`)
                         .then(response => response.json())
                         .then(data => {
                             if (loadingElement) loadingElement.style.display = 'none';
@@ -905,7 +905,7 @@ function saveSpecialTabForm(form, category) {
     }
 
     // Send data to server
-    fetch(`/projects/${projectId}/edit_${category}`, {
+    fetch(`/workspace/projects/${projectId}/edit_${category}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -990,7 +990,7 @@ function saveRowData(rowId, category, updatedData, callback) {
         return;
     }
 
-    fetch(`/projects/${projectId}/edit_item`, {
+    fetch(`/workspace/projects/${projectId}/edit_item`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -1026,7 +1026,7 @@ function deleteRowData(rowId, category, callback) {
         return;
     }
 
-    fetch(`/projects/${projectId}/delete_item`, {
+    fetch(`/workspace/projects/${projectId}/delete_item`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -1061,7 +1061,7 @@ function addNewItem(category, roomId, newData, callback) {
         return;
     }
 
-    fetch(`/projects/${projectId}/add_item`, {
+    fetch(`/workspace/projects/${projectId}/add_item`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

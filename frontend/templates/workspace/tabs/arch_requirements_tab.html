@@ -53,9 +53,11 @@
             <div class="section">
                 <h2>Validation et acoustique</h2>
                 <label>Validation requise :
-                    <input type="number" name="arch_requirements_validation_req"
+                    <input type="checkbox"
+                           name="arch_requirements_validation_req"
                            id="arch_requirements_validation_req"
-                           value="{{ item.arch_requirements_validation_req or 0 }}" disabled>
+                           value="1"
+                           {% if item.arch_requirements_validation_req == 1 %} checked {% endif %} disabled>
                 </label>
                 <label>Performance acoustique (NRC ou autre) :
                     <input type="number" name="arch_requirements_acoustic"

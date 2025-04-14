@@ -144,14 +144,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     e.preventDefault();
                     const data = {
                         room_id: form.dataset.roomId,
-                        struct_requirements_floor_overload_required: form.querySelector("#struct_overload_req").value || null,
+                        struct_requirements_floor_overload_required: form.querySelector("#struct_overload_req").checked ? 1 : 0,
                         struct_requirements_overload: form.querySelector("#struct_overload").value || null,
                         struct_requirements_equipment_weight: form.querySelector("#struct_equip_weight").value || null,
-                        struct_requirements_floor_flatness: form.querySelector("#struct_flatness").value || null,
-                        struct_requirements_ditch_gutter: form.querySelector("#struct_ditch").value || null,
-                        struct_requirements_steel_sensitivity: form.querySelector("#struct_steel").value || null,
+                        struct_requirements_floor_flatness: form.querySelector("#struct_flatness").checked ? 1 : 0,
+                        struct_requirements_ditch_gutter: form.querySelector("#struct_ditch").checked ? 1 : 0,
+                        struct_requirements_steel_sensitivity: form.querySelector("#struct_steel").checked ? 1 : 0,
                         struct_requirements_equipment_other: form.querySelector("#struct_equipment_other").value,
-                        struct_requirements_vibrations_sensitivity: form.querySelector("#struct_vibration").value || null,
+                        struct_requirements_vibrations_sensitivity: form.querySelector("#struct_vibration").checked ? 1 : 0,
                         struct_requirements_max_vibrations: form.querySelector("#struct_vibration_max").value || null,
                         struct_requirements_commentary: form.querySelector("#struct_commentary").value
                     };

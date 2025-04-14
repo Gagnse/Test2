@@ -255,6 +255,60 @@ function initTableEditors() {
         });
     }
 
+    // Sort columns when clicked
+    function setupColumnSorting() {
+        document.querySelectorAll(".sortable").forEach(header => {
+            header.addEventListener("click", function () {
+                const column = this.getAttribute("data-column");
+                const table = this.closest("table");
+                const tbody = table.querySelector("tbody");
+                const rows = Array.from(tbody.querySelectorAll("tr"));
+                const currentOrder = this.dataset.order || "none";
+
+                // get the right order
+                let newOrder = "asc";
+                if (currentOrder === "asc") newOrder = "desc";
+
+                // See if data are numeric
+                const isNumeric = !isNaN(parseFloat(rows[0]?.querySelector(`[data-key='${column}']`)?.textContent));
+
+                rows.sort((rowA, rowB) => {
+                    let a = rowA.querySelector(`[data-key='${column}']`)?.textContent.trim();
+                    let b = rowB.querySelector(`[data-key='${column}']`)?.textContent.trim();
+
+                    if (isNumeric) {
+                        a = parseFloat(a);
+                        b = parseFloat(b);
+                    } else {
+                        a = a?.toLowerCase();
+                        b = b?.toLowerCase();
+                    }
+
+                    if (a === b) return 0;
+                    return newOrder === "asc" ? (a > b ? 1 : -1) : (a < b ? 1 : -1);
+                });
+
+                // apply sorting
+                tbody.innerHTML = "";
+                rows.forEach(row => tbody.appendChild(row));
+
+                // reinitialise icons
+                table.querySelectorAll(".sortable").forEach(h => {
+                    h.dataset.order = "none";
+                    const icon = h.querySelector(".sort-icon");
+                    if (icon) icon.textContent = "↕️";
+                });
+
+                // update sort icon
+                this.dataset.order = newOrder;
+                const icon = this.querySelector(".sort-icon");
+                if (icon) icon.textContent = newOrder === "asc" ? "⬆️" : "⬇️";
+            });
+        });
+    }
+    setupColumnSorting();
+
+
     // Initialize all table editor functionality
     setupTableRowActions();
     setupCellEditing();

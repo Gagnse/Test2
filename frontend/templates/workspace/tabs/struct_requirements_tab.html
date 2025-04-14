@@ -34,9 +34,10 @@
             <div class="section">
                 <h2>Données techniques</h2>
                 <label>Surcharge au sol requise :
-                    <input type="number" id="struct_overload_req"
-                           value="{{ item.struct_requirements_floor_overload_required or '' }}"
-                           disabled>
+                    <input type="checkbox"
+                           id="struct_overload_req"
+                           value="1"
+                           {% if item.struct_overload_req== 1 %} checked {% endif %} disabled>
                 </label>
                 <label>Surcharge (kPa) :
                     <input type="number" id="struct_overload"
@@ -47,16 +48,23 @@
                            value="{{ item.struct_requirements_equipment_weight or '' }}" disabled>
                 </label>
                 <label>Planéité du plancher :
-                    <input type="number" id="struct_flatness"
-                           value="{{ item.struct_requirements_floor_flatness or '' }}" disabled>
+                    <input type="checkbox"
+                           id="struct_flatness"
+                           name="struct_requirements_floor_flatness"
+                           value="1"
+                           {% if item.struct_flatness == 1%} checked {% endif %} disabled>
                 </label>
                 <label>Caniveau en dalle :
-                    <input type="number" id="struct_ditch"
-                           value="{{ item.struct_requirements_ditch_gutter or '' }}" disabled>
+                    <input type="checkbox"
+                           id="struct_ditch"
+                           value="1"
+                           {% if item.struct_ditch == 1 %} checked {% endif %} disabled>
                 </label>
                 <label>Sensibilité à l'acier :
-                    <input type="number" id="struct_steel"
-                           value="{{ item.struct_requirements_steel_sensitivity or '' }}" disabled>
+                    <input type="checkbox"
+                           id="struct_steel"
+                           value="1"
+                           {% if item.struct_steel == 1 %} checked {% endif %} disabled>
                 </label>
             </div>
 
@@ -70,9 +78,10 @@
             <div class="section">
                 <h2>Vibrations</h2>
                 <label>Sensibilité aux vibrations :
-                    <input type="number" id="struct_vibration"
-                           value="{{ item.struct_requirements_vibrations_sensitivity or '' }}"
-                           disabled>
+                    <input type="checkbox"
+                           id="struct_vibration"
+                           value="1"
+                           {% if item.struct_vibration == 1%} checked {% endif %} disabled>
                 </label>
                 <label>Amplitude max vibrations (Hz) :
                     <input type="number" id="struct_vibration_max"

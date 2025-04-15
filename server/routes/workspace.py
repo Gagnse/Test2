@@ -225,7 +225,7 @@ def organisation_detail(org_id):
 def project_detail(project_id):
     """Show data for Project detail page"""
 
-    #connection to ADMIN database
+    # Connection to ADMIN database
     connection = get_db_connection('users_db')
     cursor = connection.cursor(dictionary=True)
 
@@ -262,8 +262,6 @@ def project_detail(project_id):
         'type': project.get('type', 'Non défini')
     }
 
-    #print(f"✅ Projet trouvé : {project_name} → Connexion à {project_db_name}")
-
     # Check if project database exists
     if not database_exists(project_db_name):
         return f"Erreur : La base de données {project_db_name} n'existe pas", 404
@@ -275,43 +273,6 @@ def project_detail(project_id):
 
     cursor = connection.cursor(dictionary=True)
 
-    # Get project data
-    project_data = {}
-    tables = [
-        "interior_fenestration", "exterior_fenestration", "doors",
-        "built_in_furniture", "accessories", "plumbings",
-        "fire_protection", "lighting", "electrical_outlets",
-        "communication_security", "medical_equipment",
-        "functionality", "arch_requirements", "struct_requirements",
-        "risk_elements", "ventilation_cvac", "electricity"
-    ]
-
-    for table in tables:
-        try:
-            primary_key = f"{table}_id"
-
-            cursor.execute(f"""
-                SELECT {table}.*, {table}.{primary_key}, rooms.id AS room_id, rooms.name AS room_name 
-                FROM {table} 
-                LEFT JOIN rooms ON {table}.room_id = rooms.id;
-            """)
-
-            rows = cursor.fetchall() or []
-
-            # Convert binary ID to UUID
-            for row in rows:
-                if primary_key in row and isinstance(row[primary_key], bytes):
-                    row[primary_key] = str(uuid.UUID(bytes=row[primary_key]))  # Convertir en UUID string
-                if "room_id" in row and isinstance(row["room_id"], bytes):
-                    row["room_id"] = str(uuid.UUID(bytes=row["room_id"]))  # Convertir en UUID string
-
-            project_data[table] = rows
-            #print(f" {table}: {len(rows)} lignes")
-
-        except Exception as err:
-            print(f"⚠️ Erreur récupération {table} : {err}")
-            project_data[table] = []  # Empty list in case of error
-
     # Get rooms order by functional unit and sector
     cursor.execute("""
         SELECT id, name, program_number, sector, functional_unit 
@@ -320,13 +281,10 @@ def project_detail(project_id):
     """)
     rooms = cursor.fetchall()
 
-    if not rooms:
-        print("⚠️ Aucune salle récupérée depuis la base de données !")
-
-    # Left menu : {Fonctional unit -> sector -> room}
+    # Left menu : {Functional unit -> sector -> room}
     room_hierarchy = {}
     for room in rooms:
-        room_id = str(uuid.UUID(bytes=room['id']))  # Convertir en UUID string
+        room_id = str(uuid.UUID(bytes=room['id']))  # Convert to UUID string
         room_name = room['name']
         program_number = room.get('program_number', '')
         sector = room['sector']
@@ -347,8 +305,6 @@ def project_detail(project_id):
     room_hierarchy = {k: room_hierarchy[k] for k in
                       sorted(room_hierarchy.keys(), key=lambda x: int(x) if x.isdigit() else float('inf'))}
 
-    #print(f"Hiérarchie des salles triée : {room_hierarchy}")
-
     cursor.close()
     connection.close()
 
@@ -360,7 +316,7 @@ def project_detail(project_id):
                                   "exterior_fenestration_name", "exterior_fenestration_quantity"],
         "doors": ["doors_category", "doors_number", "doors_name", "doors_quantity"],
         "built_in_furniture": ["built_in_furniture_category", "built_in_furniture_number",
-                                 "built_in_furniture_name", "built_in_furniture_quantity"],
+                               "built_in_furniture_name", "built_in_furniture_quantity"],
         "accessories": ["accessories_category", "accessories_number", "accessories_name", "accessories_quantity"],
         "plumbings": ["plumbings_category", "plumbings_number", "plumbings_name", "plumbings_quantity"],
         "fire_protection": ["fire_protection_category", "fire_protection_number", "fire_protection_name",
@@ -383,45 +339,116 @@ def project_detail(project_id):
         "electricity": ["electricity_lighting_type", "electricity_lighting_level"]
     }
 
-    #print(f"Données envoyées à `project_detail.html` : {list(project_data.keys())}")
+    # Initialize empty project_data structure
+    project_data = {category: [] for category in columns_to_display.keys()}
 
     selected_room_id = request.args.get('room_id', None)
     selected_room_name = None
 
-    # Filter data for special tabs
-    filtered_functionality = []
-    if selected_room_id:
-        filtered_functionality = [f for f in project_data.get("functionality", []) if
-                                  f.get("room_id") == selected_room_id]
-
-        # Find room name
-        for f in project_data.get("functionality", []):
-            if f.get("room_id") == selected_room_id:
-                selected_room_name = f.get("room_name")
-                break
-
-    # Convert sets to lists for JSON
-    def convert_sets_to_lists(data):
-        if isinstance(data, dict):
-            return {k: convert_sets_to_lists(v) for k, v in data.items()}
-        elif isinstance(data, list):
-            return [convert_sets_to_lists(v) for v in data]
-        elif isinstance(data, set):
-            return list(data)  # Sets to lists
-        return data
-
-    # Apply conversion sets to lists
-    project_data = convert_sets_to_lists(project_data)
-
     return render_template("workspace/project_detail.html",
                            project=project_details,
                            project_data=project_data,
-                           filtered_functionality=filtered_functionality,
                            columns_to_display=columns_to_display,
                            room_hierarchy=room_hierarchy,
                            selected_room_id=selected_room_id,
                            selected_room_name=selected_room_name,
                            )
+
+
+@workspace_bp.route('/api/projects/<project_id>/room_data/<room_id>', methods=['GET'])
+def get_room_data(project_id, room_id):
+    """API endpoint to fetch data for a specific room on demand"""
+    if not AuthService.is_authenticated():
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+
+    # Create the project database name
+    clean_uuid = project_id.replace('-', '')
+    project_db_name = f"SPACELOGIC_{clean_uuid}"
+
+    # Check if database exists
+    if not database_exists(project_db_name):
+        return jsonify({'success': False, 'message': 'Project database not found'}), 404
+
+    # Connect to project database
+    connection = get_db_connection(project_db_name)
+    if not connection:
+        return jsonify({'success': False, 'message': 'Failed to connect to database'}), 500
+
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        # Get room name
+        cursor.execute("SELECT name FROM rooms WHERE id = UUID_TO_BIN(%s)", (room_id,))
+        room_result = cursor.fetchone()
+        if not room_result:
+            return jsonify({'success': False, 'message': 'Room not found'}), 404
+
+        room_name = room_result['name']
+
+        # Get all data for the requested room
+        room_data = {}
+        tables = [
+            "interior_fenestration", "exterior_fenestration", "doors",
+            "built_in_furniture", "accessories", "plumbings",
+            "fire_protection", "lighting", "electrical_outlets",
+            "communication_security", "medical_equipment",
+            "functionality", "arch_requirements", "struct_requirements",
+            "risk_elements", "ventilation_cvac", "electricity"
+        ]
+
+        for table in tables:
+            try:
+                primary_key = f"{table}_id"
+
+                cursor.execute(f"""
+                    SELECT {table}.*, {table}.{primary_key}, rooms.id AS room_id, rooms.name AS room_name 
+                    FROM {table} 
+                    LEFT JOIN rooms ON {table}.room_id = rooms.id
+                    WHERE rooms.id = UUID_TO_BIN(%s);
+                """, (room_id,))
+
+                rows = cursor.fetchall() or []
+
+                # Convert binary ID to UUID
+                for row in rows:
+                    if primary_key in row and isinstance(row[primary_key], bytes):
+                        row[primary_key] = str(uuid.UUID(bytes=row[primary_key]))
+                    if "room_id" in row and isinstance(row["room_id"], bytes):
+                        row["room_id"] = str(uuid.UUID(bytes=row["room_id"]))
+
+                room_data[table] = rows
+
+            except Exception as err:
+                print(f"⚠️ Error retrieving {table} for room {room_id}: {err}")
+                room_data[table] = []
+
+        # Convert sets to lists for JSON serialization
+        def convert_sets_to_lists(data):
+            if isinstance(data, dict):
+                return {k: convert_sets_to_lists(v) for k, v in data.items()}
+            elif isinstance(data, list):
+                return [convert_sets_to_lists(v) for v in data]
+            elif isinstance(data, set):
+                return list(data)
+            return data
+
+        room_data = convert_sets_to_lists(room_data)
+
+        return jsonify({
+            'success': True,
+            'room_name': room_name,
+            'room_data': room_data
+        })
+
+    except Exception as e:
+        print(f"Error fetching room data: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+    finally:
+        cursor.close()
+        connection.close()
 
 @workspace_bp.route('/projects/<project_id>/add_item', methods=['POST'])
 def add_item(project_id):

@@ -263,7 +263,7 @@ th {
     padding: 4px 8px;
     transition: background-color 0.2s;
     border-radius: 4px;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -280,7 +280,8 @@ th {
     display: block;
     padding: 4px 0;
     transition: all 0.2s;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
+    font: "Arial Narrow";
 }
 
 .toggle:hover {
@@ -308,6 +309,8 @@ th {
     color: inherit;
     background-color: transparent;
     font-weight: normal;
+    font-size: 0.7rem;
+    font: "Arial Narrow";
 }
 
 .room-item.active-room {
@@ -756,4 +759,8 @@ th {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+.tab-content table thead {
+    display: table-header-group !important;
 }

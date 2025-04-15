@@ -426,6 +426,7 @@
 <script>
     // Make columnsToDisplay globally available
     window.columnsToDisplay = {{ columns_to_display | tojson }};
+    window.columnTitles = {{ column_titles | tojson }};
 
     // Define a global app namespace to share data and functions between modules
     window.ProjectApp = {

@@ -7,7 +7,7 @@ function initRoomDataHandlers() {
     // Cache for storing loaded room data
     App.data.roomDataCache = {};
 
-    // Filter table data by room ID
+    // Filter room data by id
     App.functions.filterRoomData = function(roomId) {
         App.elements.tabContents.forEach(tab => {
             const rows = tab.querySelectorAll("tbody tr");
@@ -15,6 +15,12 @@ function initRoomDataHandlers() {
                 const rowRoomId = row.getAttribute("data-room-id");
                 row.style.display = (rowRoomId === roomId) ? "" : "none";
             });
+
+            // Make sure headers are visible
+            const thead = tab.querySelector("thead");
+            if (thead) {
+                thead.style.display = "";
+            }
         });
     };
 
@@ -48,11 +54,76 @@ function initRoomDataHandlers() {
         });
     };
 
+    // Function to handle special tab display
+    App.functions.handleSpecialTabDisplay = function(roomId) {
+        // Handle special tabs display
+        const specialTabs = [
+            { id: 'functionality', selector: '.functionality-form' },
+            { id: 'arch_requirements', selector: '.arch_requirements-form' },
+            { id: 'struct_requirements', selector: '.struct-form' },
+            { id: 'risk_elements', selector: '.risk-form' },
+            { id: 'ventilation_cvac', selector: '.ventilation-form' },
+            { id: 'electricity', selector: '.electricity-form' }
+        ];
+
+        specialTabs.forEach(tab => {
+            const tabElement = document.getElementById(`tab-${tab.id}`);
+            if (!tabElement) return;
+
+            const forms = tabElement.querySelectorAll(tab.selector);
+            const matchingForms = Array.from(forms).filter(form => form.dataset.roomId === roomId);
+            const warningMsg = tabElement.querySelector('.special-tab-container > p');
+
+            if (matchingForms.length > 0) {
+                // Show the matching form
+                forms.forEach(form => {
+                    form.style.display = (form.dataset.roomId === roomId) ? "block" : "none";
+                });
+
+                // Hide the warning message if it exists
+                if (warningMsg) {
+                    warningMsg.style.display = 'none';
+                }
+            } else {
+                // Hide all forms
+                forms.forEach(form => {
+                    form.style.display = "none";
+                });
+
+                // Show warning message or create it if it doesn't exist
+                if (warningMsg) {
+                    warningMsg.style.display = 'block';
+                } else {
+                    const container = tabElement.querySelector('.special-tab-container');
+                    if (container) {
+                        const newWarning = document.createElement('p');
+                        newWarning.innerHTML = '⚠️ Aucune donnée trouvée pour la salle sélectionnée.';
+                        container.appendChild(newWarning);
+                    }
+                }
+            }
+        });
+    };
+
     // Function to load room data from the server
     App.functions.loadRoomData = function(roomId, roomName) {
+        console.log(`Loading data for room ${roomId} (${roomName})`);
+
         // If we already have this room's data in cache, use it
         if (App.data.roomDataCache[roomId]) {
             console.log(`Using cached data for room ${roomId}`);
+
+            // Check if special tab data exists in cache
+            const specialTabs = ['functionality', 'arch_requirements', 'struct_requirements',
+                                'risk_elements', 'ventilation_cvac', 'electricity'];
+            specialTabs.forEach(tab => {
+                const tabData = App.data.roomDataCache[roomId][tab];
+                console.log(`Special tab ${tab} data in cache:`, tabData);
+                if (tabData) {
+                    console.log(`${tab} has ${tabData.length} items`);
+                }
+            });
+
             App.functions.updateRoomTables(App.data.roomDataCache[roomId]);
             return Promise.resolve();
         }
@@ -80,6 +151,21 @@ function initRoomDataHandlers() {
                     // Cache the room data
                     App.data.roomDataCache[roomId] = data.room_data;
 
+                    // Check if special tab data exists in response
+                    const specialTabs = ['functionality', 'arch_requirements', 'struct_requirements',
+                                        'risk_elements', 'ventilation_cvac', 'electricity'];
+                    specialTabs.forEach(tab => {
+                        const tabData = data.room_data[tab];
+                        console.log(`Special tab ${tab} data in response:`, tabData);
+                        if (tabData) {
+                            console.log(`${tab} has ${tabData.length} items`);
+                            if (tabData.length > 0) {
+                                console.log(`First ${tab} item:`, tabData[0]);
+                                console.log(`Room ID for comparison: "${tabData[0].room_id}" vs "${roomId}"`);
+                            }
+                        }
+                    });
+
                     // Update tables with the fetched data
                     App.functions.updateRoomTables(data.room_data);
                 } else {
@@ -106,6 +192,34 @@ function initRoomDataHandlers() {
                 const category = categoryMatch[1];
                 const tableBody = tab.querySelector("tbody");
 
+                // Get the table element
+                const table = tab.querySelector("table");
+
+                if (table && window.columnsToDisplay && window.columnsToDisplay[category]) {
+                    // Get column titles from window.columnsToDisplay
+                    const columns = window.columnsToDisplay[category];
+
+                    // Check if thead exists, if not create it
+                    let thead = table.querySelector("thead");
+                    if (!thead) {
+                        thead = document.createElement("thead");
+                        table.insertBefore(thead, table.firstChild);
+                    }
+
+                    // Recreate the header row
+                    thead.innerHTML = `
+                        <tr>
+                            ${columns.map(key => `
+                                <th class="sortable" data-column="${key}" data-order="none">
+                                    ${window.columnTitles && window.columnTitles[key] || key}
+                                    <span class="sort-icon">↕️</span>
+                                </th>
+                            `).join('')}
+                            <th>Actions</th>
+                        </tr>
+                    `;
+                }
+
                 if (tableBody) {
                     // Remove all rows except loading indicators
                     Array.from(tableBody.children).forEach(child => {
@@ -113,6 +227,9 @@ function initRoomDataHandlers() {
                             child.remove();
                         }
                     });
+
+                    // Log the received data for debugging
+                    console.log(`Data for ${category}:`, roomData[category]);
 
                     // Add new rows based on the data
                     if (roomData[category] && roomData[category].length) {
@@ -297,18 +414,24 @@ function initRoomDataHandlers() {
                     btn.style.display = "inline-block";
                 });
 
-                // Load room data on demand
-                App.functions.loadRoomData(roomId, roomName)
-                    .then(() => {
-                        // Filter table data and show appropriate forms
-                        App.functions.filterRoomData(roomId);
-                        App.functions.showFunctionalityForRoom(roomId);
-                        App.functions.showArchRequirementsForRoom(roomId);
-                        App.functions.showStructRequirementsForRoom(roomId);
-                        App.functions.showRiskElementsForRoom(roomId);
-                        App.functions.showVentilationForRoom(roomId);
-                        App.functions.showElectricityForRoom(roomId);
+                // Check the format of the room ID
+            console.log("Room ID type:", typeof roomId, "Value:", roomId);
+
+            // Load room data on demand
+            App.functions.loadRoomData(roomId, roomName)
+                .then(() => {
+                    // Check special forms data-room-id attributes
+                    console.log("Checking special forms attributes after loading data:");
+                    document.querySelectorAll('.functionality-form, .arch_requirements-form, .struct-form, .risk-form, .ventilation-form, .electricity-form').forEach(form => {
+                        console.log(`Form element:`, form);
+                        console.log(`Form data-room-id: "${form.dataset.roomId}" vs current room: "${roomId}"`);
+                        console.log(`Are they equal?`, form.dataset.roomId === roomId);
                     });
+
+                    // Filter table data and handle special tabs
+                    App.functions.filterRoomData(roomId);
+                    App.functions.handleSpecialTabDisplay(roomId);
+                });
             });
         });
     }
@@ -358,14 +481,9 @@ function initRoomDataHandlers() {
             // Load room data on demand
             App.functions.loadRoomData(savedRoomId, savedRoomName)
                 .then(() => {
-                    // Filter tables and show appropriate forms
+                    // Filter tables and handle special tabs
                     App.functions.filterRoomData(savedRoomId);
-                    App.functions.showFunctionalityForRoom(savedRoomId);
-                    App.functions.showArchRequirementsForRoom(savedRoomId);
-                    App.functions.showStructRequirementsForRoom(savedRoomId);
-                    App.functions.showRiskElementsForRoom(savedRoomId);
-                    App.functions.showVentilationForRoom(savedRoomId);
-                    App.functions.showElectricityForRoom(savedRoomId);
+                    App.functions.handleSpecialTabDisplay(savedRoomId);
 
                     // Show add buttons
                     document.querySelectorAll(".add-item-button").forEach(btn => {
